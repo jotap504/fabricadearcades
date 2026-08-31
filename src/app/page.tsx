@@ -169,6 +169,15 @@ export default async function HomePage() {
     .map(withStockSummary)
     .sort((a, b) => (a.stock_summary?.availability === 'immediate' ? 0 : 1) - (b.stock_summary?.availability === 'immediate' ? 0 : 1) || a.sort_order - b.sort_order || a.name.localeCompare(b.name, 'es'))
 
+  const heroImages = HERO_IMAGES.map((src, index) => {
+    const linkedProduct = featuredProducts[index % Math.max(featuredProducts.length, 1)]
+    return {
+      src,
+      href: linkedProduct?.slug ? `/productos/${linkedProduct.slug}` : '/productos',
+      alt: linkedProduct?.name ?? `Arcade destacado ${index + 1}`,
+    }
+  })
+
   // Fetch all categories
   const { data: categories } = supabase
     ? await supabase
@@ -192,7 +201,7 @@ export default async function HomePage() {
         }
         description="Equipos multijuegos premium fabricados en Argentina. Elegí tu gabinete, vinilos de diseño, colores de palancas y botones. Envío express."
         ctaText="Ver Catálogo"
-        images={HERO_IMAGES}
+        images={heroImages}
         className="min-h-[80vh]"
       />
 

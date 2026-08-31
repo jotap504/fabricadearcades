@@ -9,7 +9,7 @@ interface AnimatedMarqueeHeroProps {
   title: React.ReactNode;
   description: string;
   ctaText: string;
-  images: string[];
+  images: Array<string | { src: string; href?: string; alt?: string }>;
   className?: string;
 }
 
@@ -30,8 +30,18 @@ export const AnimatedMarqueeHero: React.FC<AnimatedMarqueeHeroProps> = ({
     },
   };
 
+  const normalizedImages = images.map((image, index) =>
+    typeof image === "string"
+      ? { src: image, href: "/productos", alt: `Arcade destacado ${index + 1}` }
+      : {
+          src: image.src,
+          href: image.href || "/productos",
+          alt: image.alt || `Arcade destacado ${index + 1}`,
+        }
+  );
+
   // Duplicate images to create a seamless infinite loop
-  const duplicatedImages = [...images, ...images, ...images];
+  const duplicatedImages = [...normalizedImages, ...normalizedImages, ...normalizedImages];
 
   return (
     <section
@@ -178,9 +188,11 @@ export const AnimatedMarqueeHero: React.FC<AnimatedMarqueeHeroProps> = ({
             repeat: Infinity,
           }}
         >
-          {duplicatedImages.map((src, index) => (
-            <div
+          {duplicatedImages.map((item, index) => (
+            <Link
               key={index}
+              href={item.href}
+              aria-label={`Ver ${item.alt}`}
               style={{
                 width: "160px",
                 height: "220px",
@@ -194,11 +206,13 @@ export const AnimatedMarqueeHero: React.FC<AnimatedMarqueeHeroProps> = ({
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
+                pointerEvents: "auto",
+                transition: "transform var(--transition-fast), border-color var(--transition-fast)",
               }}
             >
               <img
-                src={src}
-                alt={`Arcade cabinet model ${index + 1}`}
+                src={item.src}
+                alt={item.alt}
                 style={{
                   width: "100%",
                   height: "100%",
@@ -207,7 +221,7 @@ export const AnimatedMarqueeHero: React.FC<AnimatedMarqueeHeroProps> = ({
                   padding: "var(--space-1)",
                 }}
               />
-            </div>
+            </Link>
           ))}
         </motion.div>
       </div>

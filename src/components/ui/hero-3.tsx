@@ -121,12 +121,11 @@ export const AnimatedMarqueeHero: React.FC<AnimatedMarqueeHeroProps> = ({
           transition={{ delay: 0.4 }}
           style={{
             fontSize: "clamp(1rem, 2vw, 1.125rem)",
-            color: "#e4e4e7", // High contrast zinc-200
+            color: "var(--color-text-secondary, var(--color-text-muted))",
             maxWidth: "600px",
             lineHeight: 1.6,
             marginBottom: "var(--space-6)",
             fontWeight: 500,
-            textShadow: "0 2px 8px rgba(0,0,0,0.85)",
           }}
         >
           {description}

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient, getAuthUser } from '@/lib/supabase/server'
+import { appendChatbotApiPath } from '@/lib/chatbot/status'
 
 export const dynamic = 'force-dynamic'
 
@@ -22,7 +23,7 @@ export async function POST() {
     return NextResponse.json({ error: 'Faltan variables de Evolution API en el servidor web.' }, { status: 400 })
   }
 
-  const response = await fetch(new URL(`/instance/connect/${evolutionInstance}`, evolutionUrl).toString(), {
+  const response = await fetch(appendChatbotApiPath(evolutionUrl, `/instance/connect/${evolutionInstance}`), {
     method: 'GET',
     headers: { apikey: evolutionKey, ...(proxyToken ? { 'X-Internal-Proxy-Token': proxyToken } : {}) },
     cache: 'no-store',

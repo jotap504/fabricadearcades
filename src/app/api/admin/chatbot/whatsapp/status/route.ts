@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient, getAuthUser } from '@/lib/supabase/server'
-import type { ChatbotSetupStatus } from '@/lib/chatbot/status'
+import { appendChatbotApiPath, type ChatbotSetupStatus } from '@/lib/chatbot/status'
 
 export const dynamic = 'force-dynamic'
 
@@ -44,7 +44,7 @@ export async function GET() {
 
   if (workerUrl) {
     try {
-      const ready = await fetchJson(new URL('/ready', workerUrl).toString(), { headers: proxyHeaders })
+      const ready = await fetchJson(appendChatbotApiPath(workerUrl, '/ready'), { headers: proxyHeaders })
       result.workerReachable = ready.status < 500
       result.databaseReady = ready.ok
       result.message = ready.ok ? 'Worker listo.' : 'Worker accesible, pero la base del chatbot todavía no está lista.'
@@ -64,7 +64,7 @@ export async function GET() {
 
   if (evolutionUrl && evolutionKey && evolutionInstance) {
     try {
-      const state = await fetchJson(new URL(`/instance/connectionState/${evolutionInstance}`, evolutionUrl).toString(), {
+      const state = await fetchJson(appendChatbotApiPath(evolutionUrl, `/instance/connectionState/${evolutionInstance}`), {
         headers: { apikey: evolutionKey, ...proxyHeaders },
       })
       const stateText = JSON.stringify(state.data ?? '').toLocaleLowerCase('es')

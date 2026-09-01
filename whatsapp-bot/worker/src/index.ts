@@ -16,10 +16,7 @@ app.get('/ready', async (_request, reply) => {
 })
 
 app.post('/webhooks/evolution', async (request, reply) => {
-  const querySecret = typeof request.query === 'object' && request.query !== null && 'secret' in request.query
-    ? (request.query as { secret?: unknown }).secret
-    : undefined
-  const secret = request.headers['x-webhook-secret'] ?? querySecret
+  const secret = request.headers['x-webhook-secret']
   if (secret !== config.WEBHOOK_SECRET) {
     return reply.code(401).send({ ok: false })
   }

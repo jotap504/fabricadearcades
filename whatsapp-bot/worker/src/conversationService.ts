@@ -9,7 +9,7 @@ export async function getOrCreateConversation(message: NormalizedMessage) {
     .maybeSingle()
 
   if (selectError) throw selectError
-  if (existing) return existing as { id: string; mode: ConversationMode }
+  if (existing) return existing as { id: string; phone: string; display_name: string | null; mode: ConversationMode }
 
   const { data, error } = await supabase
     .from('chatbot_conversations')
@@ -23,7 +23,7 @@ export async function getOrCreateConversation(message: NormalizedMessage) {
     .single()
 
   if (error) throw error
-  return data as { id: string; mode: ConversationMode }
+  return data as { id: string; phone: string; display_name: string | null; mode: ConversationMode }
 }
 
 export async function saveIncomingMessage(conversationId: string, message: NormalizedMessage) {

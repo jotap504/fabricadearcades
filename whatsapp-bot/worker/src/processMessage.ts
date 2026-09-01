@@ -1,6 +1,7 @@
 import { askLlm } from './llmClient.js'
 import { createHandoff, getOrCreateConversation, isKnownBotOutbox, markHumanTakeover, saveBotMessage, saveIncomingMessage } from './conversationService.js'
 import { sendWhatsAppText } from './evolution.js'
+import { forwardHandoffToResponsible, handleResponsibleReply } from './handoffRoutingService.js'
 import { retrieveKnowledge } from './ragService.js'
 import { getBotSettings } from './settingsService.js'
 import { getSafeFirstName, getSimpleReply } from './simpleIntents.js'
@@ -9,6 +10,11 @@ import type { NormalizedMessage } from './types.js'
 export async function processMessage(message: NormalizedMessage) {
   if (message.direction === 'outbound' && await isKnownBotOutbox(message.externalMessageId)) {
     return { status: 'bot_outbox_echo' }
+  }
+
+  if (message.direction === 'inbound') {
+    const responsibleReply = await handleResponsibleReply(message.phone, message.content, message.externalMessageId)
+    if (responsibleReply) return { status: 'responsible_reply_forwarded' }
   }
 
   const conversation = await getOrCreateConversation(message)
@@ -35,7 +41,9 @@ export async function processMessage(message: NormalizedMessage) {
 
   const sources = await retrieveKnowledge(message.content, settings.topK, settings.ragThreshold)
   if (sources.length === 0) {
-    await createHandoff(conversation.id, savedMessage.id, message.content, 'Sin conocimiento relevante suficiente')
+    const reason = 'Sin conocimiento relevante suficiente'
+    await createHandoff(conversation.id, savedMessage.id, message.content, reason)
+    await forwardHandoffToResponsible(conversation, message.content, reason)
     await sendWhatsAppText(message.phone, settings.handoffMessage)
     return { status: 'handoff_no_sources' }
   }
@@ -45,7 +53,9 @@ export async function processMessage(message: NormalizedMessage) {
   const sourceIdsAreValid = answer.knowledge_ids.length > 0 && answer.knowledge_ids.every((id) => allowedSourceIds.has(id))
 
   if (answer.action !== 'ANSWER' || answer.confidence < settings.confidenceThreshold || !sourceIdsAreValid) {
-    await createHandoff(conversation.id, savedMessage.id, message.content, answer.reason || 'Respuesta insuficiente')
+    const reason = answer.reason || 'Respuesta insuficiente'
+    await createHandoff(conversation.id, savedMessage.id, message.content, reason)
+    await forwardHandoffToResponsible(conversation, message.content, reason)
     await sendWhatsAppText(message.phone, settings.handoffMessage)
     return { status: 'handoff_llm' }
   }

@@ -133,7 +133,7 @@ async function retrieveCatalogKnowledge(text: string): Promise<KnowledgeSource[]
 
     const terms = extractTerms(text)
     const sources: KnowledgeSource[] = []
-    const baseUrl = 'https://fabricadearcades.com'
+    const baseUrl = 'https://raw.githubusercontent.com/jotap504/fabricadearcades/main/public'
 
     for (const p of products) {
       const markup = p.retail_markup_pct ?? 30
@@ -161,23 +161,32 @@ async function retrieveCatalogKnowledge(text: string): Promise<KnowledgeSource[]
         .map((id) => vinylsById.get(id))
         .filter((v): v is NonNullable<typeof v> => Boolean(v && v.image_url))
 
-      // Collect image URLs for sending (convert relative /vinilos/... to full URL https://fabricadearcades.com/...)
+      // Helper to encode image path cleanly for raw GitHub
+      const toFullImageUrl = (path: string) => {
+        if (!path) return ''
+        if (path.startsWith('http')) return path
+        const cleanPath = path.startsWith('/') ? path : `/${path}`
+        return encodeURI(`${baseUrl}${cleanPath}`)
+      }
+
+      // Collect image URLs for sending
       const imageUrls: string[] = []
       if (Array.isArray(p.images) && p.images.length > 0) {
         p.images.forEach((img: string) => {
-          if (img) imageUrls.push(img.startsWith('http') ? img : `${baseUrl}${img}`)
+          const full = toFullImageUrl(img)
+          if (full && !imageUrls.includes(full)) imageUrls.push(full)
         })
       }
       readyUnits.forEach((u) => {
         if (u.image_url) {
-          const full = u.image_url.startsWith('http') ? u.image_url : `${baseUrl}${u.image_url}`
-          if (!imageUrls.includes(full)) imageUrls.push(full)
+          const full = toFullImageUrl(u.image_url)
+          if (full && !imageUrls.includes(full)) imageUrls.push(full)
         }
       })
       compatibleVinyls.forEach((v) => {
         if (v.image_url) {
-          const full = v.image_url.startsWith('http') ? v.image_url : `${baseUrl}${v.image_url}`
-          if (!imageUrls.includes(full)) imageUrls.push(full)
+          const full = toFullImageUrl(v.image_url)
+          if (full && !imageUrls.includes(full)) imageUrls.push(full)
         }
       })
 
@@ -192,7 +201,7 @@ async function retrieveCatalogKnowledge(text: string): Promise<KnowledgeSource[]
         stockInfo,
         `Descripción: ${p.short_description || p.description || ''}`,
         vinylSummary,
-        `Link oficial: https://fabricadearcades.com/productos/${p.slug}`,
+        `Link oficial: https://fabricadearcades.vercel.app/productos/${p.slug}`,
         `Imágenes oficiales disponibles para enviar: ${imageUrls.slice(0, 8).join(', ')}`,
       ].filter(Boolean).join('\n')
 

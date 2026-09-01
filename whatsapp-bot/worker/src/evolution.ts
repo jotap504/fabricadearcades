@@ -41,11 +41,9 @@ export async function sendWhatsAppMedia(phone: string, mediaUrl: string, caption
     },
     body: JSON.stringify({
       number: phone,
-      mediaMessage: {
-        mediatype: 'image',
-        media: mediaUrl,
-        caption: caption ?? '',
-      },
+      mediatype: 'image',
+      media: mediaUrl,
+      caption: caption ?? '',
     }),
   })
 

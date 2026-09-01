@@ -131,3 +131,22 @@ export async function createHandoff(conversationId: string, messageId: string | 
     reason,
   })
 }
+
+export async function getRecentMessages(conversationId: string, limit: number = 6): Promise<Array<{ role: 'user' | 'assistant'; content: string }>> {
+  const { data, error } = await supabase
+    .from('chatbot_messages')
+    .select('direction, sender_type, content, created_at')
+    .eq('conversation_id', conversationId)
+    .order('created_at', { ascending: false })
+    .limit(limit)
+
+  if (error || !data) return []
+
+  return data
+    .reverse()
+    .filter((m) => Boolean(m.content && m.content.trim()))
+    .map((m) => ({
+      role: m.sender_type === 'bot' || m.direction === 'outbound' ? 'assistant' : 'user',
+      content: m.content,
+    }))
+}

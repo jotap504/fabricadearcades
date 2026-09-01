@@ -56,3 +56,23 @@ export async function sendWhatsAppMedia(phone: string, mediaUrl: string, caption
   const data = (await response.json()) as SendTextResult
   return data.key?.id ?? data.messageId ?? data.id ?? null
 }
+
+export async function sendWhatsAppPresence(phone: string, presence: 'composing' | 'paused' = 'composing', delayMs: number = 3000): Promise<void> {
+  try {
+    const url = new URL(`/chat/sendPresence/${config.EVOLUTION_INSTANCE}`, config.EVOLUTION_API_URL)
+    await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: config.EVOLUTION_API_KEY,
+      },
+      body: JSON.stringify({
+        number: phone,
+        presence,
+        delay: delayMs,
+      }),
+    })
+  } catch (err) {
+    console.error('Evolution sendPresence failed:', err)
+  }
+}

@@ -1,6 +1,6 @@
 import { askLlm } from './llmClient.js'
-import { countClarificationMessages, createHandoff, getOrCreateConversation, isKnownBotOutbox, markHumanTakeover, saveBotMessage, saveIncomingMessage } from './conversationService.js'
-import { sendWhatsAppText, sendWhatsAppMedia } from './evolution.js'
+import { countClarificationMessages, createHandoff, getOrCreateConversation, getRecentMessages, isKnownBotOutbox, markHumanTakeover, saveBotMessage, saveIncomingMessage } from './conversationService.js'
+import { sendWhatsAppText, sendWhatsAppMedia, sendWhatsAppPresence } from './evolution.js'
 import { forwardHandoffToResponsible, handleResponsibleReply, isResponsiblePhone } from './handoffRoutingService.js'
 import { retrieveKnowledge } from './ragService.js'
 import { getBotSettings } from './settingsService.js'
@@ -33,6 +33,9 @@ export async function processMessage(message: NormalizedMessage) {
   if (!settings.botActive) return { status: 'bot_inactive' }
   if (conversation.mode !== 'BOT') return { status: `conversation_${conversation.mode.toLowerCase()}` }
 
+  // Send "composing / escribiendo..." presence state to customer immediately
+  sendWhatsAppPresence(message.phone, 'composing', 4000).catch(() => {})
+
   const simpleReply = getSimpleReply(message.content, getSafeFirstName(message.displayName))
   if (simpleReply) {
     const externalId = await sendWhatsAppText(message.phone, simpleReply)
@@ -40,7 +43,11 @@ export async function processMessage(message: NormalizedMessage) {
     return { status: 'answered_simple' }
   }
 
-  const sources = await retrieveKnowledge(message.content, settings.topK, settings.ragThreshold)
+  const [sources, history] = await Promise.all([
+    retrieveKnowledge(message.content, settings.topK, settings.ragThreshold),
+    getRecentMessages(conversation.id, 6)
+  ])
+
   if (sources.length === 0) {
     const clarificationCount = await countClarificationMessages(conversation.id)
     if (clarificationCount < 2) {
@@ -57,7 +64,7 @@ export async function processMessage(message: NormalizedMessage) {
     return { status: 'handoff_no_sources' }
   }
 
-  const answer = await askLlm(message.content, sources)
+  const answer = await askLlm(message.content, sources, history)
   const allowedSourceIds = new Set(sources.map((source) => source.id))
   // Accept catalog and valid sources
   const sourceIdsAreValid = answer.knowledge_ids.length > 0 && answer.knowledge_ids.every((id) => allowedSourceIds.has(id) || id.startsWith('prod_'))

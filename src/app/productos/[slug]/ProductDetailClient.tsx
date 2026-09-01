@@ -1133,67 +1133,71 @@ export function ProductDetailClient({
                     </div>
                   </div>
 
-                  <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
                     {isLocked && (
                       <div
                         style={{
-                          position: 'absolute',
-                          top: 0,
-                          left: 0,
-                          right: 0,
-                          bottom: 0,
-                          background: 'rgba(255, 255, 255, 0.08)',
-                          backdropFilter: 'blur(3px)',
-                          zIndex: 10,
+                          background: 'var(--color-cyan-dim)',
+                          border: '1px solid var(--color-cyan)',
+                          padding: 'var(--space-3) var(--space-4)',
                           borderRadius: 'var(--radius-md)',
                           display: 'flex',
                           alignItems: 'center',
-                          justifyContent: 'center',
-                          pointerEvents: 'auto',
+                          justifyContent: 'space-between',
+                          gap: 'var(--space-3)',
+                          flexWrap: 'wrap',
                         }}
                       >
-                        <div
-                          style={{
-                            background: 'var(--color-surface)',
-                            border: '1px solid var(--color-cyan)',
-                            padding: 'var(--space-3) var(--space-4)',
-                            borderRadius: 'var(--radius-md)',
-                            fontSize: '0.875rem',
-                            fontWeight: 600,
-                            color: 'var(--color-cyan)',
-                            boxShadow: 'var(--shadow-md)',
-                            textAlign: 'center',
-                          }}
-                        >
-                          🔒 Equipo pre-armado físico listo en fábrica
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                          <span style={{ fontSize: '1.25rem' }}>⚡</span>
+                          <div>
+                            <div style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--color-text)' }}>
+                              Composición exacta del equipo armado en stock
+                            </div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>
+                              El vinilo y los colores de palancas y botones corresponden a la unidad física disponible. Para elegir tus propios colores, hacé clic en &quot;Comprar a medida&quot;.
+                            </div>
+                          </div>
                         </div>
+                        <button
+                          type="button"
+                          onClick={() => handleSelectCustom()}
+                          className="btn btn-secondary btn-sm"
+                          style={{ fontSize: '0.75rem', padding: '4px 10px' }}
+                        >
+                          🎨 Cambiar a pedido a medida
+                        </button>
                       </div>
                     )}
 
                     {/* 1. SECCIÓN TEMÁTICA / VINILO */}
                     <div className="customizer-section">
-                      <span className="customizer-section-title">1. Temática y Vinilo Ploteado</span>
+                      <span className="customizer-section-title">
+                        1. Temática y Vinilo Ploteado {isLocked && <small style={{ fontWeight: 600, color: 'var(--color-cyan)', marginLeft: 6 }}>🔒 (Fijo en stock)</small>}
+                      </span>
                       
                       <div style={{ display: 'flex', gap: 'var(--space-2)', marginBottom: 'var(--space-3)' }}>
                         <button
                           type="button"
+                          disabled={isLocked}
                           onClick={() => {
                             setVinylSource('stock')
                             setCustomization((prev) => ({ ...prev, vinyl_source: 'stock' }))
                           }}
                           className={clsx('category-tab', { active: vinylSource === 'stock' })}
-                          style={{ fontSize: '0.8125rem' }}
+                          style={{ fontSize: '0.8125rem', cursor: isLocked ? 'default' : 'pointer' }}
                         >
                           🎨 Vinilos en Stock Fábrica (24/48 hs)
                         </button>
                         <button
                           type="button"
+                          disabled={isLocked}
                           onClick={() => {
                             setVinylSource('print')
                             setCustomization((prev) => ({ ...prev, vinyl_source: 'print' }))
                           }}
                           className={clsx('category-tab', { active: vinylSource === 'print' || vinylSource === 'custom' })}
-                          style={{ fontSize: '0.8125rem' }}
+                          style={{ fontSize: '0.8125rem', cursor: isLocked ? 'default' : 'pointer' }}
                         >
                           ✨ Diseño a Pedido / Personalizado (7 días)
                         </button>
@@ -1211,6 +1215,7 @@ export function ProductDetailClient({
                                   <span>Vinilo</span>
                                   <select
                                     value={customization.vinyl_supply_id || ''}
+                                    disabled={isLocked}
                                     onChange={(event) => {
                                       const vinyl = vinylsInStock.find((v) => v.id === event.target.value)
                                       setCustomization((prev) => ({
@@ -1255,6 +1260,7 @@ export function ProductDetailClient({
                               <span>Vinilo</span>
                               <select
                                 value={customization.vinyl_source === 'custom' ? '__custom__' : customization.vinyl_supply_id || ''}
+                                disabled={isLocked}
                                 onChange={(event) => {
                                   if (event.target.value === '__custom__') {
                                     setCustomization((prev) => ({
@@ -1304,7 +1310,7 @@ export function ProductDetailClient({
                     <div className="customizer-section">
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-2)' }}>
                         <span className="customizer-section-title" style={{ margin: 0 }}>
-                          2. Controles por jugador
+                          2. Controles por jugador {isLocked && <small style={{ fontWeight: 600, color: 'var(--color-cyan)', marginLeft: 6 }}>🔒 (Fijo en stock)</small>}
                         </span>
                         {productSpecs.led_enabled && (
                           <div className="controls-type-grid">
@@ -1313,21 +1319,25 @@ export function ProductDetailClient({
                               <div style={{ display: 'flex', gap: 4 }}>
                                 <button
                                   type="button"
+                                  disabled={isLocked}
                                   onClick={() => {
                                     setJoystickType('standard')
                                     setCustomization((prev) => ({ ...prev, joystick_type: 'standard' }))
                                   }}
                                   className={clsx('category-tab', { active: joystickType === 'standard' })}
+                                  style={{ cursor: isLocked ? 'default' : 'pointer' }}
                                 >
                                   Std
                                 </button>
                                 <button
                                   type="button"
+                                  disabled={isLocked}
                                   onClick={() => {
                                     setJoystickType('led')
                                     setCustomization((prev) => ({ ...prev, joystick_type: 'led' }))
                                   }}
                                   className={clsx('category-tab', { active: joystickType === 'led' })}
+                                  style={{ cursor: isLocked ? 'default' : 'pointer' }}
                                 >
                                   LED
                                 </button>
@@ -1338,21 +1348,25 @@ export function ProductDetailClient({
                               <div style={{ display: 'flex', gap: 4 }}>
                                 <button
                                   type="button"
+                                  disabled={isLocked}
                                   onClick={() => {
                                     setButtonType('standard')
                                     setCustomization((prev) => ({ ...prev, button_type: 'standard' }))
                                   }}
                                   className={clsx('category-tab', { active: buttonType === 'standard' })}
+                                  style={{ cursor: isLocked ? 'default' : 'pointer' }}
                                 >
                                   Std
                                 </button>
                                 <button
                                   type="button"
+                                  disabled={isLocked}
                                   onClick={() => {
                                     setButtonType('led')
                                     setCustomization((prev) => ({ ...prev, button_type: 'led' }))
                                   }}
                                   className={clsx('category-tab', { active: buttonType === 'led' })}
+                                  style={{ cursor: isLocked ? 'default' : 'pointer' }}
                                 >
                                   LED
                                 </button>
@@ -1494,8 +1508,9 @@ export function ProductDetailClient({
                                 <button
                                   key={j.id}
                                   type="button"
+                                  disabled={isLocked}
                                   className={clsx('swatch', { selected })}
-                                  style={{ backgroundColor: j.color ?? '#888' }}
+                                  style={{ backgroundColor: j.color ?? '#888', cursor: isLocked ? 'default' : 'pointer' }}
                                   onClick={() =>
                                     updatePlayerCustomization(activePlayer, {
                                       joystick_supply_id: j.id,
@@ -1537,10 +1552,11 @@ export function ProductDetailClient({
                                 <button
                                   key={b.id}
                                   type="button"
+                                  disabled={isLocked}
                                   className={clsx('swatch', {
                                     selected,
                                   })}
-                                  style={{ backgroundColor: b.color ?? '#888' }}
+                                  style={{ backgroundColor: b.color ?? '#888', cursor: isLocked ? 'default' : 'pointer' }}
                                   onClick={() => {
                                     updatePlayerCustomization(activePlayer, {
                                       button_supply_id: b.id,

@@ -91,6 +91,7 @@ export default function EditProductPage() {
   const [playersCount, setPlayersCount] = useState(2)
   const [joysticksCount, setJoysticksCount] = useState(2)
   const [buttonsPerPlayer, setButtonsPerPlayer] = useState(6)
+  const [gamesCount, setGamesCount] = useState('')
 
   const [newVariant, setNewVariant] = useState({
     cabinet_type: 'bartop',
@@ -124,6 +125,7 @@ export default function EditProductPage() {
           setPlayersCount(obj.players_count ?? 2)
           setJoysticksCount(obj.joysticks_count ?? 2)
           setButtonsPerPlayer(obj.buttons_per_player ?? 6)
+          setGamesCount(obj.games_count?.toString() || '')
           setSelectedFamilies(obj.families || [])
           setSelectedVinylIds(obj.vinyl_supply_ids || [])
           setPrimaryConsoleLogoIds(obj.primary_console_logo_ids || [])
@@ -325,6 +327,7 @@ export default function EditProductPage() {
       players_count: playersCount,
       joysticks_count: joysticksCount,
       buttons_per_player: buttonsPerPlayer,
+      games_count: parseInt(gamesCount) || 0,
       families: selectedFamilies,
       vinyl_supply_ids: selectedVinylIds,
       primary_console_logo_ids: primaryConsoleLogoIds.slice(0, 10),
@@ -513,6 +516,19 @@ export default function EditProductPage() {
                 <option value="12">12 Botones</option>
                 <option value="16">16 Botones</option>
               </select>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label" htmlFor="product-games-count">Cantidad de juegos</label>
+              <input
+                id="product-games-count"
+                type="number"
+                min="0"
+                className="form-input"
+                value={gamesCount}
+                onChange={(e) => setGamesCount(e.target.value)}
+                placeholder="500"
+              />
             </div>
           </div>
 

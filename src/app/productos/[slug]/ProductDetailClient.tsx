@@ -60,6 +60,7 @@ export function ProductDetailClient({
       players_count: 2,
       joysticks_count: 2,
       buttons_per_player: 6,
+      games_count: 0,
       led_enabled: true,
       led_surcharge: 0,
       families: [],
@@ -816,6 +817,18 @@ export function ProductDetailClient({
                 >
                   {product.description}
                 </div>
+                {productSpecs.games_count > 0 && (
+                  <p
+                    style={{
+                      fontSize: '0.9375rem',
+                      fontWeight: 700,
+                      color: 'var(--color-text-secondary)',
+                      marginTop: 'var(--space-3)',
+                    }}
+                  >
+                    🕹️ Incluye {productSpecs.games_count} juegos
+                  </p>
+                )}
                 <ConsoleLogoRows
                   primaryIds={productSpecs.primary_console_logo_ids as string[] | undefined}
                   secondaryIds={productSpecs.secondary_console_logo_ids as string[] | undefined}

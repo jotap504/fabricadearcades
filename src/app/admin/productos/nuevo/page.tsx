@@ -37,6 +37,7 @@ export default function NewProductPage() {
   const [playersCount, setPlayersCount] = useState(2)
   const [joysticksCount, setJoysticksCount] = useState(2)
   const [buttonsPerPlayer, setButtonsPerPlayer] = useState(6)
+  const [gamesCount, setGamesCount] = useState('')
 
   useEffect(() => {
     async function load() {
@@ -87,6 +88,7 @@ export default function NewProductPage() {
       players_count: playersCount,
       joysticks_count: joysticksCount,
       buttons_per_player: buttonsPerPlayer,
+      games_count: parseInt(gamesCount) || 0,
       families: selectedFamilies,
       bom: bom
     })
@@ -275,6 +277,19 @@ export default function NewProductPage() {
                 <option value="12">12 Botones</option>
                 <option value="16">16 Botones</option>
               </select>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label" htmlFor="product-games-count">Cantidad de juegos</label>
+              <input
+                id="product-games-count"
+                type="number"
+                min="0"
+                className="form-input"
+                value={gamesCount}
+                onChange={(e) => setGamesCount(e.target.value)}
+                placeholder="500"
+              />
             </div>
           </div>
 

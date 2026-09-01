@@ -54,7 +54,7 @@ export default async function AdminChatbotPage() {
       <div className="customer-summary-grid">
         <div className="customer-summary-card"><div><strong>{conversations}</strong><span>Conversaciones</span></div></div>
         <div className="customer-summary-card"><div><strong>{openQuestions}</strong><span>Sin respuesta</span></div></div>
-        <div className="customer-summary-card"><div><strong>{String(settingsMap.get('llm_model') ?? 'deepseek/deepseek-v4-pro')}</strong><span>Modelo LLM</span></div></div>
+        <div className="customer-summary-card"><div><strong>{String(settingsMap.get('llm_model') ?? 'deepseek/deepseek-chat-v3.1')}</strong><span>Modelo LLM</span></div></div>
       </div>
 
       <div className="admin-grid" style={{ marginTop: 'var(--space-6)' }}>

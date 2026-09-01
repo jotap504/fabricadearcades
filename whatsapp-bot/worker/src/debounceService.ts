@@ -50,6 +50,9 @@ async function flush(phone: string) {
     })
     logger.info({ phone, result }, 'message_batch_processed')
   } catch (error) {
-    logger.error({ error, phone }, 'debounced_message_failed')
+    logger.error({
+      error: error instanceof Error ? { message: error.message, stack: error.stack } : error,
+      phone,
+    }, 'debounced_message_failed')
   }
 }

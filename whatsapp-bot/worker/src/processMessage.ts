@@ -67,7 +67,7 @@ export async function processMessage(message: NormalizedMessage) {
 }
 
 function configModel() {
-  return process.env.LLM_MODEL ?? 'deepseek/deepseek-v4-pro'
+  return process.env.LLM_MODEL ?? 'deepseek/deepseek-chat-v3.1'
 }
 
 async function saveAnswerSources(messageId: string, knowledgeIds: string[], sources: Array<{ id: string; similarity: number }>) {

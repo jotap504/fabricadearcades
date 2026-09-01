@@ -48,6 +48,11 @@ const jsonSchema = {
   },
 }
 
+function buildOpenRouterUrl(path: string) {
+  const base = config.LLM_BASE_URL.endsWith('/') ? config.LLM_BASE_URL : `${config.LLM_BASE_URL}/`
+  return new URL(path.replace(/^\//, ''), base)
+}
+
 export async function askLlm(question: string, sources: KnowledgeSource[]): Promise<BotAnswer> {
   if (!config.LLM_API_KEY) {
     return { action: 'HANDOFF', answer: '', confidence: 0, knowledge_ids: [], reason: 'missing_llm_api_key' }
@@ -57,7 +62,7 @@ export async function askLlm(question: string, sources: KnowledgeSource[]): Prom
     `ID: ${source.id}\nCategoría: ${source.category}\nTítulo: ${source.title}\nContenido: ${source.content}`
   )).join('\n\n---\n\n')
 
-  const response = await fetch(new URL('/chat/completions', config.LLM_BASE_URL), {
+  const response = await fetch(buildOpenRouterUrl('/chat/completions'), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -96,8 +101,15 @@ export async function askLlm(question: string, sources: KnowledgeSource[]): Prom
     }),
   })
 
-  if (!response.ok) throw new Error(`OpenRouter failed: ${response.status} ${await response.text()}`)
-  const data = await response.json() as any
+  const responseText = await response.text()
+  if (!response.ok) throw new Error(`OpenRouter failed: ${response.status} ${responseText.slice(0, 500)}`)
+
+  let data: any
+  try {
+    data = JSON.parse(responseText)
+  } catch {
+    throw new Error(`OpenRouter returned non-JSON response: ${responseText.slice(0, 160)}`)
+  }
   const outputText = data.choices?.[0]?.message?.content
   let rawAnswer: unknown
   try {

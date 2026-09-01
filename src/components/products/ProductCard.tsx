@@ -5,6 +5,7 @@ import { useMemo, useState } from 'react'
 import { useAuth } from '@/components/auth/AuthProvider'
 import { useCartStore } from '@/lib/stores/cart'
 import { useToast } from '@/lib/stores/toast'
+import { ConsoleLogoRows } from '@/components/products/ConsoleLogoRows'
 import {
   formatPrice,
   getEffectivePrice,
@@ -206,11 +207,26 @@ export function ProductCard({ product, stockSummary }: ProductCardProps) {
           <small>{timeInfo}</small>
         </div>
 
-        {selectedVinyl && isImmediate ? (
-          <div className="product-card-vinyl-select is-locked">
-            <span>Vinilo</span>
-            <strong>{selectedVinyl.name.replace(/^.* - /, '')}</strong>
-            <small>Fijo: es el vinilo real del equipo armado.</small>
+        {isImmediate ? (
+          <div className="product-card-console-logos">
+            <ConsoleLogoRows
+              primaryIds={(() => {
+                try {
+                  const meta = JSON.parse(product.meta_description || '{}')
+                  return meta.primary_console_logo_ids || ['arcade', 'cps1', 'cps2', 'cps3', 'neogeo', 'mame', 'sega', 'nintendo']
+                } catch {
+                  return ['arcade', 'cps1', 'cps2', 'cps3', 'neogeo', 'mame', 'sega', 'nintendo']
+                }
+              })()}
+              secondaryIds={(() => {
+                try {
+                  const meta = JSON.parse(product.meta_description || '{}')
+                  return meta.secondary_console_logo_ids || []
+                } catch {
+                  return []
+                }
+              })()}
+            />
           </div>
         ) : vinylOptions.length > 0 ? (
           <label className="product-card-vinyl-select">

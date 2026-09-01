@@ -86,7 +86,7 @@ export function ConversationInbox({ conversations }: { conversations: InboxConve
   const [editEmail, setEditEmail] = useState('')
   const [editNotes, setEditNotes] = useState('')
   const [pending, startTransition] = useTransition()
-  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const messagesContainerRef = useRef<HTMLDivElement>(null)
 
   // Auto refresh every 5 minutes (300,000 ms)
   useEffect(() => {
@@ -119,10 +119,12 @@ export function ConversationInbox({ conversations }: { conversations: InboxConve
 
   const selected = filtered.find((conversation) => conversation.id === selectedId) ?? filtered[0] ?? null
 
-  // Scroll to bottom when selected conversation changes or receives new messages
+  // Scroll to bottom ONLY inside the messages container when conversation changes or receives new messages
   useEffect(() => {
     if (selected) {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'auto' })
+      if (messagesContainerRef.current) {
+        messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight
+      }
       setEditName(selected.customer?.display_name ?? selected.display_name ?? '')
       setEditEmail(selected.customer?.email ?? '')
       setEditNotes(selected.customer?.notes ?? '')
@@ -263,7 +265,7 @@ export function ConversationInbox({ conversations }: { conversations: InboxConve
             </header>
 
             <div className={`chat-thread-layout ${isCustomerCardOpen ? 'has-card-open' : 'is-card-collapsed'}`}>
-              <div className="chat-messages">
+              <div className="chat-messages" ref={messagesContainerRef}>
                 {selected.messages.map((message) => (
                   <div key={message.id} className={`chat-bubble-row ${message.direction === 'outbound' ? 'outbound' : 'inbound'}`}>
                     <div className={`chat-bubble chat-bubble-${message.sender_type}`}>
@@ -274,7 +276,6 @@ export function ConversationInbox({ conversations }: { conversations: InboxConve
                   </div>
                 ))}
                 {selected.messages.length === 0 && <p className="admin-empty-state">Todavía no hay mensajes en esta conversación.</p>}
-                <div ref={messagesEndRef} />
               </div>
 
               {isCustomerCardOpen && (

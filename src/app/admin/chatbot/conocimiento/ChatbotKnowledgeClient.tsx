@@ -24,6 +24,7 @@ export function ChatbotKnowledgeClient({ initialItems, databasePending = false }
   const [editing, setEditing] = useState<KnowledgeItem | null>(null)
   const [draft, setDraft] = useState({ category: 'general', title: '', content: '', priority: 0, active: true })
   const [saving, setSaving] = useState(false)
+  const [generatingEmbeddingId, setGeneratingEmbeddingId] = useState<string | null>(null)
 
   const filtered = useMemo(() => {
     const term = search.trim().toLocaleLowerCase('es')
@@ -81,12 +82,20 @@ export function ChatbotKnowledgeClient({ initialItems, databasePending = false }
   }
 
   async function regenerateEmbedding(item: KnowledgeItem) {
+    if (generatingEmbeddingId) return
+    setGeneratingEmbeddingId(item.id)
     try {
-      const updated = await regenerateKnowledgeEmbedding(item.id) as KnowledgeItem
-      setItems((current) => current.map((row) => row.id === item.id ? updated : row))
+      const result = await regenerateKnowledgeEmbedding(item.id)
+      if (!result.ok) {
+        toast.warning('Embedding no configurado', result.message)
+        return
+      }
+      setItems((current) => current.map((row) => row.id === item.id ? result.item : row))
       toast.success('Embedding generado', 'El bot ya puede encontrar este conocimiento en la búsqueda.')
     } catch (error) {
       toast.error('No se pudo generar embedding', error instanceof Error ? error.message : 'Revisá la configuración del servidor.')
+    } finally {
+      setGeneratingEmbeddingId(null)
     }
   }
 
@@ -126,7 +135,7 @@ export function ChatbotKnowledgeClient({ initialItems, databasePending = false }
               <strong>{item.title}</strong>
               <div className="table-secondary">{item.category} · prioridad {item.priority} · {item.active ? 'Activo' : 'Pausado'}</div>
               <p style={{ color: 'var(--color-text-muted)' }}>{item.content.slice(0, 180)}{item.content.length > 180 ? '…' : ''}</p>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}><button className="btn btn-ghost btn-sm" onClick={() => startEdit(item)}>Editar</button><button className="btn btn-ghost btn-sm" onClick={() => toggleActive(item)}>{item.active ? 'Pausar' : 'Activar'}</button><button className="btn btn-ghost btn-sm" onClick={() => regenerateEmbedding(item)}>Generar embedding</button></div>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}><button className="btn btn-ghost btn-sm" onClick={() => startEdit(item)}>Editar</button><button className="btn btn-ghost btn-sm" onClick={() => toggleActive(item)}>{item.active ? 'Pausar' : 'Activar'}</button><button className="btn btn-ghost btn-sm" disabled={generatingEmbeddingId !== null} onClick={() => regenerateEmbedding(item)}>{generatingEmbeddingId === item.id ? 'Generando…' : 'Generar embedding'}</button></div>
             </div>
           ))}
           {filtered.length === 0 && <p className="admin-empty-state">No hay conocimiento cargado.</p>}

@@ -179,7 +179,12 @@ export async function dismissUnansweredQuestion(questionId: string) {
 async function createEmbedding(text: string) {
   const apiKey = process.env.EMBEDDING_API_KEY
   const model = process.env.EMBEDDING_MODEL ?? 'text-embedding-3-small'
-  if (!apiKey) throw new Error('Falta EMBEDDING_API_KEY en el servidor.')
+  if (!apiKey) {
+    return {
+      ok: false as const,
+      message: 'Falta configurar EMBEDDING_API_KEY en Vercel. El bot puede seguir usando la búsqueda por texto, pero para búsqueda semántica real hay que cargar una clave de embeddings.',
+    }
+  }
 
   const response = await fetch('https://api.openai.com/v1/embeddings', {
     method: 'POST',
@@ -189,11 +194,22 @@ async function createEmbedding(text: string) {
     },
     body: JSON.stringify({ model, input: text }),
   })
-  if (!response.ok) throw new Error(`No se pudo generar embedding: ${response.status}`)
+  if (!response.ok) {
+    const body = await response.text()
+    return {
+      ok: false as const,
+      message: `El proveedor de embeddings rechazó la solicitud (${response.status}). Revisá que EMBEDDING_API_KEY y EMBEDDING_MODEL sean correctos. ${body.slice(0, 180)}`,
+    }
+  }
   const data = await response.json() as { data?: Array<{ embedding: number[] }> }
   const embedding = data.data?.[0]?.embedding
-  if (!embedding) throw new Error('El proveedor no devolvió embedding.')
-  return embedding
+  if (!embedding) {
+    return {
+      ok: false as const,
+      message: 'El proveedor respondió, pero no devolvió un embedding válido.',
+    }
+  }
+  return { ok: true as const, embedding }
 }
 
 export async function regenerateKnowledgeEmbedding(knowledgeId: string) {
@@ -205,15 +221,17 @@ export async function regenerateKnowledgeEmbedding(knowledgeId: string) {
     .single()
   if (error) throw new Error(error.message)
 
-  const embedding = await createEmbedding(`${item.title}\n\n${item.content}`)
+  const embeddingResult = await createEmbedding(`${item.title}\n\n${item.content}`)
+  if (!embeddingResult.ok) return embeddingResult
+
   const { data: updated, error: updateError } = await supabase
     .from('chatbot_knowledge_items')
-    .update({ embedding })
+    .update({ embedding: embeddingResult.embedding })
     .eq('id', knowledgeId)
     .select('id,category,title,content,active,priority,updated_at')
     .single()
   if (updateError) throw new Error(updateError.message)
 
   revalidatePath('/admin/chatbot/conocimiento')
-  return updated
+  return { ok: true as const, item: updated }
 }

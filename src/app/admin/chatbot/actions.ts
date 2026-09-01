@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient, getAuthUser } from '@/lib/supabase/server'
+import { appendChatbotApiPath } from '@/lib/chatbot/status'
 
 async function requireAdmin() {
   const supabase = await createClient()
@@ -12,10 +13,14 @@ async function requireAdmin() {
 
 export async function setChatbotConversationMode(conversationId: string, mode: 'BOT' | 'HUMAN' | 'PAUSED') {
   const supabase = await requireAdmin()
-  const updates: Record<string, string | null> = { mode }
+  const updates: Record<string, string | number | null> = {
+    mode,
+    sales_status: mode === 'BOT' ? 'BOT_ACTIVE' : mode === 'HUMAN' ? 'HUMAN_ACTIVE' : 'HUMAN_REQUIRED',
+  }
   if (mode === 'BOT') {
     updates.handoff_reason = null
     updates.bot_resumed_at = new Date().toISOString()
+    updates.pending_count = 0
   }
   const { error } = await supabase
     .from('chatbot_conversations')
@@ -27,6 +32,93 @@ export async function setChatbotConversationMode(conversationId: string, mode: '
     event_type: `admin_set_${mode.toLowerCase()}`,
     conversation_id: conversationId,
     metadata: {},
+  })
+
+  revalidatePath('/admin/chatbot')
+  revalidatePath('/admin/chatbot/conversaciones')
+}
+
+async function sendWhatsAppText(phone: string, text: string) {
+  const evolutionUrl = process.env.EVOLUTION_API_URL
+  const evolutionKey = process.env.EVOLUTION_API_KEY
+  const evolutionInstance = process.env.EVOLUTION_INSTANCE
+  const proxyToken = process.env.WHATSAPP_PROXY_TOKEN
+
+  if (!evolutionUrl || !evolutionKey || !evolutionInstance) {
+    throw new Error('Faltan variables de WhatsApp/Evolution en Vercel.')
+  }
+
+  const response = await fetch(appendChatbotApiPath(evolutionUrl, `/message/sendText/${evolutionInstance}`), {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      apikey: evolutionKey,
+      ...(proxyToken ? { 'X-Internal-Proxy-Token': proxyToken } : {}),
+    },
+    body: JSON.stringify({ number: phone, text }),
+  })
+
+  if (!response.ok) {
+    const body = await response.text()
+    throw new Error(`No se pudo enviar el WhatsApp (${response.status}): ${body.slice(0, 240)}`)
+  }
+
+  const data = await response.json() as { key?: { id?: string }; messageId?: string; id?: string }
+  return data.key?.id ?? data.messageId ?? data.id ?? null
+}
+
+export async function sendChatbotConversationReply(conversationId: string, content: string, returnToBot = false) {
+  const supabase = await requireAdmin()
+  const cleanContent = content.trim()
+  if (!cleanContent) throw new Error('Escribí una respuesta antes de enviar.')
+
+  const { data: conversation, error: conversationError } = await supabase
+    .from('chatbot_conversations')
+    .select('id,phone,mode')
+    .eq('id', conversationId)
+    .single()
+  if (conversationError) throw new Error(conversationError.message)
+
+  const externalId = await sendWhatsAppText(conversation.phone, cleanContent)
+
+  const { error: messageError } = await supabase
+    .from('chatbot_messages')
+    .insert({
+      conversation_id: conversation.id,
+      external_message_id: externalId,
+      direction: 'outbound',
+      sender_type: 'human',
+      content: cleanContent,
+      handled_by: 'admin_panel',
+      raw_payload: { source: 'admin_panel', return_to_bot: returnToBot },
+      human_generated: true,
+    })
+  if (messageError) throw new Error(messageError.message)
+
+  await supabase.from('chatbot_outbox').insert({
+    conversation_id: conversation.id,
+    external_message_id: externalId,
+    content: cleanContent,
+    status: 'sent',
+    provider_response: { source: 'admin_panel' },
+  })
+
+  const { error: updateError } = await supabase
+    .from('chatbot_conversations')
+    .update({
+      mode: returnToBot ? 'BOT' : 'HUMAN',
+      handoff_reason: returnToBot ? null : 'Atendido desde el panel',
+      bot_resumed_at: returnToBot ? new Date().toISOString() : null,
+      pending_count: 0,
+      sales_status: returnToBot ? 'BOT_ACTIVE' : 'HUMAN_ACTIVE',
+    })
+    .eq('id', conversation.id)
+  if (updateError) throw new Error(updateError.message)
+
+  await supabase.from('chatbot_audit_log').insert({
+    event_type: returnToBot ? 'admin_reply_return_to_bot' : 'admin_reply_takeover',
+    conversation_id: conversation.id,
+    metadata: { content_length: cleanContent.length },
   })
 
   revalidatePath('/admin/chatbot')

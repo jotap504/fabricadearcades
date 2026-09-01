@@ -3,16 +3,17 @@ import { createHandoff, getOrCreateConversation, isKnownBotOutbox, markHumanTake
 import { sendWhatsAppText } from './evolution.js'
 import { retrieveKnowledge } from './ragService.js'
 import { getBotSettings } from './settingsService.js'
-import { getSimpleReply } from './simpleIntents.js'
+import { getSafeFirstName, getSimpleReply } from './simpleIntents.js'
 import type { NormalizedMessage } from './types.js'
 
 export async function processMessage(message: NormalizedMessage) {
+  if (message.direction === 'outbound' && await isKnownBotOutbox(message.externalMessageId)) {
+    return { status: 'bot_outbox_echo' }
+  }
+
   const conversation = await getOrCreateConversation(message)
 
   if (message.direction === 'outbound' && message.senderType === 'human') {
-    if (await isKnownBotOutbox(message.externalMessageId)) {
-      return { status: 'bot_outbox_echo' }
-    }
     await markHumanTakeover(conversation.id, 'Mensaje saliente detectado desde WhatsApp')
     await saveIncomingMessage(conversation.id, message)
     return { status: 'human_takeover' }
@@ -25,7 +26,7 @@ export async function processMessage(message: NormalizedMessage) {
   if (!settings.botActive) return { status: 'bot_inactive' }
   if (conversation.mode !== 'BOT') return { status: `conversation_${conversation.mode.toLowerCase()}` }
 
-  const simpleReply = getSimpleReply(message.content)
+  const simpleReply = getSimpleReply(message.content, getSafeFirstName(message.displayName))
   if (simpleReply) {
     const externalId = await sendWhatsAppText(message.phone, simpleReply)
     await saveBotMessage(conversation.id, message.phone, simpleReply, externalId, 'rules:simple_intent', 1)

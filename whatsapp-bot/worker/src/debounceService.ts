@@ -6,6 +6,7 @@ import type { NormalizedMessage } from './types.js'
 const pendingByPhone = new Map<string, { timer: NodeJS.Timeout; messages: NormalizedMessage[] }>()
 
 export function enqueueMessage(message: NormalizedMessage) {
+  logger.info({ phone: message.phone, direction: message.direction }, 'message_queued')
   const existing = pendingByPhone.get(message.phone)
   if (existing) {
     clearTimeout(existing.timer)
@@ -29,6 +30,7 @@ async function flush(phone: string) {
   const outbound = batch.messages.filter((message) => message.direction === 'outbound')
 
   try {
+    logger.info({ phone, count: batch.messages.length }, 'message_batch_flushing')
     for (const message of outbound) {
       await processMessage(message)
     }
@@ -37,7 +39,7 @@ async function flush(phone: string) {
 
     const lastMessage = inbound[inbound.length - 1]
     const combinedContent = inbound.map((message) => message.content).join('\n')
-    await processMessage({
+    const result = await processMessage({
       ...lastMessage,
       externalMessageId: inbound.map((message) => message.externalMessageId).join(':'),
       content: combinedContent,
@@ -46,6 +48,7 @@ async function flush(phone: string) {
         messages: inbound.map((message) => message.raw),
       },
     })
+    logger.info({ phone, result }, 'message_batch_processed')
   } catch (error) {
     logger.error({ error, phone }, 'debounced_message_failed')
   }

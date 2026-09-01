@@ -1,0 +1,1559 @@
+# PLAN DE INTEGRACIÓN – CHATBOT COMERCIAL PARA WHATSAPP
+
+## 1. OBJETIVO GENERAL
+
+Construir un chatbot comercial para WhatsApp conectado a la web existente.
+
+El chatbot debe funcionar como un vendedor especializado en los productos de la empresa.
+
+NO debe comportarse como un asistente de inteligencia artificial general.
+
+Su objetivo es:
+
+- Atender consultas.
+- Detectar qué producto necesita el cliente.
+- Recomendar productos existentes.
+- Mostrar imágenes e información.
+- Resolver preguntas comerciales.
+- Detectar intención de compra.
+- Llevar al cliente hacia la compra desde la página web.
+- Derivar consultas a un humano cuando sea necesario.
+- Permitir que un administrador intervenga manualmente.
+- Mantener historial de clientes y conversaciones.
+
+---
+
+# 2. ARQUITECTURA ACTUAL
+
+## Frontend
+
+Vercel.
+
+Aplicación web actualmente desarrollada.
+
+## Backend / Base de datos
+
+Supabase.
+
+Debe mantenerse inicialmente Supabase para acelerar el desarrollo.
+
+La arquitectura debe quedar desacoplada para permitir en el futuro migrar PostgreSQL / Storage / servicios hacia un VPS propio sin rehacer toda la aplicación.
+
+## VPS
+
+El chatbot y los servicios asociados deben ejecutarse dentro de Docker en el VPS.
+
+Servicios posibles:
+
+- Evolution API.
+- Backend del chatbot.
+- Workers.
+- Sistema de colas.
+- Scheduler.
+- Health monitor.
+- Servicios auxiliares.
+
+## WhatsApp
+
+Evolution API conectada a WhatsApp.
+
+La lógica comercial NO debería colocarse directamente dentro de Evolution API.
+
+Evolution debe funcionar principalmente como gateway de WhatsApp.
+
+La lógica del bot debe estar en un servicio independiente.
+
+---
+
+# 3. PRINCIPIO FUNDAMENTAL DEL CHATBOT
+
+## MODO ESTRICTO
+
+Esta es una de las reglas más importantes de todo el proyecto.
+
+El chatbot NO puede responder usando libremente el conocimiento general del modelo de IA.
+
+Solo puede responder utilizando información aprobada por el sistema.
+
+Fuentes permitidas inicialmente:
+
+1. Productos de la base de datos.
+2. Características cargadas de cada producto.
+3. Precios.
+4. Stock.
+5. Plataformas/emuladores compatibles.
+6. Preguntas frecuentes.
+7. Información comercial.
+8. Políticas de envío.
+9. Formas de pago.
+10. Garantías.
+11. Información que el administrador agregue expresamente a la base de conocimiento.
+
+Si una respuesta no puede construirse con información existente:
+
+NO INVENTAR.
+
+NO COMPLETAR CON CONOCIMIENTO GENERAL.
+
+NO SUPONER.
+
+NO DIVAGAR.
+
+Debe responder algo equivalente a:
+
+"No tengo ese dato confirmado. Si querés, puedo consultarlo con un vendedor."
+
+Y debe poder dispararse una intervención humana.
+
+---
+
+# 4. TONO DE CONVERSACIÓN
+
+El tono debe ser:
+
+- Informal.
+- Cercano.
+- Natural.
+- Argentino, sin exagerar modismos.
+- Amable.
+- Comercial.
+- Directo.
+- Frases relativamente cortas.
+
+Evitar:
+
+- Textos largos.
+- Lenguaje excesivamente corporativo.
+- Respuestas enciclopédicas.
+- Explicaciones innecesarias.
+- Listas enormes.
+- Hacer varias preguntas juntas.
+- Sonar como ChatGPT.
+
+Regla:
+
+UNA pregunta relevante por vez.
+
+---
+
+# 5. SALUDO Y DETECCIÓN DEL NOMBRE
+
+Cuando llega un contacto nuevo desde WhatsApp:
+
+Intentar obtener el nombre de perfil de WhatsApp.
+
+Ejemplo:
+
+Nombre recibido:
+
+"María Rodríguez"
+
+Usar:
+
+"Hola María, ¿cómo estás?"
+
+NO:
+
+"Hola María Rodríguez."
+
+Debe utilizar solamente el primer nombre.
+
+---
+
+## Validación del nombre
+
+No utilizar automáticamente nombres sospechosos de ser:
+
+- Apodos.
+- Nombres comerciales.
+- Frases.
+- Emojis.
+- Palabras extrañas.
+- Nicknames.
+- Descripciones.
+
+Ejemplo:
+
+Nombre de WhatsApp:
+
+"RockAndRoll"
+
+NO decir:
+
+"Hola RockAndRoll."
+
+En ese caso:
+
+"Hola, ¿cómo estás? ¿Cómo te llamás?"
+
+Cuando el cliente proporciona su nombre real, guardarlo en su ficha.
+
+---
+
+# 6. PRIMERA PREGUNTA
+
+Después del saludo:
+
+"¿Qué estás buscando?"
+
+Alternativas naturales:
+
+"¿En qué te puedo ayudar?"
+
+"¿Qué producto estás buscando?"
+
+El chatbot puede variar ligeramente el texto para evitar conversaciones completamente mecánicas.
+
+---
+
+# 7. SISTEMA DE DESCUBRIMIENTO DEL PRODUCTO
+
+El bot debe actuar como un vendedor consultivo.
+
+No debe mostrar veinte productos de entrada.
+
+Debe ir acotando la búsqueda.
+
+Ejemplo:
+
+Cliente:
+
+"Busco una consola."
+
+Bot:
+
+"¿Es para vos o para regalar?"
+
+Cliente:
+
+"Para mí."
+
+Bot:
+
+"¿Buscás algo portátil, un bartop o un arcade de pie?"
+
+---
+
+# 8. RECOMENDACIÓN DE ARCADES
+
+Si el cliente busca un arcade:
+
+El sistema debe poder diferenciar productos según:
+
+- Tamaño.
+- Formato.
+- Potencia de hardware.
+- Plataformas emuladas.
+- Cantidad de jugadores.
+- Características.
+- Precio.
+- Disponibilidad.
+
+Una de las preguntas principales debe relacionarse con qué plataformas quiere jugar.
+
+Ejemplo:
+
+"¿Buscás principalmente juegos retro o también querés jugar cosas como PS2, GameCube o Xbox?"
+
+Productos retro pueden relacionarse con plataformas como:
+
+- MAME.
+- Neo Geo.
+- Super Nintendo.
+- Mega Drive.
+- Nintendo.
+- Nintendo 64.
+- Etc.
+
+Productos con mayor potencia pueden incluir:
+
+- PlayStation 2.
+- GameCube.
+- Xbox.
+- Otras plataformas compatibles que estén específicamente cargadas en el producto.
+
+IMPORTANTE:
+
+Las plataformas compatibles ya se encuentran asociadas a los productos en la web mediante logos/datos.
+
+El chatbot debe consultar esa información.
+
+NO debe inferir compatibilidad por su cuenta.
+
+---
+
+# 9. MOTOR DE RECOMENDACIÓN
+
+El chatbot no debe intentar vender necesariamente el producto que inicialmente menciona el cliente.
+
+Debe intentar encontrar el producto más apropiado según sus necesidades.
+
+Variables posibles:
+
+- Tipo de producto.
+- Uso.
+- Presupuesto.
+- Espacio disponible.
+- Plataformas que quiere jugar.
+- Cantidad de jugadores.
+- Nivel de emulación.
+- Preferencias.
+
+El objetivo es comportarse como un vendedor experimentado.
+
+---
+
+# 10. INFORMACIÓN DE PRODUCTOS
+
+La información debe provenir directamente de la base de datos.
+
+Cada producto debería contener como mínimo:
+
+- ID.
+- Nombre.
+- Slug.
+- Categoría.
+- Descripción corta.
+- Descripción completa.
+- Precio.
+- Precio promocional.
+- Stock.
+- Imágenes.
+- Videos.
+- Plataformas compatibles.
+- Características.
+- Dimensiones.
+- Cantidad de jugadores.
+- Hardware.
+- URL del producto.
+- Estado activo/inactivo.
+- Tags.
+
+---
+
+# 11. IMÁGENES
+
+Las imágenes deberían almacenarse inicialmente en:
+
+Supabase Storage.
+
+La web y el chatbot deben usar exactamente las mismas imágenes.
+
+NO duplicarlas dentro del VPS.
+
+Flujo:
+
+Supabase Storage
+→ Web
+→ Chatbot
+→ WhatsApp
+
+---
+
+# 12. USO COMERCIAL DE LAS IMÁGENES
+
+Si un cliente quiere conocer un producto:
+
+Priorizar enviar una buena imagen directamente por WhatsApp.
+
+Después se puede enviar el link.
+
+Ejemplo:
+
+[imagen]
+
+"Este es el modelo que te comentaba."
+
+Luego:
+
+"Si querés ver todas las características, te paso la ficha completa."
+
+No mandar 10 o 20 imágenes juntas.
+
+Preferiblemente:
+
+1 o 2 imágenes relevantes.
+
+---
+
+# 13. LINK DEL PRODUCTO
+
+Cada producto debe tener su URL propia.
+
+Ejemplo conceptual:
+
+/productos/arcade-premium-32
+
+El chatbot debe poder obtener automáticamente esa URL.
+
+---
+
+# 14. CIERRE DE VENTA
+
+El cierre de la venta se realizará principalmente desde la página web.
+
+Cuando el cliente ya decidió qué producto quiere:
+
+El chatbot debe llevarlo al checkout.
+
+Ejemplo:
+
+"Perfecto. Te dejo el link para comprarlo 👇"
+
+[URL del producto]
+
+El chatbot NO debería crear sistemas de pago paralelos por WhatsApp inicialmente.
+
+La compra debe centralizarse en la web.
+
+---
+
+# 15. DETECCIÓN DE INTENCIÓN DE COMPRA
+
+El sistema debe reconocer aproximadamente estados como:
+
+- Curiosidad.
+- Buscando opciones.
+- Comparando.
+- Preguntando precio.
+- Alta intención.
+- Listo para comprar.
+- Compra iniciada.
+- Compra completada.
+
+Cuando detecta alta intención:
+
+Reducir preguntas.
+
+Dar información concreta.
+
+Facilitar el acceso al producto.
+
+Enviar link de compra.
+
+---
+
+# 16. IDENTIDAD DEL CLIENTE
+
+NO utilizar exclusivamente el número telefónico como ID de la base de datos.
+
+Crear:
+
+customer_id interno único.
+
+Ejemplo:
+
+UUID.
+
+La ficha puede contener:
+
+customer_id
+
+nombre
+
+apellido
+
+teléfono
+
+email
+
+Google ID
+
+fecha de creación
+
+último contacto
+
+canal original
+
+estado comercial
+
+---
+
+# 17. TELÉFONO COMO IDENTIFICADOR IMPORTANTE
+
+Aunque exista un customer_id interno, el teléfono será uno de los identificadores principales para conectar WhatsApp con la web.
+
+Debe almacenarse normalizado.
+
+Ejemplo Argentina:
+
++549XXXXXXXXXX
+
+Evitar guardar distintas versiones del mismo número.
+
+---
+
+# 18. LOGIN DE LA WEB
+
+Permitir:
+
+## Opción 1
+
+Continuar con Google.
+
+## Opción 2
+
+Continuar con teléfono.
+
+Ambas identidades deben poder terminar vinculadas al mismo customer_id.
+
+Ejemplo:
+
+Usuario entra con Google.
+
+Luego proporciona teléfono.
+
+El sistema vincula:
+
+Google ID
++
+email
++
+teléfono
++
+customer_id
+
+Así una posterior conversación por WhatsApp puede asociarse con la misma persona.
+
+---
+
+# 19. CONVERSACIONES
+
+El customer y la conversación deben ser entidades diferentes.
+
+Un cliente puede tener múltiples conversaciones.
+
+Ejemplo:
+
+CUSTOMER
+
+Juan
+
+CONVERSACIONES
+
+Marzo
+Junio
+Septiembre
+
+Cada conversación debe tener:
+
+conversation_id
+
+customer_id
+
+fecha inicio
+
+fecha última interacción
+
+estado
+
+canal
+
+modo bot/humano
+
+producto de interés
+
+intención
+
+---
+
+# 20. HISTORIAL
+
+Guardar todos los mensajes.
+
+Tabla conceptual:
+
+messages
+
+- id
+- conversation_id
+- customer_id
+- sender
+- type
+- text
+- media_url
+- timestamp
+- channel
+- ai_generated
+- human_generated
+
+Esto permitirá recuperar contexto.
+
+---
+
+# 21. MEMORIA COMERCIAL
+
+Si un cliente vuelve después de días o semanas:
+
+El bot debe poder conocer contexto relevante.
+
+Ejemplo:
+
+"Estabas viendo el arcade de 32 pulgadas."
+
+Pero evitar respuestas incómodas o excesivamente invasivas.
+
+La memoria debe usarse solo cuando resulte natural.
+
+---
+
+# 22. DERIVACIÓN A HUMANO
+
+Si el chatbot no sabe responder:
+
+Crear un evento:
+
+HUMAN_REQUIRED
+
+Guardar:
+
+- Cliente.
+- Teléfono.
+- Pregunta.
+- Producto relacionado.
+- Conversación.
+- Motivo de derivación.
+
+---
+
+# 23. NOTIFICACIÓN AL ADMINISTRADOR POR WHATSAPP
+
+El sistema puede enviar un WhatsApp al número personal del administrador.
+
+Ejemplo:
+
+"Consulta que necesita respuesta:
+
+Cliente: Jorge
+Producto: Arcade Premium
+
+Pregunta:
+¿Tiene Age of Empires 2?"
+
+El administrador puede contestar:
+
+"Sí, está incluido."
+
+El sistema debe enviar al cliente esa respuesta utilizando el WhatsApp comercial.
+
+---
+
+# 24. RESPUESTA PUNTUAL + RETORNO AUTOMÁTICO DEL BOT
+
+Debe existir diferencia entre:
+
+Responder una consulta puntual.
+
+y
+
+Tomar control completo.
+
+Caso puntual:
+
+Bot no sabe algo.
+
+Admin responde.
+
+Cliente recibe respuesta.
+
+Bot continúa después normalmente.
+
+---
+
+# 25. MODO HUMANO
+
+Debe poder tomarse control de una conversación.
+
+Ejemplo de comando:
+
+/control
+
+Resultado:
+
+BOT OFF para esa conversación.
+
+El administrador responde manualmente.
+
+---
+
+# 26. DEVOLVER CONVERSACIÓN AL BOT
+
+Comando:
+
+/bot
+
+Resultado:
+
+BOT ON.
+
+El bot recupera contexto y continúa atendiendo.
+
+---
+
+# 27. NUEVO: BANDEJA DE MENSAJES EN EL PANEL ADMIN
+
+Agregar dentro de la web un módulo:
+
+## Conversaciones
+
+Accesible únicamente para usuarios autenticados como administrador o vendedor autorizado.
+
+Debe funcionar como una pequeña bandeja de atención comercial.
+
+---
+
+# 28. LISTADO DE CONVERSACIONES
+
+Mostrar una columna lateral con:
+
+- Nombre.
+- Teléfono.
+- Último mensaje.
+- Hora.
+- Producto de interés.
+- Estado.
+- Bot activo/inactivo.
+- Mensajes pendientes.
+- Canal de origen.
+
+Ejemplo:
+
+Juan
+Arcade 32"
+"¿Cuánto tarda el envío?"
+Hace 2 min
+🔴 Necesita humano
+
+---
+
+# 29. CHAT DESDE LA WEB
+
+Al abrir una conversación:
+
+Mostrar todo el historial.
+
+Similar a WhatsApp Web.
+
+Administrador puede escribir:
+
+"Sí, ese modelo incluye el juego."
+
+La web envía:
+
+Panel Admin
+→ backend
+→ Evolution API
+→ WhatsApp cliente.
+
+El cliente recibe el mensaje desde el número comercial.
+
+---
+
+# 30. ESTADO DEL BOT DESDE EL PANEL
+
+Dentro del chat mostrar claramente:
+
+BOT ACTIVO
+
+o
+
+MODO HUMANO
+
+Debe existir botón:
+
+Tomar conversación
+
+Al presionarlo:
+
+bot_enabled = false
+
+---
+
+También:
+
+Devolver al bot
+
+bot_enabled = true
+
+---
+
+# 31. RESPONDER UNA SOLA CONSULTA DESDE EL PANEL
+
+Otra opción:
+
+"Responder y devolver al bot."
+
+Esto permite contestar algo que la IA no conoce sin tener que encargarse de toda la conversación.
+
+Flujo:
+
+Admin responde.
+
+Mensaje llega al cliente.
+
+Estado vuelve automáticamente a:
+
+BOT ACTIVO.
+
+---
+
+# 32. ASIGNACIÓN DE CONVERSACIONES
+
+Preparar estructura para varios vendedores.
+
+Campo:
+
+assigned_to
+
+Ejemplo:
+
+Sin asignar
+
+Jota
+
+Vendedor 1
+
+Vendedor 2
+
+Esto permitirá escalar el sistema.
+
+---
+
+# 33. ESTADOS DE CONVERSACIÓN
+
+Ejemplos:
+
+NEW
+
+BOT_ACTIVE
+
+WAITING_CUSTOMER
+
+HUMAN_REQUIRED
+
+HUMAN_ACTIVE
+
+PURCHASE_INTENT
+
+PURCHASE_LINK_SENT
+
+PURCHASED
+
+CLOSED
+
+POST_SALE
+
+---
+
+# 34. ALERTAS VISUALES
+
+Panel:
+
+🔴 necesita humano
+
+🟡 esperando cliente
+
+🟢 bot atendiendo
+
+🔵 vendedor atendiendo
+
+💰 posible venta
+
+✅ venta realizada
+
+---
+
+# 35. CONFIRMACIÓN DE VENTA
+
+WhatsApp NO debe intentar adivinar si se realizó una venta.
+
+El backend debe informarlo.
+
+Si la compra ocurre en la página:
+
+Checkout
+→ pago aprobado
+→ backend
+→ customer.status = PURCHASED
+
+Esto debe detener automáticamente cualquier seguimiento comercial.
+
+---
+
+# 36. VENTAS PRESENCIALES
+
+Si una venta se cierra manualmente:
+
+Desde el panel Admin debe existir:
+
+"Marcar como venta realizada."
+
+Opcionalmente:
+
+producto
+
+importe
+
+fecha
+
+medio de pago
+
+---
+
+# 37. SEGUIMIENTO DE CLIENTES
+
+Si un cliente mostró interés y no compró:
+
+Puede existir seguimiento automático.
+
+Pero debe ser conservador.
+
+Ejemplo:
+
+Después de algunos días:
+
+"Hola Juan, ¿cómo estás? Habíamos quedado con la consulta del arcade. Si necesitás que te ayude con algo, avisame."
+
+---
+
+# 38. EVITAR SPAM Y RIESGO DE BLOQUEO
+
+Reglas fuertes:
+
+- No bombardear con mensajes.
+- No enviar cadenas.
+- No enviar múltiples preguntas.
+- Responder principalmente a conversaciones iniciadas por el cliente.
+- Evitar seguimientos excesivos.
+- No insistir repetidamente.
+- Respetar pedidos de no contacto.
+- Mantener mensajes comerciales cortos.
+
+---
+
+# 39. SIMULACIÓN DE COMPORTAMIENTO HUMANO
+
+Evitar respuestas instantáneas idénticas.
+
+Implementar pequeños delays variables razonables.
+
+Ejemplo:
+
+1-4 segundos.
+
+Dependiendo de longitud.
+
+No usar delays exagerados.
+
+---
+
+# 40. MENSAJES AGRUPADOS
+
+Si el cliente envía:
+
+"Hola"
+
+"Quiero una consola"
+
+"Para mi hijo"
+
+en pocos segundos:
+
+No responder tres veces.
+
+Esperar brevemente y procesar los mensajes juntos.
+
+Esto hace que la conversación sea mucho más natural.
+
+---
+
+# 41. FOLLOW-UP
+
+Máximo recomendado inicialmente:
+
+1 seguimiento automático.
+
+Si no responde:
+
+No seguir insistiendo.
+
+En el futuro el comportamiento puede configurarse desde el panel.
+
+---
+
+# 42. PANEL ADMIN – FICHA DEL CLIENTE
+
+Al lado de la conversación mostrar:
+
+Nombre
+
+Teléfono
+
+Email
+
+Producto de interés
+
+Última compra
+
+Conversaciones previas
+
+Canal de origen
+
+Estado
+
+Notas internas
+
+---
+
+# 43. NOTAS INTERNAS
+
+Permitir que vendedores escriban notas que el cliente NO ve.
+
+Ejemplo:
+
+"Quiere retirar por Devoto."
+
+"Consultó precio mayorista."
+
+"Volver a llamar viernes."
+
+Estas notas pueden servir de contexto al vendedor y, si se decide, al chatbot.
+
+---
+
+# 44. BASE DE CONOCIMIENTO
+
+Crear una sección Admin:
+
+Base de conocimiento.
+
+Categorías:
+
+Productos
+
+Pagos
+
+Envíos
+
+Garantía
+
+Emulación
+
+Preguntas frecuentes
+
+Políticas
+
+Información general
+
+El administrador debe poder editar esta información sin modificar código.
+
+---
+
+# 45. RESPUESTAS APROBADAS
+
+Opcionalmente almacenar respuestas verificadas.
+
+Ejemplo:
+
+Pregunta:
+
+"¿Hacen envíos?"
+
+Respuesta oficial:
+
+"Sí, realizamos envíos a todo el país."
+
+La IA puede reformular ligeramente manteniendo exactamente el significado.
+
+---
+
+# 46. ARQUITECTURA RAG
+
+Usar un modelo de lenguaje únicamente después de recuperar información permitida.
+
+Flujo:
+
+Mensaje usuario
+
+↓
+
+Clasificación de intención
+
+↓
+
+Búsqueda en productos/base de conocimiento
+
+↓
+
+Contexto aprobado
+
+↓
+
+Modelo de IA
+
+↓
+
+Validación
+
+↓
+
+Respuesta WhatsApp
+
+Si:
+
+context == vacío
+
+NO generar respuesta comercial inventada.
+
+Derivar.
+
+---
+
+# 47. GUARDRAIL DE RESPUESTAS
+
+Prompt de sistema aproximado:
+
+"Sos un vendedor especializado de esta empresa.
+
+Solo podés responder utilizando el contexto proporcionado por el sistema.
+
+Nunca utilices conocimiento externo para responder preguntas sobre productos, compatibilidad, precios, stock, características, juegos, envíos, garantías o servicios.
+
+Si la respuesta no aparece en el contexto disponible, indicá que necesitás consultar con un vendedor y activá una derivación humana.
+
+No inventes.
+
+No supongas.
+
+No completes información faltante."
+
+Esta regla debe implementarse también técnicamente y no depender únicamente del prompt.
+
+---
+
+# 48. MONITOREO
+
+Crear un servicio en el VPS que verifique:
+
+- Evolution API.
+- WhatsApp conectado.
+- Backend.
+- Supabase.
+- Base de datos.
+- Servicio IA.
+- Workers.
+
+---
+
+# 49. HEALTH CHECK
+
+Endpoints sugeridos:
+
+/health
+
+/database-health
+
+/whatsapp-health
+
+/ai-health
+
+---
+
+# 50. ALERTAS
+
+Si algo se cae:
+
+Enviar alerta al administrador.
+
+Ejemplo:
+
+"⚠️ WhatsApp desconectado."
+
+"⚠️ Evolution API sin responder."
+
+"⚠️ Error conectando con Supabase."
+
+---
+
+# 51. MANTENER SUPABASE ACTIVO
+
+Mientras se utilice el plan actual:
+
+El VPS puede ejecutar periódicamente un health check liviano.
+
+Pero no diseñar la arquitectura dependiendo de este mecanismo.
+
+El objetivo futuro será poder migrar la infraestructura al VPS.
+
+---
+
+# 52. DOCKER
+
+Servicios separados.
+
+Ejemplo conceptual:
+
+docker-compose
+
+evolution-api
+
+chatbot-api
+
+worker
+
+redis
+
+monitor
+
+reverse-proxy
+
+Cada servicio debe poder reiniciarse independientemente.
+
+---
+
+# 53. COLA DE MENSAJES
+
+Recomendado utilizar Redis o mecanismo equivalente.
+
+Motivos:
+
+- Evitar procesar mensajes duplicados.
+- Agrupar mensajes consecutivos.
+- Manejar delays.
+- Controlar concurrencia.
+- Ejecutar follow-ups.
+- Procesar imágenes.
+- Procesar derivaciones.
+
+---
+
+# 54. WEBHOOK DE WHATSAPP
+
+Flujo:
+
+WhatsApp
+
+↓
+
+Evolution API
+
+↓
+
+Webhook
+
+↓
+
+Chatbot Backend
+
+↓
+
+DB
+
+↓
+
+RAG / IA
+
+↓
+
+Evolution API
+
+↓
+
+WhatsApp
+
+---
+
+# 55. SEGURIDAD
+
+Todas las claves mediante variables de entorno.
+
+Nunca incluir:
+
+API keys
+
+tokens
+
+passwords
+
+Supabase service role
+
+credenciales Evolution
+
+dentro del repositorio.
+
+---
+
+# 56. ROLES DE LA WEB
+
+Preparar:
+
+CUSTOMER
+
+SELLER
+
+ADMIN
+
+ADMIN puede:
+
+- Ver todo.
+- Editar productos.
+- Editar base de conocimiento.
+- Ver conversaciones.
+- Responder.
+- Tomar control.
+- Configurar chatbot.
+
+SELLER puede:
+
+- Ver conversaciones asignadas.
+- Responder.
+- Tomar control.
+
+CUSTOMER:
+
+No debe acceder al panel comercial.
+
+---
+
+# 57. AUDITORÍA
+
+Registrar acciones importantes.
+
+Ejemplo:
+
+10:43 bot respondió.
+
+10:45 bot derivó.
+
+10:47 Jota tomó control.
+
+10:48 Jota respondió.
+
+10:50 conversación volvió al bot.
+
+Esto sirve muchísimo para detectar errores.
+
+---
+
+# 58. MÉTRICAS FUTURAS
+
+Guardar información que permita calcular:
+
+- Cantidad de consultas.
+- Productos más consultados.
+- Conversión.
+- Consultas derivadas.
+- Preguntas que el bot no sabe.
+- Tiempo promedio de respuesta.
+- Ventas iniciadas desde WhatsApp.
+- Ventas finalizadas.
+- Abandono.
+- Canales de adquisición.
+
+---
+
+# 59. APRENDIZAJE DEL SISTEMA
+
+Cuando el bot deriva una pregunta:
+
+Guardar:
+
+Pregunta del cliente.
+
+Respuesta del vendedor.
+
+Luego permitir desde el panel:
+
+"Agregar a base de conocimiento."
+
+Pero NO agregarla automáticamente.
+
+Debe requerir aprobación humana.
+
+Así el chatbot puede mejorar sin empezar a inventar información.
+
+---
+
+# 60. FUTURA INTEGRACIÓN CON MERCADO LIBRE
+
+NO desarrollarla ahora.
+
+Preparar arquitectura para incorporarla después.
+
+Mercado Libre podrá funcionar como otro canal / fuente de catálogo.
+
+Posibilidades futuras:
+
+- Importar publicaciones.
+- Asociarlas a productos existentes.
+- Evitar duplicados.
+- Sincronizar stock.
+- Sincronizar precios.
+- Detectar ventas.
+- Procesar preguntas.
+- Derivar consultas.
+
+---
+
+# 61. PRODUCTO MAESTRO
+
+En el futuro no conviene pensar:
+
+"Producto Mercado Libre"
+
+y
+
+"Producto Web"
+
+como productos separados.
+
+Conviene crear:
+
+MASTER_PRODUCT
+
+y luego asociaciones:
+
+WEB
+
+MERCADO_LIBRE
+
+INSTAGRAM
+
+TIKTOK
+
+WHATSAPP
+
+Esto evita duplicados.
+
+---
+
+# 62. SINCRONIZACIÓN MERCADO LIBRE FUTURA
+
+Cada publicación deberá poder tener:
+
+ml_listing_id
+
+master_product_id
+
+sync_enabled
+
+sync_stock
+
+sync_price
+
+ignored
+
+Esto permitirá decidir individualmente qué traer y qué ignorar.
+
+---
+
+# 63. ORDEN DE DESARROLLO
+
+## FASE 1
+
+WhatsApp conectado mediante Evolution API.
+
+## FASE 2
+
+Recepción y envío de mensajes.
+
+## FASE 3
+
+Base de clientes y conversaciones.
+
+## FASE 4
+
+Integración con catálogo Supabase.
+
+## FASE 5
+
+Motor RAG en modo estricto.
+
+## FASE 6
+
+Motor de recomendación comercial.
+
+## FASE 7
+
+Imágenes y links de productos.
+
+## FASE 8
+
+Derivación a vendedor.
+
+## FASE 9
+
+Control manual /control /bot.
+
+## FASE 10
+
+Bandeja de conversaciones dentro del panel Admin.
+
+## FASE 11
+
+Responder WhatsApp directamente desde la web.
+
+## FASE 12
+
+Ficha del cliente, notas y asignación de vendedores.
+
+## FASE 13
+
+Confirmación de venta desde checkout.
+
+## FASE 14
+
+Seguimientos.
+
+## FASE 15
+
+Monitoreo y health checks.
+
+## FASE 16
+
+Métricas.
+
+## FASE 17
+
+Optimización.
+
+## FASE 18 – POSTERIOR
+
+Integración Mercado Libre.
+
+---
+
+# 64. PRIORIDAD PRINCIPAL
+
+NO intentar construir simultáneamente:
+
+WhatsApp + Mercado Libre + Instagram + TikTok + automatizaciones.
+
+Primero terminar perfectamente:
+
+WEB + SUPABASE + WHATSAPP + CHATBOT.
+
+Cuando esa arquitectura sea estable, agregar Mercado Libre como módulo independiente.
+
+El chatbot no debería necesitar modificaciones importantes para incorporar Mercado Libre posteriormente porque deberá trabajar siempre contra el catálogo/base de datos central.
+
+---
+
+# 65. CRITERIO FINAL DEL PROYECTO
+
+El usuario nunca debería sentir que está hablando con una IA que sabe de todo.
+
+Debería sentir que está hablando con un vendedor de la empresa que:
+
+- Conoce perfectamente los productos.
+- Hace pocas preguntas.
+- Entiende qué necesita.
+- Recomienda.
+- Muestra productos.
+- Responde rápido.
+- Reconoce cuando no sabe algo.
+- Consulta a una persona cuando hace falta.
+- Retoma la conversación después.
+- Y cuando el cliente decide comprar, lo lleva directamente a la página para completar la operación.
+
+Ese debe ser el criterio principal para todas las decisiones de implementación.

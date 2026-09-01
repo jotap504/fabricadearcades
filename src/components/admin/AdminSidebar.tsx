@@ -14,6 +14,7 @@ import {
   BoxIcon,
   Boxes,
   ContactRound,
+  BotMessageSquare,
 } from 'lucide-react'
 import { clsx } from 'clsx'
 import { ThemeToggle } from '@/components/ui/ThemeToggle'
@@ -51,6 +52,7 @@ const NAV_ITEMS: { section: string; items: NavItem[] }[] = [
   {
     section: 'Administración',
     items: [
+      { href: '/admin/chatbot', icon: <BotMessageSquare size={18} />, label: 'Chatbot' },
       { href: '/admin/clientes', icon: <ContactRound size={18} />, label: 'Clientes' },
       { href: '/admin/usuarios', icon: <Users size={18} />, label: 'Usuarios' },
       { href: '/admin/configuracion', icon: <Settings size={18} />, label: 'Configuración' },

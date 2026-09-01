@@ -1703,6 +1703,75 @@ h1, h2, h3, h4, h5, h6 {
   padding: var(--space-2) 0;
 }
 
+.delivery-method-grid {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.delivery-method-card {
+  align-items: flex-start;
+  background: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  color: var(--color-text);
+  cursor: pointer;
+  display: grid;
+  gap: var(--space-2);
+  min-height: 132px;
+  padding: var(--space-4);
+  text-align: left;
+  transition: background var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
+}
+
+.delivery-method-card:hover,
+.delivery-method-card.selected {
+  background: var(--color-cyan-dim);
+  border-color: var(--color-cyan);
+  transform: translateY(-1px);
+}
+
+.delivery-method-card > span {
+  color: var(--color-cyan);
+}
+
+.delivery-method-card strong {
+  font-size: 1rem;
+}
+
+.delivery-method-card small {
+  color: var(--color-text-secondary);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.checkout-delivery-note {
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-cyan);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  display: grid;
+  gap: 0.2rem;
+  padding: var(--space-4);
+}
+
+.checkout-delivery-note strong {
+  color: var(--color-cyan);
+  font-size: 0.92rem;
+}
+
+.checkout-delivery-note span {
+  color: var(--color-text-secondary);
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+
+@media (max-width: 640px) {
+  .delivery-method-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ============================================================
    NOTIFICATIONS
    ============================================================ */
@@ -3332,4 +3401,154 @@ h1, h2, h3, h4, h5, h6 {
 .whatsapp-float:hover {
   transform: scale(1.1) translateY(-2px);
   box-shadow: 0 6px 20px rgba(37, 211, 102, 0.6) !important;
+}
+
+/* ============================================================
+   CHATBOT ADMIN
+   ============================================================ */
+.chatbot-status-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-5);
+}
+
+.chatbot-link-grid {
+  display: grid;
+  grid-template-columns: minmax(280px, 420px) 1fr;
+  gap: var(--space-5);
+  align-items: start;
+}
+
+.chatbot-card-title {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.chatbot-card-title svg {
+  color: var(--color-primary);
+  flex: 0 0 auto;
+  margin-top: 3px;
+}
+
+.chatbot-card-title h2 {
+  margin: 0;
+}
+
+.chatbot-card-title p {
+  color: var(--color-text-muted);
+  margin: var(--space-1) 0 0;
+}
+
+.chatbot-qr-card .btn {
+  width: 100%;
+}
+
+.chatbot-qr-box {
+  align-items: center;
+  background:
+    linear-gradient(135deg, rgba(0, 212, 170, 0.10), transparent),
+    var(--color-bg-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  display: flex;
+  justify-content: center;
+  margin-bottom: var(--space-4);
+  min-height: 320px;
+  overflow: hidden;
+  padding: var(--space-4);
+}
+
+.chatbot-qr-box img {
+  background: white;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  height: min(280px, 70vw);
+  object-fit: contain;
+  padding: var(--space-3);
+  width: min(280px, 70vw);
+}
+
+.chatbot-empty-qr {
+  align-items: center;
+  color: var(--color-text-muted);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  text-align: center;
+}
+
+.chatbot-empty-qr svg {
+  color: var(--color-primary);
+}
+
+.chatbot-empty-qr strong {
+  color: var(--color-text);
+  font-size: 1.05rem;
+}
+
+.chatbot-empty-qr.success svg {
+  color: var(--color-success);
+}
+
+.chatbot-steps {
+  counter-reset: chatbot-step;
+  display: grid;
+  gap: var(--space-3);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.chatbot-steps li {
+  align-items: flex-start;
+  background: var(--color-bg-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  display: grid;
+  gap: 2px;
+  padding: var(--space-3) var(--space-3) var(--space-3) calc(var(--space-8) + var(--space-2));
+  position: relative;
+}
+
+.chatbot-steps li::before {
+  align-items: center;
+  background: var(--color-primary);
+  border-radius: 999px;
+  color: var(--color-bg);
+  content: counter(chatbot-step);
+  counter-increment: chatbot-step;
+  display: flex;
+  font-size: 0.8rem;
+  font-weight: 800;
+  height: 28px;
+  justify-content: center;
+  left: var(--space-3);
+  position: absolute;
+  top: var(--space-3);
+  width: 28px;
+}
+
+.chatbot-steps span,
+.chatbot-checklist {
+  color: var(--color-text-muted);
+}
+
+.chatbot-checklist {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.chatbot-checklist label {
+  align-items: center;
+  display: flex;
+  gap: var(--space-2);
+}
+
+@media (max-width: 900px) {
+  .chatbot-link-grid {
+    grid-template-columns: 1fr;
+  }
 }

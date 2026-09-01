@@ -175,6 +175,9 @@ export interface Order {
 }
 
 export interface ShippingAddress {
+  delivery_method?: 'pickup' | 'shipping'
+  shipping_mode?: 'local_moto_flete' | 'transporte_correo' | 'coordinar' | null
+  shipping_payment?: 'destination' | null
   street: string
   city: string
   province: string

@@ -13,10 +13,11 @@ import {
   type PaymentMethod,
   type ShippingAddress,
 } from '@/lib/types'
-import { ArrowLeft, CreditCard, Banknote, Building2, Check } from 'lucide-react'
+import { ArrowLeft, CreditCard, Banknote, Building2, Check, MapPin, Truck } from 'lucide-react'
 import Link from 'next/link'
 
 type Step = 'cart-review' | 'shipping' | 'payment' | 'confirm'
+type DeliveryMethod = 'pickup' | 'shipping'
 
 export default function CheckoutPage() {
   const { user, profile } = useAuth()
@@ -28,12 +29,16 @@ export default function CheckoutPage() {
   const [createdOrder, setCreatedOrder] = useState<CreatedOrderResult | null>(null)
 
   const [shipping, setShipping] = useState<ShippingAddress>({
+    delivery_method: 'pickup',
+    shipping_mode: null,
+    shipping_payment: null,
     street: '',
     city: '',
     province: '',
     zip: '',
     notes: '',
   })
+  const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>('pickup')
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('transfer')
   const [paymentRules, setPaymentRules] = useState({
     transfer_discount_pct: 5,
@@ -137,6 +142,31 @@ export default function CheckoutPage() {
     setLoading(true)
 
     try {
+      const shippingForOrder: ShippingAddress =
+        deliveryMethod === 'pickup'
+          ? {
+              delivery_method: 'pickup',
+              shipping_mode: null,
+              shipping_payment: null,
+              street: 'Retira el cliente en fábrica/showroom',
+              city: 'CABA',
+              province: 'CABA',
+              zip: '',
+              notes: shipping.notes ? `Retiro en fábrica. ${shipping.notes}` : 'Retiro en fábrica.',
+            }
+          : {
+              ...shipping,
+              delivery_method: 'shipping',
+              shipping_mode: 'coordinar',
+              shipping_payment: 'destination',
+              notes: [
+                'Envío pago en destino.',
+                'Dentro de 50 km de la fábrica: moto/flete.',
+                'Interior del país: transporte o correo.',
+                shipping.notes,
+              ].filter(Boolean).join(' '),
+            }
+
       const orderItems = items.map((item) => ({
         product_id: item.product.id,
         variant_id: item.variant?.id ?? null,
@@ -147,7 +177,7 @@ export default function CheckoutPage() {
 
       const result = await createStoreOrder({
         customer: { name: finalName, email: finalEmail, phone: customerPhone },
-        shipping,
+        shipping: shippingForOrder,
         paymentMethod,
         notes,
         items: orderItems,
@@ -450,7 +480,7 @@ export default function CheckoutPage() {
             {/* STEP 2: Shipping */}
             {step === 'shipping' && (
               <div>
-                <h2 style={{ marginBottom: 'var(--space-5)' }}>Datos de envío</h2>
+                <h2 style={{ marginBottom: 'var(--space-5)' }}>Forma de entrega</h2>
                  <div
                   style={{
                     display: 'grid',
@@ -486,90 +516,146 @@ export default function CheckoutPage() {
                     </div>
                   )}
 
-                  <div className="form-group">
-                    <label className="form-label" htmlFor="shipping-street">
-                      Calle y número *
-                    </label>
-                    <input
-                      id="shipping-street"
-                      className="form-input"
-                      value={shipping.street}
-                      onChange={(e) =>
-                        setShipping((prev) => ({ ...prev, street: e.target.value }))
-                      }
-                      placeholder="Av. Corrientes 1234"
-                      required
-                    />
-                  </div>
-                  <div
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: '1fr 1fr',
-                      gap: 'var(--space-4)',
-                    }}
-                  >
-                    <div className="form-group">
-                      <label className="form-label" htmlFor="shipping-city">
-                        Ciudad *
-                      </label>
-                      <input
-                        id="shipping-city"
-                        className="form-input"
-                        value={shipping.city}
-                        onChange={(e) =>
-                          setShipping((prev) => ({ ...prev, city: e.target.value }))
-                        }
-                        placeholder="Buenos Aires"
-                        required
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label className="form-label" htmlFor="shipping-province">
-                        Provincia *
-                      </label>
-                      <select
-                        id="shipping-province"
-                        className="form-input form-select"
-                        value={shipping.province}
-                        onChange={(e) =>
-                          setShipping((prev) => ({ ...prev, province: e.target.value }))
-                        }
-                        required
+                  <div className="delivery-method-grid">
+                    {[
+                      {
+                        id: 'pickup' as DeliveryMethod,
+                        icon: <MapPin size={22} />,
+                        title: 'Retira el cliente',
+                        desc: 'Coordinamos día y horario para retirar en fábrica/showroom.',
+                      },
+                      {
+                        id: 'shipping' as DeliveryMethod,
+                        icon: <Truck size={22} />,
+                        title: 'Se envía',
+                        desc: 'El envío se coordina según distancia y siempre se abona en destino.',
+                      },
+                    ].map((option) => (
+                      <button
+                        key={option.id}
+                        type="button"
+                        className={`delivery-method-card ${deliveryMethod === option.id ? 'selected' : ''}`}
+                        onClick={() => {
+                          setDeliveryMethod(option.id)
+                          setShipping((prev) => ({
+                            ...prev,
+                            delivery_method: option.id,
+                            shipping_mode: option.id === 'shipping' ? 'coordinar' : null,
+                            shipping_payment: option.id === 'shipping' ? 'destination' : null,
+                          }))
+                        }}
+                        aria-pressed={deliveryMethod === option.id}
                       >
-                        <option value="">Seleccionar</option>
-                        {[
-                          'Buenos Aires',
-                          'CABA',
-                          'Córdoba',
-                          'Santa Fe',
-                          'Mendoza',
-                          'Tucumán',
-                          'Entre Ríos',
-                          'Salta',
-                          'Misiones',
-                          'Chaco',
-                          'Corrientes',
-                          'Santiago del Estero',
-                          'San Juan',
-                          'Jujuy',
-                          'Río Negro',
-                          'Neuquén',
-                          'Formosa',
-                          'Chubut',
-                          'San Luis',
-                          'Catamarca',
-                          'La Rioja',
-                          'La Pampa',
-                          'Santa Cruz',
-                          'Tierra del Fuego',
-                        ].map((p) => (
-                          <option key={p} value={p}>
-                            {p}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+                        <span>{option.icon}</span>
+                        <strong>{option.title}</strong>
+                        <small>{option.desc}</small>
+                      </button>
+                    ))}
                   </div>
+
+                  {deliveryMethod === 'pickup' && (
+                    <div className="checkout-delivery-note">
+                      <strong>Retiro en fábrica</strong>
+                      <span>No se cobra envío. Luego de confirmar el pedido coordinamos día y horario de retiro.</span>
+                    </div>
+                  )}
+
+                  {deliveryMethod === 'shipping' && (
+                    <>
+                      <div className="checkout-delivery-note">
+                        <strong>Envío pago en destino</strong>
+                        <span>
+                          Si estás a menos de 50 km de la fábrica lo coordinamos por moto/flete. Para interior del país, por transporte o correo.
+                        </span>
+                      </div>
+
+                      <div className="form-group">
+                        <label className="form-label" htmlFor="shipping-street">
+                          Calle y número *
+                        </label>
+                        <input
+                          id="shipping-street"
+                          className="form-input"
+                          value={shipping.street}
+                          onChange={(e) =>
+                            setShipping((prev) => ({ ...prev, street: e.target.value }))
+                          }
+                          placeholder="Av. Corrientes 1234"
+                          required={deliveryMethod === 'shipping'}
+                        />
+                      </div>
+                      <div
+                        style={{
+                          display: 'grid',
+                          gridTemplateColumns: '1fr 1fr',
+                          gap: 'var(--space-4)',
+                        }}
+                      >
+                        <div className="form-group">
+                          <label className="form-label" htmlFor="shipping-city">
+                            Ciudad *
+                          </label>
+                          <input
+                            id="shipping-city"
+                            className="form-input"
+                            value={shipping.city}
+                            onChange={(e) =>
+                              setShipping((prev) => ({ ...prev, city: e.target.value }))
+                            }
+                            placeholder="Buenos Aires"
+                            required={deliveryMethod === 'shipping'}
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label className="form-label" htmlFor="shipping-province">
+                            Provincia *
+                          </label>
+                          <select
+                            id="shipping-province"
+                            className="form-input form-select"
+                            value={shipping.province}
+                            onChange={(e) =>
+                              setShipping((prev) => ({ ...prev, province: e.target.value }))
+                            }
+                            required={deliveryMethod === 'shipping'}
+                          >
+                            <option value="">Seleccionar</option>
+                            {[
+                              'Buenos Aires',
+                              'CABA',
+                              'Córdoba',
+                              'Santa Fe',
+                              'Mendoza',
+                              'Tucumán',
+                              'Entre Ríos',
+                              'Salta',
+                              'Misiones',
+                              'Chaco',
+                              'Corrientes',
+                              'Santiago del Estero',
+                              'San Juan',
+                              'Jujuy',
+                              'Río Negro',
+                              'Neuquén',
+                              'Formosa',
+                              'Chubut',
+                              'San Luis',
+                              'Catamarca',
+                              'La Rioja',
+                              'La Pampa',
+                              'Santa Cruz',
+                              'Tierra del Fuego',
+                            ].map((p) => (
+                              <option key={p} value={p}>
+                                {p}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                    </>
+                  )}
+
                   <div className="form-group">
                     <label className="form-label" htmlFor="shipping-phone">
                       Teléfono de contacto
@@ -594,7 +680,7 @@ export default function CheckoutPage() {
                       onChange={(e) =>
                         setShipping((prev) => ({ ...prev, notes: e.target.value }))
                       }
-                      placeholder="Horario preferido, instrucciones especiales..."
+                      placeholder={deliveryMethod === 'pickup' ? 'Horario preferido para retirar...' : 'Horario preferido, referencias, instrucciones especiales...'}
                     />
                   </div>
                 </div>
@@ -613,9 +699,7 @@ export default function CheckoutPage() {
                     className="btn btn-primary btn-lg"
                     onClick={() => setStep('payment')}
                     disabled={
-                      !shipping.street ||
-                      !shipping.city ||
-                      !shipping.province ||
+                      (deliveryMethod === 'shipping' && (!shipping.street || !shipping.city || !shipping.province)) ||
                       (!user && (!guestName || !guestEmail))
                     }
                     id="checkout-next-payment-btn"

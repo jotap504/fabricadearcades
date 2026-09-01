@@ -1,0 +1,69 @@
+services:
+  evolution-postgres:
+    image: postgres:16.10-alpine
+    container_name: fabrica-evolution-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: evolution
+      POSTGRES_USER: evolution
+      POSTGRES_PASSWORD: ${EVOLUTION_POSTGRES_PASSWORD}
+    volumes:
+      - evolution_postgres_data:/var/lib/postgresql/data
+    networks:
+      - whatsapp_bot
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U evolution -d evolution"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  evolution-redis:
+    image: redis:7.4.5-alpine
+    container_name: fabrica-evolution-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - evolution_redis_data:/data
+    networks:
+      - whatsapp_bot
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  evolution-api:
+    image: ${EVOLUTION_IMAGE}
+    container_name: fabrica-evolution-api
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "127.0.0.1:${EVOLUTION_PORT:-18080}:8080"
+    volumes:
+      - evolution_instances:/evolution/instances
+    networks:
+      - whatsapp_bot
+
+  bot-worker:
+    build:
+      context: ./worker
+    container_name: fabrica-whatsapp-bot-worker
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "127.0.0.1:${BOT_WORKER_PORT:-13001}:3001"
+    depends_on:
+      - evolution-api
+    networks:
+      - whatsapp_bot
+
+volumes:
+  evolution_instances:
+  evolution_postgres_data:
+  evolution_redis_data:
+
+networks:
+  whatsapp_bot:
+    name: fabrica_whatsapp_bot

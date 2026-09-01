@@ -39,9 +39,14 @@ async function getActiveRoutes() {
 
 function pickRoute(routes: HandoffRoute[], question: string) {
   const normalizedQuestion = normalizeText(question)
-  return routes.find((route) =>
-    route.keywords.some((keyword) => normalizedQuestion.includes(normalizeText(keyword))),
-  ) ?? routes.find((route) => route.route_key === 'arcades') ?? routes[0] ?? null
+  const isMercadoLibre = normalizedQuestion.includes('mercadolibre') || normalizedQuestion.includes('mercado libre') || normalizedQuestion.includes('meli')
+  
+  if (isMercadoLibre) {
+    return routes.find((r) => r.route_key === 'mercadolibre' || cleanPhone(r.responsible_phone) === '5491153078610') ?? routes[0] ?? null
+  }
+
+  // If not MercadoLibre, do not automatically forward to 1153078610
+  return null
 }
 
 function buildForwardMessage(route: HandoffRoute, conversation: ConversationForHandoff, question: string, reason: string) {

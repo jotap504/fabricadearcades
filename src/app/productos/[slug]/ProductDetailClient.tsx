@@ -110,17 +110,53 @@ export function ProductDetailClient({
   }, [productFamilies, allSupplyFamilies])
 
   // Customization state
+  const initialPreset = presets.length > 0 ? presets[0] : null
+  const initialStockItem = initialPreset ? stockItems.find((s) => s.id === initialPreset.stock_id) : null
+  const initialVariant = initialStockItem ? variants.find((v) => v.id === initialStockItem?.variant_id) : null
+
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(
-    variants[0] ?? null
+    (initialVariant || variants[0]) ?? null
   )
   const [activePlayer, setActivePlayer] = useState(0)
-  const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null)
+  const [selectedPresetId, setSelectedPresetId] = useState<string | null>(
+    initialPreset ? (initialPreset.stock_id || initialPreset.id) : null
+  )
 
-  const [joystickType, setJoystickType] = useState<'standard' | 'led'>('standard')
-  const [buttonType, setButtonType] = useState<'standard' | 'led'>('standard')
+  const [joystickType, setJoystickType] = useState<'standard' | 'led'>(
+    initialPreset?.joystick_type || 'standard'
+  )
+  const [buttonType, setButtonType] = useState<'standard' | 'led'>(
+    initialPreset?.button_type || 'standard'
+  )
   const [vinylSource, setVinylSource] = useState<'stock' | 'print' | 'custom'>('stock')
 
   const [customization, setCustomization] = useState<ArcadeCustomization>(() => {
+    if (initialPreset) {
+      const vinyl = supplies.find((s) => s.id === initialPreset.vinyl_supply_id)
+      const joystickSupply = supplies.find((s) => s.supply_type === 'joystick' && s.color_label === initialPreset.joystick_color)
+      const buttonSupply = supplies.find((s) => s.supply_type === 'button' && s.color_label === initialPreset.button_color)
+
+      const players = Array.from({ length: numPlayers }, () => ({
+        joystick_supply_id: joystickSupply?.id || '',
+        joystick_color: initialPreset.joystick_color || '',
+        button_supply_ids: buttonSupply ? [buttonSupply.id] : [],
+        button_color: initialPreset.button_color || '',
+        button_count: productSpecs.buttons_per_player || 6,
+      }))
+
+      return {
+        control_type: (initialPreset.joystick_type === 'led' || initialPreset.button_type === 'led') ? 'led' : 'standard',
+        joystick_type: initialPreset.joystick_type || 'standard',
+        button_type: initialPreset.button_type || 'standard',
+        cabinet_type: initialVariant?.cabinet_type || undefined,
+        screen_size: initialVariant?.screen_size || undefined,
+        vinyl_source: 'stock',
+        vinyl_supply_id: initialPreset.vinyl_supply_id || undefined,
+        vinyl_name: initialPreset.vinyl_name || vinyl?.name || undefined,
+        players,
+      }
+    }
+
     const defaultPlayers = Array.from({ length: numPlayers }, () => ({
       joystick_supply_id: '',
       joystick_color: '',
@@ -220,7 +256,10 @@ export function ProductDetailClient({
     })
   }
 
-  // Filter supplies for customer customizer (must have stock > 0 and belong to compatible family/BOM)
+  const handleSelectCustom = () => {
+    setSelectedPresetId(null)
+  }
+
   const joysticks = useMemo(() => {
     let list = supplies.filter((s) => s.supply_type === 'joystick' && s.is_active && s.quantity > 0)
     if (allowedSupplyIds && allowedSupplyIds.size > 0) {
@@ -935,22 +974,37 @@ export function ProductDetailClient({
               )}
 
               <div className="purchase-mode-grid">
-                <div className={clsx('purchase-mode-card', { active: selectedPresetId !== null })}>
-                  <strong>Comprar listo para entregar</strong>
+                <button
+                  type="button"
+                  className={clsx('purchase-mode-card', { active: selectedPresetId !== null })}
+                  onClick={() => {
+                    if (presets.length > 0) {
+                      handleSelectPreset(presets[0])
+                    }
+                  }}
+                  disabled={presets.length === 0}
+                  style={{ textAlign: 'left', cursor: presets.length > 0 ? 'pointer' : 'not-allowed', border: '1px solid var(--color-border)' }}
+                >
+                  <strong>⚡ Comprar listo para entregar</strong>
                   <span>
                     Equipo ya armado en fábrica. La configuración no se modifica.
                   </span>
                   <small>{stockSummary.immediate > 0 ? `${stockSummary.immediate} disponible(s)` : 'Sin equipos listos ahora'}</small>
-                </div>
-                <div className={clsx('purchase-mode-card', { active: selectedPresetId === null })}>
-                  <strong>Comprar a medida</strong>
+                </button>
+                <button
+                  type="button"
+                  className={clsx('purchase-mode-card', { active: selectedPresetId === null })}
+                  onClick={() => handleSelectCustom()}
+                  style={{ textAlign: 'left', cursor: 'pointer', border: '1px solid var(--color-border)' }}
+                >
+                  <strong>🎨 Comprar a medida</strong>
                   <span>
                     Elegís vinilo, palancas, botones y adicionales antes de iniciar el pedido.
                   </span>
                   <small>
                     {vinylSource === 'stock' && selectedVinyl?.quantity ? '24/48 hs con vinilo impreso' : `${designedDaysLabel} con impresión`}
                   </small>
-                </div>
+                </button>
               </div>
             </div>
 

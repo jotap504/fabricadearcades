@@ -177,22 +177,33 @@ export async function dismissUnansweredQuestion(questionId: string) {
 }
 
 async function createEmbedding(text: string) {
-  const apiKey = process.env.EMBEDDING_API_KEY
-  const model = process.env.EMBEDDING_MODEL ?? 'text-embedding-3-small'
+  const provider = process.env.EMBEDDING_PROVIDER === 'openai' ? 'openai' : 'openrouter'
+  const apiKey = process.env.EMBEDDING_API_KEY || (provider === 'openrouter' ? process.env.LLM_API_KEY : undefined)
+  const model = process.env.EMBEDDING_MODEL ?? (provider === 'openrouter' ? 'openai/text-embedding-3-small' : 'text-embedding-3-small')
   if (!apiKey) {
     return {
       ok: false as const,
-      message: 'Falta configurar EMBEDDING_API_KEY en Vercel. El bot puede seguir usando la búsqueda por texto, pero para búsqueda semántica real hay que cargar una clave de embeddings.',
+      message: 'Falta configurar LLM_API_KEY o EMBEDDING_API_KEY en Vercel. El bot puede seguir usando la búsqueda por texto, pero para búsqueda semántica real hay que cargar una clave de OpenRouter.',
     }
   }
 
-  const response = await fetch('https://api.openai.com/v1/embeddings', {
+  const endpoint = provider === 'openrouter'
+    ? new URL('/api/v1/embeddings', process.env.EMBEDDING_BASE_URL ?? 'https://openrouter.ai/api/v1').toString()
+    : 'https://api.openai.com/v1/embeddings'
+
+  const response = await fetch(endpoint, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${apiKey}`,
+      ...(provider === 'openrouter' && process.env.OPENROUTER_SITE_URL ? { 'HTTP-Referer': process.env.OPENROUTER_SITE_URL } : {}),
+      ...(provider === 'openrouter' ? { 'X-Title': process.env.OPENROUTER_APP_NAME ?? 'Fabrica de Arcades' } : {}),
     },
-    body: JSON.stringify({ model, input: text }),
+    body: JSON.stringify({
+      model,
+      input: text,
+      ...(provider === 'openrouter' ? { dimensions: 1536 } : {}),
+    }),
   })
   if (!response.ok) {
     const body = await response.text()

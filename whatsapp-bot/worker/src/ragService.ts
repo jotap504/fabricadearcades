@@ -38,17 +38,25 @@ function scoreKnowledgeItem(item: { title: string; category: string; content: st
 }
 
 export async function createEmbedding(text: string): Promise<number[] | null> {
-  if (!config.EMBEDDING_API_KEY) return null
+  const apiKey = config.EMBEDDING_API_KEY || (config.EMBEDDING_PROVIDER === 'openrouter' ? config.LLM_API_KEY : undefined)
+  if (!apiKey) return null
 
-  const response = await fetch('https://api.openai.com/v1/embeddings', {
+  const endpoint = config.EMBEDDING_PROVIDER === 'openrouter'
+    ? new URL('/api/v1/embeddings', config.EMBEDDING_BASE_URL).toString()
+    : 'https://api.openai.com/v1/embeddings'
+
+  const response = await fetch(endpoint, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${config.EMBEDDING_API_KEY}`,
+      Authorization: `Bearer ${apiKey}`,
+      ...(config.EMBEDDING_PROVIDER === 'openrouter' && config.OPENROUTER_SITE_URL ? { 'HTTP-Referer': config.OPENROUTER_SITE_URL } : {}),
+      ...(config.EMBEDDING_PROVIDER === 'openrouter' ? { 'X-Title': config.OPENROUTER_APP_NAME } : {}),
     },
     body: JSON.stringify({
       model: config.EMBEDDING_MODEL,
       input: text,
+      ...(config.EMBEDDING_PROVIDER === 'openrouter' ? { dimensions: 1536 } : {}),
     }),
   })
 

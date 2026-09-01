@@ -3860,10 +3860,15 @@ h1, h2, h3, h4, h5, h6 {
 
 .chat-thread-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(210px, 280px);
+  grid-template-columns: minmax(0, 1fr);
   min-height: 0;
   flex: 1;
   overflow: hidden;
+  position: relative;
+}
+
+.chat-thread-layout.has-card-open {
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
 }
 
 .chat-messages {

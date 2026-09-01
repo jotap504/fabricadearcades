@@ -1,9 +1,10 @@
 'use client'
 
 import Link from 'next/link'
-import { useMemo, useState, useTransition } from 'react'
-import { Bot, CheckCircle2, MessageCircle, PauseCircle, Search, Send, UserRound, X } from 'lucide-react'
-import { sendChatbotConversationReply, setChatbotConversationMode } from '../actions'
+import { useRouter } from 'next/navigation'
+import { useEffect, useMemo, useRef, useState, useTransition } from 'react'
+import { Bot, Check, CheckCircle2, ChevronDown, ChevronRight, Edit2, MessageCircle, PauseCircle, RefreshCw, RotateCcw, Save, Search, Send, User, UserRound, X } from 'lucide-react'
+import { sendChatbotConversationReply, setChatbotConversationMode, updateChatbotCustomerProfile } from '../actions'
 import { useToast } from '@/lib/stores/toast'
 
 type ConversationMode = 'BOT' | 'HUMAN' | 'PAUSED'
@@ -73,12 +74,27 @@ function getLastMessage(conversation: InboxConversation) {
 }
 
 export function ConversationInbox({ conversations }: { conversations: InboxConversation[] }) {
+  const router = useRouter()
   const toast = useToast()
   const [selectedId, setSelectedId] = useState(conversations.find((conversation) => conversation.messages.length > 0)?.id ?? '')
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<'all' | 'pending' | 'bot' | 'human'>('all')
   const [reply, setReply] = useState('')
+  const [isCustomerCardOpen, setIsCustomerCardOpen] = useState(false)
+  const [isEditingCustomer, setIsEditingCustomer] = useState(false)
+  const [editName, setEditName] = useState('')
+  const [editEmail, setEditEmail] = useState('')
+  const [editNotes, setEditNotes] = useState('')
   const [pending, startTransition] = useTransition()
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  // Auto refresh every 5 minutes (300,000 ms)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      router.refresh()
+    }, 5 * 60 * 1000)
+    return () => clearInterval(interval)
+  }, [router])
 
   const filtered = useMemo(() => {
     const term = search.trim().toLocaleLowerCase('es')
@@ -102,6 +118,17 @@ export function ConversationInbox({ conversations }: { conversations: InboxConve
   }, [conversations, filter, search])
 
   const selected = filtered.find((conversation) => conversation.id === selectedId) ?? filtered[0] ?? null
+
+  // Scroll to bottom when selected conversation changes or receives new messages
+  useEffect(() => {
+    if (selected) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'auto' })
+      setEditName(selected.customer?.display_name ?? selected.display_name ?? '')
+      setEditEmail(selected.customer?.email ?? '')
+      setEditNotes(selected.customer?.notes ?? '')
+      setIsEditingCustomer(false)
+    }
+  }, [selected?.id, selected?.messages.length])
 
   function updateMode(mode: ConversationMode) {
     if (!selected) return
@@ -129,15 +156,43 @@ export function ConversationInbox({ conversations }: { conversations: InboxConve
     })
   }
 
+  function saveCustomerData() {
+    if (!selected) return
+    startTransition(async () => {
+      try {
+        await updateChatbotCustomerProfile(selected.id, {
+          name: editName,
+          email: editEmail,
+          notes: editNotes,
+        })
+        setIsEditingCustomer(false)
+        toast.success('Ficha del cliente actualizada')
+      } catch (error) {
+        toast.error('Error al guardar', error instanceof Error ? error.message : 'Intentá nuevamente.')
+      }
+    })
+  }
+
   return (
     <div className="chat-inbox">
       <aside className="chat-inbox-sidebar" aria-label="Conversaciones">
-        <label className="admin-search-field chat-inbox-search">
-          <span className="sr-only">Buscar conversación</span>
-          <Search size={17} aria-hidden="true" />
-          <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar cliente, teléfono o producto…" />
-          {search && <button type="button" onClick={() => setSearch('')} aria-label="Limpiar búsqueda"><X size={15} /></button>}
-        </label>
+        <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center' }}>
+          <label className="admin-search-field chat-inbox-search" style={{ flex: 1 }}>
+            <span className="sr-only">Buscar conversación</span>
+            <Search size={17} aria-hidden="true" />
+            <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar cliente, teléfono o producto…" />
+            {search && <button type="button" onClick={() => setSearch('')} aria-label="Limpiar búsqueda"><X size={15} /></button>}
+          </label>
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm"
+            onClick={() => router.refresh()}
+            title="Actualizar bandeja (auto cada 5m)"
+            style={{ padding: '8px', height: '38px' }}
+          >
+            <RefreshCw size={15} />
+          </button>
+        </div>
 
         <div className="chat-filter-tabs" aria-label="Filtros de conversaciones">
           {[
@@ -190,6 +245,16 @@ export function ConversationInbox({ conversations }: { conversations: InboxConve
                 <p>{selected.phone} · {statusLabels[selected.sales_status ?? selected.mode] ?? selected.sales_status ?? selected.mode}</p>
               </div>
               <div className="chat-thread-actions">
+                <button
+                  type="button"
+                  className={`btn btn-sm ${isCustomerCardOpen ? 'btn-primary' : 'btn-ghost'}`}
+                  onClick={() => setIsCustomerCardOpen(!isCustomerCardOpen)}
+                  title="Ver/Ocultar Ficha del Cliente"
+                >
+                  <User size={15} />
+                  Ficha Cliente
+                  {isCustomerCardOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                </button>
                 <span className={`badge chat-mode-${selected.mode.toLowerCase()}`}>{modeLabels[selected.mode]}</span>
                 {selected.mode !== 'HUMAN' && <button className="btn btn-ghost btn-sm" type="button" disabled={pending} onClick={() => updateMode('HUMAN')}><UserRound size={16} /> Tomar</button>}
                 {selected.mode !== 'BOT' && <button className="btn btn-primary btn-sm" type="button" disabled={pending} onClick={() => updateMode('BOT')}><Bot size={16} /> Reanudar bot</button>}
@@ -197,7 +262,7 @@ export function ConversationInbox({ conversations }: { conversations: InboxConve
               </div>
             </header>
 
-            <div className="chat-thread-layout">
+            <div className={`chat-thread-layout ${isCustomerCardOpen ? 'has-card-open' : 'is-card-collapsed'}`}>
               <div className="chat-messages">
                 {selected.messages.map((message) => (
                   <div key={message.id} className={`chat-bubble-row ${message.direction === 'outbound' ? 'outbound' : 'inbound'}`}>
@@ -209,18 +274,118 @@ export function ConversationInbox({ conversations }: { conversations: InboxConve
                   </div>
                 ))}
                 {selected.messages.length === 0 && <p className="admin-empty-state">Todavía no hay mensajes en esta conversación.</p>}
+                <div ref={messagesEndRef} />
               </div>
 
-              <aside className="chat-customer-card">
-                <h3>Ficha del cliente</h3>
-                <dl>
-                  <div><dt>Nombre</dt><dd>{selected.customer?.display_name ?? selected.display_name ?? 'Sin nombre confirmado'}</dd></div>
-                  <div><dt>Teléfono</dt><dd>{selected.phone}</dd></div>
-                  <div><dt>Email</dt><dd>{selected.customer?.email ?? 'Sin email'}</dd></div>
-                  <div><dt>Producto</dt><dd>{selected.product_interest ? <Link href={`/productos/${selected.product_interest.slug}`} target="_blank">{selected.product_interest.name}</Link> : 'Sin producto detectado'}</dd></div>
-                  <div><dt>Notas</dt><dd>{selected.customer?.notes ?? 'Sin notas internas'}</dd></div>
-                </dl>
-              </aside>
+              {isCustomerCardOpen && (
+                <aside className="chat-customer-card">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-3)' }}>
+                    <h3 style={{ margin: 0 }}>Ficha del cliente</h3>
+                    {!isEditingCustomer ? (
+                      <button
+                        type="button"
+                        className="btn btn-ghost btn-sm"
+                        onClick={() => setIsEditingCustomer(true)}
+                        style={{ padding: '4px 8px', fontSize: '0.8rem' }}
+                      >
+                        <Edit2 size={13} /> Editar
+                      </button>
+                    ) : (
+                      <div style={{ display: 'flex', gap: '4px' }}>
+                        <button
+                          type="button"
+                          className="btn btn-primary btn-sm"
+                          onClick={saveCustomerData}
+                          disabled={pending}
+                          style={{ padding: '4px 8px', fontSize: '0.8rem' }}
+                        >
+                          <Save size={13} /> Guardar
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-ghost btn-sm"
+                          onClick={() => setIsEditingCustomer(false)}
+                          style={{ padding: '4px 8px', fontSize: '0.8rem' }}
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {!isEditingCustomer ? (
+                    <dl>
+                      <div>
+                        <dt>Nombre</dt>
+                        <dd>{selected.customer?.display_name ?? selected.display_name ?? 'Sin nombre confirmado'}</dd>
+                      </div>
+                      <div>
+                        <dt>Teléfono</dt>
+                        <dd>{selected.phone}</dd>
+                      </div>
+                      <div>
+                        <dt>Email</dt>
+                        <dd>{selected.customer?.email ?? 'Sin email'}</dd>
+                      </div>
+                      <div>
+                        <dt>Producto</dt>
+                        <dd>
+                          {selected.product_interest ? (
+                            <Link href={`/productos/${selected.product_interest.slug}`} target="_blank">
+                              {selected.product_interest.name}
+                            </Link>
+                          ) : (
+                            'Sin producto detectado'
+                          )}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>Notas / Comentarios</dt>
+                        <dd style={{ whiteSpace: 'pre-wrap' }}>{selected.customer?.notes ?? 'Sin notas internas'}</dd>
+                      </div>
+                    </dl>
+                  ) : (
+                    <div style={{ display: 'grid', gap: 'var(--space-3)' }}>
+                      <div>
+                        <label style={{ fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
+                          Nombre
+                        </label>
+                        <input
+                          type="text"
+                          value={editName}
+                          onChange={(e) => setEditName(e.target.value)}
+                          placeholder="Nombre del cliente"
+                          style={{ width: '100%', padding: '6px 8px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border)', background: 'var(--color-bg)', color: 'var(--color-text)' }}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
+                          Email
+                        </label>
+                        <input
+                          type="email"
+                          value={editEmail}
+                          onChange={(e) => setEditEmail(e.target.value)}
+                          placeholder="email@cliente.com"
+                          style={{ width: '100%', padding: '6px 8px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border)', background: 'var(--color-bg)', color: 'var(--color-text)' }}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
+                          Notas internas
+                        </label>
+                        <textarea
+                          rows={4}
+                          value={editNotes}
+                          onChange={(e) => setEditNotes(e.target.value)}
+                          placeholder="Preferencias, vinilo deseado, dirección, etc."
+                          style={{ width: '100%', padding: '6px 8px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border)', background: 'var(--color-bg)', color: 'var(--color-text)' }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </aside>
+              )}
             </div>
 
             <footer className="chat-reply-box">

@@ -38,6 +38,41 @@ export async function setChatbotConversationMode(conversationId: string, mode: '
   revalidatePath('/admin/chatbot/conversaciones')
 }
 
+export async function updateChatbotCustomerProfile(conversationId: string, data: { name?: string; email?: string; notes?: string }) {
+  const supabase = await requireAdmin()
+
+  const { data: conv, error: convErr } = await supabase
+    .from('chatbot_conversations')
+    .select('id, customer_id, phone, display_name')
+    .eq('id', conversationId)
+    .single()
+
+  if (convErr) throw new Error(convErr.message)
+
+  if (data.name !== undefined) {
+    await supabase
+      .from('chatbot_conversations')
+      .update({ display_name: data.name.trim() || null })
+      .eq('id', conversationId)
+  }
+
+  if (conv?.customer_id) {
+    const customerUpdates: Record<string, any> = {}
+    if (data.name !== undefined) customerUpdates.display_name = data.name.trim() || null
+    if (data.email !== undefined) customerUpdates.email = data.email.trim() || null
+    if (data.notes !== undefined) customerUpdates.notes = data.notes.trim() || null
+
+    if (Object.keys(customerUpdates).length > 0) {
+      await supabase
+        .from('chatbot_customers')
+        .update(customerUpdates)
+        .eq('id', conv.customer_id)
+    }
+  }
+
+  revalidatePath('/admin/chatbot/conversaciones')
+}
+
 async function sendWhatsAppText(phone: string, text: string) {
   const evolutionUrl = process.env.EVOLUTION_API_URL
   const evolutionKey = process.env.EVOLUTION_API_KEY

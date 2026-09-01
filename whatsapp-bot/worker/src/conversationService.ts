@@ -105,6 +105,19 @@ export async function saveBotMessage(conversationId: string, phone: string, cont
   return data as { id: string }
 }
 
+export async function countClarificationMessages(conversationId: string) {
+  const { count, error } = await supabase
+    .from('chatbot_messages')
+    .select('id', { count: 'exact', head: true })
+    .eq('conversation_id', conversationId)
+    .eq('direction', 'outbound')
+    .eq('sender_type', 'bot')
+    .in('model', ['rules:clarification', 'llm:clarification'])
+
+  if (error) throw error
+  return count ?? 0
+}
+
 export async function createHandoff(conversationId: string, messageId: string | null, question: string, reason: string) {
   await supabase
     .from('chatbot_conversations')

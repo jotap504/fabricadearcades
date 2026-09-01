@@ -1,5 +1,5 @@
 import { askLlm } from './llmClient.js'
-import { createHandoff, getOrCreateConversation, isKnownBotOutbox, markHumanTakeover, saveBotMessage, saveIncomingMessage } from './conversationService.js'
+import { countClarificationMessages, createHandoff, getOrCreateConversation, isKnownBotOutbox, markHumanTakeover, saveBotMessage, saveIncomingMessage } from './conversationService.js'
 import { sendWhatsAppText } from './evolution.js'
 import { forwardHandoffToResponsible, handleResponsibleReply, isResponsiblePhone } from './handoffRoutingService.js'
 import { retrieveKnowledge } from './ragService.js'
@@ -42,6 +42,14 @@ export async function processMessage(message: NormalizedMessage) {
 
   const sources = await retrieveKnowledge(message.content, settings.topK, settings.ragThreshold)
   if (sources.length === 0) {
+    const clarificationCount = await countClarificationMessages(conversation.id)
+    if (clarificationCount < 2) {
+      const clarification = '¿Me contás un poco más sobre qué producto o tema querés consultar? Así te puedo responder mejor.'
+      const externalId = await sendWhatsAppText(message.phone, clarification)
+      await saveBotMessage(conversation.id, message.phone, clarification, externalId, 'rules:clarification', 0.45)
+      return { status: 'clarified_no_sources' }
+    }
+
     const reason = 'Sin conocimiento relevante suficiente'
     await createHandoff(conversation.id, savedMessage.id, message.content, reason)
     await forwardHandoffToResponsible(conversation, message.content, reason)
@@ -52,6 +60,15 @@ export async function processMessage(message: NormalizedMessage) {
   const answer = await askLlm(message.content, sources)
   const allowedSourceIds = new Set(sources.map((source) => source.id))
   const sourceIdsAreValid = answer.knowledge_ids.length > 0 && answer.knowledge_ids.every((id) => allowedSourceIds.has(id))
+
+  if (answer.action === 'CLARIFY') {
+    const clarificationCount = await countClarificationMessages(conversation.id)
+    if (clarificationCount < 2 && answer.answer.trim()) {
+      const externalId = await sendWhatsAppText(message.phone, answer.answer)
+      await saveBotMessage(conversation.id, message.phone, answer.answer, externalId, 'llm:clarification', answer.confidence)
+      return { status: 'clarified_llm' }
+    }
+  }
 
   if (answer.action !== 'ANSWER' || answer.confidence < settings.confidenceThreshold || !sourceIdsAreValid) {
     const reason = answer.reason || 'Respuesta insuficiente'

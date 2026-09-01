@@ -30,3 +30,31 @@ export async function sendWhatsAppText(phone: string, text: string): Promise<str
   const data = (await response.json()) as SendTextResult
   return data.key?.id ?? data.messageId ?? data.id ?? null
 }
+
+export async function sendWhatsAppMedia(phone: string, mediaUrl: string, caption?: string): Promise<string | null> {
+  const url = new URL(`/message/sendMedia/${config.EVOLUTION_INSTANCE}`, config.EVOLUTION_API_URL)
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      apikey: config.EVOLUTION_API_KEY,
+    },
+    body: JSON.stringify({
+      number: phone,
+      mediaMessage: {
+        mediatype: 'image',
+        media: mediaUrl,
+        caption: caption ?? '',
+      },
+    }),
+  })
+
+  if (!response.ok) {
+    const body = await response.text()
+    console.error(`Evolution sendMedia failed: ${response.status} ${body}`)
+    return null
+  }
+
+  const data = (await response.json()) as SendTextResult
+  return data.key?.id ?? data.messageId ?? data.id ?? null
+}

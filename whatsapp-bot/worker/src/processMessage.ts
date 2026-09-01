@@ -1,6 +1,6 @@
 import { askLlm } from './llmClient.js'
 import { countClarificationMessages, createHandoff, getOrCreateConversation, isKnownBotOutbox, markHumanTakeover, saveBotMessage, saveIncomingMessage } from './conversationService.js'
-import { sendWhatsAppText } from './evolution.js'
+import { sendWhatsAppText, sendWhatsAppMedia } from './evolution.js'
 import { forwardHandoffToResponsible, handleResponsibleReply, isResponsiblePhone } from './handoffRoutingService.js'
 import { retrieveKnowledge } from './ragService.js'
 import { getBotSettings } from './settingsService.js'
@@ -80,6 +80,20 @@ export async function processMessage(message: NormalizedMessage) {
     await forwardHandoffToResponsible(conversation, message.content, reason)
     await sendWhatsAppText(message.phone, settings.handoffMessage)
     return { status: 'handoff_llm' }
+  }
+
+  // Send up to 3 images if LLM selected media_urls
+  if (Array.isArray(answer.media_urls) && answer.media_urls.length > 0) {
+    const imagesToSend = answer.media_urls.slice(0, 3)
+    for (const mediaUrl of imagesToSend) {
+      try {
+        await sendWhatsAppMedia(message.phone, mediaUrl)
+        // Small delay to ensure order in WhatsApp
+        await new Promise((resolve) => setTimeout(resolve, 400))
+      } catch (err) {
+        console.error('Failed to send media image:', mediaUrl, err)
+      }
+    }
   }
 
   const externalId = await sendWhatsAppText(message.phone, answer.answer)

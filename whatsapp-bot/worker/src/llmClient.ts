@@ -5,6 +5,7 @@ import type { KnowledgeSource } from './types.js'
 const answerSchema = z.object({
   action: z.enum(['ANSWER', 'CLARIFY', 'HANDOFF']),
   answer: z.string(),
+  media_urls: z.array(z.string()).optional(),
   confidence: z.number().min(0).max(1),
   knowledge_ids: z.array(z.string()),
   reason: z.string(),
@@ -18,7 +19,7 @@ const jsonSchema = {
   schema: {
     type: 'object',
     additionalProperties: false,
-    required: ['action', 'answer', 'confidence', 'knowledge_ids', 'reason'],
+    required: ['action', 'answer', 'media_urls', 'confidence', 'knowledge_ids', 'reason'],
     properties: {
       action: {
         type: 'string',
@@ -28,6 +29,11 @@ const jsonSchema = {
       answer: {
         type: 'string',
         description: 'Texto para enviar al cliente. Para CLARIFY debe ser una repregunta breve. Vacío si action es HANDOFF.',
+      },
+      media_urls: {
+        type: 'array',
+        items: { type: 'string' },
+        description: 'Array de URLs completas de imágenes a enviar al cliente (máximo 3). Seleccionar solo de las "Imágenes oficiales disponibles" del contexto.',
       },
       confidence: {
         type: 'number',
@@ -83,9 +89,13 @@ export async function askLlm(question: string, sources: KnowledgeSource[]): Prom
           content: [
             'Sos el asesor y vendedor virtual oficial de Fábrica de Arcades (fabricadearcades.com).',
             'Tu objetivo es atender a los clientes por WhatsApp de forma amable, cercana, entusiasta y muy clara (en español rioplatense).',
-            'Tenés acceso a los datos de la web, productos, precios actualizados, stock y enlaces oficiales en el CONTEXTO.',
+            'Tenés acceso a los datos de la web, productos, precios actualizados, stock, vinilos y fotos en el CONTEXTO.',
             'Asesorá y explicá libremente las diferencias entre consolas, arcades, bartops, vinilos, palancas y botones.',
             'Cuando hables de un producto, podés compartir su precio y el link exacto (ej: https://fabricadearcades.com/productos/...) para que el cliente pueda entrar a ver fotos y personalizarlo.',
+            'REGLA DE FOTOS / IMÁGENES:',
+            '- Si el cliente te pide fotos, imágenes o te pregunta por un modelo puntual, podés seleccionar HASTA 3 URLs de imágenes del contexto en el campo media_urls para enviárselas por WhatsApp.',
+            '- NUNCA envíes más de 3 imágenes en un mismo mensaje.',
+            '- Si el producto tiene más vinilos/diseños alternativos disponibles, mencionale que hay más opciones y preguntale si le interesa alguna temática en particular (ej: Mario, Mortal Kombat, Pacman, Anime, etc.) para fijarte si la tenemos o enviarle 3 fotos adicionales.',
             'Si un producto tiene ENTREGA INMEDIATA, destacalo con entusiasmo.',
             'Si el cliente te hace preguntas generales o te pide recomendaciones sobre qué equipo elegir, ayudalo con consejos prácticos.',
             'Solo devolvé HANDOFF si el cliente solicita explícitamente hablar con un humano, si tiene un problema técnico complejo posventa o una consulta personalizada que no esté al alcance.',

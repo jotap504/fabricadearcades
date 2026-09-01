@@ -92,7 +92,7 @@ async function retrieveCatalogKnowledge(text: string): Promise<KnowledgeSource[]
   try {
     const { data: products } = await supabase
       .from('products')
-      .select('id, name, slug, short_description, description, base_price, retail_markup_pct, requires_production, is_active, metadata')
+      .select('id, name, slug, short_description, description, base_price, retail_markup_pct, requires_production, is_active, images, meta_description')
       .eq('is_active', true)
       .limit(30)
 
@@ -103,23 +103,37 @@ async function retrieveCatalogKnowledge(text: string): Promise<KnowledgeSource[]
       .select('product_id, quantity, stock_type, configuration')
       .gt('quantity', 0)
 
+    const { data: allSupplies } = await supabase
+      .from('supply_inventory')
+      .select('id, name, supply_type, image_url')
+      .eq('is_active', true)
+
+    const vinylsById = new Map(
+      (allSupplies || [])
+        .filter((s) => s.supply_type === 'vinyl' && s.image_url)
+        .map((s) => [s.id, s])
+    )
+
     const stockByProduct = new Map<string, number>()
-    const readyPresetsByProduct = new Map<string, string[]>()
+    const readyPresetsByProduct = new Map<string, Array<{ details: string; image_url?: string }>>()
 
     stockItems?.forEach((item) => {
       const current = stockByProduct.get(item.product_id) || 0
       stockByProduct.set(item.product_id, current + item.quantity)
       if (item.stock_type === 'immediate' && item.configuration) {
         const conf = item.configuration as any
-        const details = `Vinilo: ${conf.vinyl_name || 'Diseño de stock'}, Palanca: ${conf.joystick_color || 'Estándar'}, Botones: ${conf.button_color || 'Estándar'}`
+        const vinylObj = conf.vinyl_supply_id ? vinylsById.get(conf.vinyl_supply_id) : null
+        const vinylImg = vinylObj?.image_url || conf.image_url
+        const details = `Vinilo: ${conf.vinyl_name || vinylObj?.name || 'Diseño de stock'}, Palanca: ${conf.joystick_color || 'Estándar'}, Botones: ${conf.button_color || 'Estándar'}`
         const arr = readyPresetsByProduct.get(item.product_id) || []
-        arr.push(details)
+        arr.push({ details, image_url: vinylImg })
         readyPresetsByProduct.set(item.product_id, arr)
       }
     })
 
     const terms = extractTerms(text)
     const sources: KnowledgeSource[] = []
+    const baseUrl = 'https://fabricadearcades.com'
 
     for (const p of products) {
       const markup = p.retail_markup_pct ?? 30
@@ -132,21 +146,58 @@ async function retrieveCatalogKnowledge(text: string): Promise<KnowledgeSource[]
       if (totalStock > 0) {
         stockInfo = `⚡ ¡ENTREGA INMEDIATA DISPONIBLE! (${totalStock} unidades listas en fábrica).`
         if (readyUnits.length > 0) {
-          stockInfo += ` Equipos armados: ${readyUnits.join(' | ')}.`
+          stockInfo += ` Equipos armados: ${readyUnits.map((u) => u.details).join(' | ')}.`
         }
       }
+
+      // Collect available vinyl images for this product
+      let meta: any = {}
+      try {
+        meta = JSON.parse(p.meta_description || '{}')
+      } catch {}
+
+      const compatibleVinylIds: string[] = meta.vinyl_supply_ids || []
+      const compatibleVinyls = compatibleVinylIds
+        .map((id) => vinylsById.get(id))
+        .filter((v): v is NonNullable<typeof v> => Boolean(v && v.image_url))
+
+      // Collect image URLs for sending (convert relative /vinilos/... to full URL https://fabricadearcades.com/...)
+      const imageUrls: string[] = []
+      if (Array.isArray(p.images) && p.images.length > 0) {
+        p.images.forEach((img: string) => {
+          if (img) imageUrls.push(img.startsWith('http') ? img : `${baseUrl}${img}`)
+        })
+      }
+      readyUnits.forEach((u) => {
+        if (u.image_url) {
+          const full = u.image_url.startsWith('http') ? u.image_url : `${baseUrl}${u.image_url}`
+          if (!imageUrls.includes(full)) imageUrls.push(full)
+        }
+      })
+      compatibleVinyls.forEach((v) => {
+        if (v.image_url) {
+          const full = v.image_url.startsWith('http') ? v.image_url : `${baseUrl}${v.image_url}`
+          if (!imageUrls.includes(full)) imageUrls.push(full)
+        }
+      })
+
+      const vinylNames = compatibleVinyls.map((v) => v.name.replace(/^[^ -]+ - /i, '')).slice(0, 12)
+      const vinylSummary = vinylNames.length > 0
+        ? `Diseños de vinilo disponibles (${compatibleVinyls.length} en total): ${vinylNames.join(', ')}.`
+        : ''
 
       const productContent = [
         `Producto: ${p.name}`,
         `Precio de lista actual: ${formattedPrice}`,
         stockInfo,
         `Descripción: ${p.short_description || p.description || ''}`,
-        `Link en la web para comprar y configurar: https://fabricadearcades.com/productos/${p.slug}`,
+        vinylSummary,
+        `Link oficial: https://fabricadearcades.com/productos/${p.slug}`,
+        `Imágenes oficiales disponibles para enviar: ${imageUrls.slice(0, 8).join(', ')}`,
       ].filter(Boolean).join('\n')
 
       const score = terms.length > 0 ? scoreKnowledgeItem({ title: p.name, category: 'catalogo', content: productContent, priority: 10 }, terms) : 1
 
-      // If user specifically asked or mentioned products or catalog, include
       sources.push({
         id: `prod_${p.id}`,
         category: 'catalogo',

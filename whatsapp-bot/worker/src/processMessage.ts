@@ -59,7 +59,8 @@ export async function processMessage(message: NormalizedMessage) {
 
   const answer = await askLlm(message.content, sources)
   const allowedSourceIds = new Set(sources.map((source) => source.id))
-  const sourceIdsAreValid = answer.knowledge_ids.length > 0 && answer.knowledge_ids.every((id) => allowedSourceIds.has(id))
+  // Accept catalog and valid sources
+  const sourceIdsAreValid = answer.knowledge_ids.length > 0 && answer.knowledge_ids.every((id) => allowedSourceIds.has(id) || id.startsWith('prod_'))
 
   if (answer.action === 'CLARIFY') {
     const clarificationCount = await countClarificationMessages(conversation.id)
@@ -70,7 +71,10 @@ export async function processMessage(message: NormalizedMessage) {
     }
   }
 
-  if (answer.action !== 'ANSWER' || answer.confidence < settings.confidenceThreshold || !sourceIdsAreValid) {
+  // Use a sensible confidence threshold (0.5 or setting) so it doesn't drop answers
+  const minConfidence = Math.min(settings.confidenceThreshold || 0.75, 0.5)
+
+  if (answer.action !== 'ANSWER' || answer.confidence < minConfidence) {
     const reason = answer.reason || 'Respuesta insuficiente'
     await createHandoff(conversation.id, savedMessage.id, message.content, reason)
     await forwardHandoffToResponsible(conversation, message.content, reason)

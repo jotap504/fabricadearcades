@@ -1,7 +1,7 @@
 import { askLlm } from './llmClient.js'
 import { createHandoff, getOrCreateConversation, isKnownBotOutbox, markHumanTakeover, saveBotMessage, saveIncomingMessage } from './conversationService.js'
 import { sendWhatsAppText } from './evolution.js'
-import { forwardHandoffToResponsible, handleResponsibleReply } from './handoffRoutingService.js'
+import { forwardHandoffToResponsible, handleResponsibleReply, isResponsiblePhone } from './handoffRoutingService.js'
 import { retrieveKnowledge } from './ragService.js'
 import { getBotSettings } from './settingsService.js'
 import { getSafeFirstName, getSimpleReply } from './simpleIntents.js'
@@ -15,6 +15,7 @@ export async function processMessage(message: NormalizedMessage) {
   if (message.direction === 'inbound') {
     const responsibleReply = await handleResponsibleReply(message.phone, message.content, message.externalMessageId)
     if (responsibleReply) return { status: 'responsible_reply_forwarded' }
+    if (await isResponsiblePhone(message.phone)) return { status: 'responsible_without_pending_handoff' }
   }
 
   const conversation = await getOrCreateConversation(message)

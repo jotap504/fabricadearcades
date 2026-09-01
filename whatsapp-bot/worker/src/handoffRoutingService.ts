@@ -170,3 +170,17 @@ export async function handleResponsibleReply(responsiblePhone: string, answer: s
 
   return { conversationId: pending.conversation_id, customerPhone: pending.customer_phone }
 }
+
+export async function isResponsiblePhone(phone: string) {
+  const clean = cleanPhone(phone)
+  const { data, error } = await supabase
+    .from('chatbot_handoff_routes')
+    .select('id')
+    .eq('active', true)
+    .eq('responsible_phone', clean)
+    .limit(1)
+    .maybeSingle()
+
+  if (error) throw error
+  return Boolean(data)
+}

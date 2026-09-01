@@ -1,11 +1,23 @@
 export function getSimpleReply(text: string, firstName?: string | null): string | null {
-  const normalized = text.trim().toLocaleLowerCase('es')
-  if (/^(hola|buenas|buen dia|buen día|buenas tardes|buenas noches)[!.\s]*$/.test(normalized)) {
+  const normalized = text
+    .trim()
+    .toLocaleLowerCase('es')
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .replace(/[¡!.,;:¿?()[\]{}"'`´]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+
+  const greetingOnly = /^(hola|buenas|buen dia|buenas tardes|buenas noches|hello|hi|hey|que tal|buenas buenas)(\s+(como estas|consulta|queria consultar|te consulto))?$/.test(normalized)
+  if (greetingOnly) {
     return firstName ? `¡Hola ${firstName}! ¿En qué puedo ayudarte?` : '¡Hola! ¿En qué puedo ayudarte?'
   }
-  if (/^(gracias|muchas gracias|ok gracias|dale gracias)[!.\s]*$/.test(normalized)) {
+
+  const thanksOnly = /^(gracias|muchas gracias|ok gracias|dale gracias|perfecto gracias|genial gracias|mil gracias)$/.test(normalized)
+  if (thanksOnly) {
     return '¡De nada! Quedo atento.'
   }
+
   return null
 }
 

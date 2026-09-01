@@ -1810,6 +1810,10 @@ h1, h2, h3, h4, h5, h6 {
   .admin-layout {
     flex-direction: row;
   }
+
+  .admin-layout:has(.admin-sidebar-wrapper:hover) .admin-main {
+    padding-left: calc(var(--space-6) + 188px);
+  }
 }
 
 .admin-mobile-header {
@@ -1829,6 +1833,16 @@ h1, h2, h3, h4, h5, h6 {
 @media (min-width: 1024px) {
   .admin-sidebar-wrapper {
     display: block !important;
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 80;
+    width: 72px;
+    transition: width 0.24s ease;
+  }
+
+  .admin-sidebar-wrapper:hover,
+  .admin-sidebar-wrapper:focus-within {
+    width: var(--sidebar-width);
   }
 }
 
@@ -1868,15 +1882,91 @@ h1, h2, h3, h4, h5, h6 {
   flex-direction: column;
 }
 
+.admin-sidebar-brand {
+  padding: 0 var(--space-4) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: var(--space-2);
+}
+
+.admin-sidebar-brand-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.admin-sidebar-logo {
+  height: 32px;
+  width: auto;
+  object-fit: contain;
+}
+
 .admin-main {
   flex: 1;
   min-width: 0;
   padding: var(--space-6) var(--space-5);
+  transition: padding-left 0.24s ease;
 }
 
 @media (min-width: 768px) {
   .admin-main {
     padding: var(--space-8);
+  }
+}
+
+@media (min-width: 1024px) {
+  .admin-main {
+    padding-left: calc(var(--space-6) + 72px);
+  }
+
+  .admin-sidebar-wrapper .admin-sidebar {
+    width: 72px;
+    overflow-x: hidden;
+    transition: width 0.24s ease, box-shadow 0.24s ease;
+  }
+
+  .admin-sidebar-wrapper:hover .admin-sidebar,
+  .admin-sidebar-wrapper:focus-within .admin-sidebar {
+    width: var(--sidebar-width);
+    box-shadow: 14px 0 34px rgba(15, 23, 42, 0.12);
+  }
+
+  .admin-sidebar-wrapper .admin-sidebar-brand {
+    padding-inline: var(--space-3);
+  }
+
+  .admin-sidebar-wrapper .admin-sidebar-logo {
+    width: 34px;
+    height: 34px;
+    object-fit: contain;
+  }
+
+  .admin-sidebar-wrapper:hover .admin-sidebar-logo,
+  .admin-sidebar-wrapper:focus-within .admin-sidebar-logo {
+    width: 120px;
+    height: 32px;
+  }
+
+  .admin-sidebar-wrapper .theme-toggle,
+  .admin-sidebar-wrapper .admin-sidebar-section,
+  .admin-sidebar-wrapper .admin-nav-link span,
+  .admin-sidebar-wrapper .admin-store-link span:last-child {
+    opacity: 0;
+    visibility: hidden;
+    white-space: nowrap;
+    transition: opacity 0.16s ease;
+  }
+
+  .admin-sidebar-wrapper:hover .theme-toggle,
+  .admin-sidebar-wrapper:focus-within .theme-toggle,
+  .admin-sidebar-wrapper:hover .admin-sidebar-section,
+  .admin-sidebar-wrapper:focus-within .admin-sidebar-section,
+  .admin-sidebar-wrapper:hover .admin-nav-link span,
+  .admin-sidebar-wrapper:focus-within .admin-nav-link span,
+  .admin-sidebar-wrapper:hover .admin-store-link span:last-child,
+  .admin-sidebar-wrapper:focus-within .admin-store-link span:last-child {
+    opacity: 1;
+    visibility: visible;
   }
 }
 
@@ -1900,6 +1990,18 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--color-text-secondary);
   transition: all var(--transition-fast);
   position: relative;
+}
+
+.admin-nav-link svg {
+  flex: 0 0 auto;
+}
+
+.admin-store-link {
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 0.875rem;
 }
 
 .admin-nav-link:hover {
@@ -3549,12 +3651,14 @@ h1, h2, h3, h4, h5, h6 {
 
 .chat-inbox {
   display: grid;
-  grid-template-columns: minmax(260px, 340px) minmax(0, 1fr);
-  min-height: 680px;
+  grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
+  height: calc(100vh - 190px);
+  min-height: 620px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xl);
   overflow: hidden;
   background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
 }
 
 .chat-inbox-sidebar {
@@ -3564,13 +3668,39 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .chat-inbox-search {
-  margin: var(--space-4);
+  margin: var(--space-4) var(--space-4) var(--space-2);
+}
+
+.chat-filter-tabs {
+  display: flex;
+  gap: var(--space-2);
+  padding: 0 var(--space-4) var(--space-3);
+  overflow-x: auto;
+}
+
+.chat-filter-tabs button {
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 800;
+  padding: 7px 11px;
+  white-space: nowrap;
+}
+
+.chat-filter-tabs button:hover,
+.chat-filter-tabs button.active {
+  border-color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 12%, var(--color-surface));
+  color: var(--color-primary);
 }
 
 .chat-conversation-list {
   display: flex;
   flex-direction: column;
-  max-height: 620px;
+  height: calc(100% - 118px);
   overflow: auto;
 }
 
@@ -3580,7 +3710,7 @@ h1, h2, h3, h4, h5, h6 {
   grid-template-columns: auto minmax(0, 1fr) auto;
   gap: var(--space-3);
   align-items: start;
-  padding: var(--space-4);
+  padding: var(--space-3) var(--space-4);
   border: 0;
   border-top: 1px solid var(--color-border);
   background: transparent;
@@ -3653,15 +3783,17 @@ h1, h2, h3, h4, h5, h6 {
   display: flex;
   flex-direction: column;
   min-width: 0;
-  min-height: 680px;
+  min-height: 0;
+  height: 100%;
 }
 
 .chat-thread-header {
   display: flex;
   justify-content: space-between;
   gap: var(--space-4);
-  padding: var(--space-5);
+  padding: var(--space-4) var(--space-5);
   border-bottom: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--color-surface) 92%, var(--color-primary) 8%);
 }
 
 .chat-thread-header h2 {
@@ -3688,9 +3820,10 @@ h1, h2, h3, h4, h5, h6 {
 
 .chat-thread-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(220px, 300px);
+  grid-template-columns: minmax(0, 1fr) minmax(210px, 280px);
   min-height: 0;
   flex: 1;
+  overflow: hidden;
 }
 
 .chat-messages {
@@ -3754,9 +3887,10 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .chat-customer-card {
-  padding: var(--space-5);
+  padding: var(--space-4);
   border-left: 1px solid var(--color-border);
   background: var(--color-surface);
+  overflow: auto;
 }
 
 .chat-customer-card h3 {
@@ -3766,7 +3900,7 @@ h1, h2, h3, h4, h5, h6 {
 .chat-customer-card dl,
 .chat-customer-card div {
   display: grid;
-  gap: var(--space-3);
+  gap: var(--space-2);
 }
 
 .chat-customer-card dt {
@@ -3792,7 +3926,7 @@ h1, h2, h3, h4, h5, h6 {
   grid-template-columns: minmax(0, 1fr) auto;
   gap: var(--space-3);
   align-items: end;
-  padding: var(--space-4);
+  padding: var(--space-3) var(--space-4);
   border-top: 1px solid var(--color-border);
   background: var(--color-surface);
 }
@@ -3800,7 +3934,7 @@ h1, h2, h3, h4, h5, h6 {
 .chat-reply-box textarea {
   width: 100%;
   resize: vertical;
-  min-height: 76px;
+  min-height: 62px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-bg);

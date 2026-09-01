@@ -65,23 +65,9 @@ export function AdminSidebar({ onClose }: { onClose?: () => void }) {
 
   return (
     <aside className="admin-sidebar">
-      <div
-        style={{
-          padding: '0 var(--space-5) var(--space-4)',
-          borderBottom: '1px solid var(--color-border)',
-          marginBottom: 'var(--space-2)',
-        }}
-      >
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 'var(--space-2)',
-            marginBottom: 'var(--space-4)',
-          }}
-        >
-          <Image src="/logo.png" alt="Fábrica de Arcades" width={120} height={32} style={{ height: 32, width: 'auto' }} />
+      <div className="admin-sidebar-brand">
+        <div className="admin-sidebar-brand-row">
+          <Image className="admin-sidebar-logo" src="/logo.png" alt="Fábrica de Arcades" width={120} height={32} />
           <ThemeToggle />
         </div>
       </div>
@@ -100,9 +86,10 @@ export function AdminSidebar({ onClose }: { onClose?: () => void }) {
                 className={clsx('admin-nav-link', { active: isActive })}
                 id={`admin-nav-${item.href.split('/').pop()}`}
                 onClick={onClose}
+                title={item.label}
               >
                 {item.icon}
-                {item.label}
+                <span>{item.label}</span>
               </Link>
             )
           })}
@@ -112,15 +99,11 @@ export function AdminSidebar({ onClose }: { onClose?: () => void }) {
       <div style={{ marginTop: 'auto', padding: 'var(--space-5)' }}>
         <Link
           href="/"
-          style={{
-            fontSize: '0.875rem',
-            color: 'var(--color-text-muted)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 'var(--space-2)',
-          }}
+          className="admin-store-link"
+          title="Ver la tienda"
         >
-          ← Ver la tienda
+          <span aria-hidden="true">←</span>
+          <span>Ver la tienda</span>
         </Link>
       </div>
     </aside>

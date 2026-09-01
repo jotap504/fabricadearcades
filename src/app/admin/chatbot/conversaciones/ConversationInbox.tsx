@@ -74,15 +74,20 @@ function getLastMessage(conversation: InboxConversation) {
 
 export function ConversationInbox({ conversations }: { conversations: InboxConversation[] }) {
   const toast = useToast()
-  const [selectedId, setSelectedId] = useState(conversations[0]?.id ?? '')
+  const [selectedId, setSelectedId] = useState(conversations.find((conversation) => conversation.messages.length > 0)?.id ?? '')
   const [search, setSearch] = useState('')
+  const [filter, setFilter] = useState<'all' | 'pending' | 'bot' | 'human'>('all')
   const [reply, setReply] = useState('')
   const [pending, startTransition] = useTransition()
 
   const filtered = useMemo(() => {
     const term = search.trim().toLocaleLowerCase('es')
-    if (!term) return conversations
     return conversations.filter((conversation) => {
+      if (conversation.messages.length === 0) return false
+      if (filter === 'pending' && !conversation.pending_count) return false
+      if (filter === 'bot' && conversation.mode !== 'BOT') return false
+      if (filter === 'human' && conversation.mode !== 'HUMAN') return false
+      if (!term) return true
       const haystack = [
         conversation.phone,
         conversation.display_name,
@@ -94,9 +99,9 @@ export function ConversationInbox({ conversations }: { conversations: InboxConve
       ].filter(Boolean).join(' ').toLocaleLowerCase('es')
       return haystack.includes(term)
     })
-  }, [conversations, search])
+  }, [conversations, filter, search])
 
-  const selected = conversations.find((conversation) => conversation.id === selectedId) ?? filtered[0] ?? null
+  const selected = filtered.find((conversation) => conversation.id === selectedId) ?? filtered[0] ?? null
 
   function updateMode(mode: ConversationMode) {
     if (!selected) return
@@ -133,6 +138,24 @@ export function ConversationInbox({ conversations }: { conversations: InboxConve
           <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar cliente, teléfono o producto…" />
           {search && <button type="button" onClick={() => setSearch('')} aria-label="Limpiar búsqueda"><X size={15} /></button>}
         </label>
+
+        <div className="chat-filter-tabs" aria-label="Filtros de conversaciones">
+          {[
+            ['all', 'Todos'],
+            ['pending', 'Pendientes'],
+            ['bot', 'Bot'],
+            ['human', 'Humano'],
+          ].map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              className={filter === value ? 'active' : ''}
+              onClick={() => setFilter(value as typeof filter)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
 
         <div className="chat-conversation-list">
           {filtered.map((conversation) => (

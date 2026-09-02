@@ -7,6 +7,8 @@ import { ProductCard } from '@/components/products/ProductCard'
 import type { Product } from '@/lib/types'
 import { mockProducts, mockCategories } from '@/lib/mock-data'
 import { ImageAccordionHero, type ImageAccordionItem } from '@/components/ui/interactive-image-accordion'
+import { SalesMilestoneStats } from '@/components/ui/sales-milestone-stats'
+import { InstagramReelsSection } from '@/components/home/InstagramReelsSection'
 
 const getCategoryIconLarge = (slug: string) => {
   switch (slug) {
@@ -342,52 +344,11 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* CATEGORIES */}
-      {categories && categories.length > 0 && (
-        <section
-          className="section-sm"
-          style={{ background: 'var(--color-bg-2)' }}
-        >
-          <div className="container">
-            <div className="section-header" style={{ marginBottom: 'var(--space-6)' }}>
-              <h2 className="section-title" style={{ fontSize: '1.5rem' }}>
-                Explorá por categoría
-              </h2>
-            </div>
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
-                gap: 'var(--space-4)',
-              }}
-            >
-              {categories.map((cat: any) => (
-                <Link
-                  key={cat.id}
-                  href={`/productos?categoria=${cat.slug}`}
-                  className="card card-hover card-body glass-hover"
-                  style={{
-                    textAlign: 'center',
-                    gap: 'var(--space-3)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    paddingTop: 'var(--space-6)',
-                    paddingBottom: 'var(--space-6)',
-                    textDecoration: 'none',
-                  }}
-                  id={`category-${cat.slug}`}
-                >
-                  <div style={{ display: 'flex', height: '48px', alignItems: 'center', justifyContent: 'center' }}>
-                    {getCategoryIconLarge(cat.slug)}
-                  </div>
-                  <span style={{ fontWeight: 700, fontSize: '0.9375rem', marginTop: 'var(--space-2)' }}>{cat.name}</span>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
+      {/* INSTAGRAM REELS - ARCADES EN ACCIÓN */}
+      <InstagramReelsSection />
+
+      {/* SALES MILESTONE STATS */}
+      <SalesMilestoneStats />
 
       {/* HOW TO BUY */}
       <section className="section">

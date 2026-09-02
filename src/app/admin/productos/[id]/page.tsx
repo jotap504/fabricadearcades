@@ -58,11 +58,13 @@ export default function EditProductPage() {
   const [variants, setVariants] = useState<ProductVariantRow[]>([])
   const [productMeta, setProductMeta] = useState<ProductMeta>({})
 
+  const [categories, setCategories] = useState<any[]>([])
   const [form, setForm] = useState({
     name: '',
     slug: '',
     short_description: '',
     description: '',
+    category_id: '',
     product_type: 'arcade' as ProductType,
     base_price: '',
     retail_markup_pct: '30',
@@ -121,6 +123,7 @@ export default function EditProductPage() {
           slug: data.slug || '',
           short_description: data.short_description || '',
           description: data.description || '',
+          category_id: data.category_id || '',
           product_type: data.product_type || 'arcade',
           base_price: data.base_price?.toString() || '0',
           retail_markup_pct: data.retail_markup_pct?.toString() || '30',
@@ -157,6 +160,9 @@ export default function EditProductPage() {
       
       const { data: vData } = await supabase.from('product_variants').select('*').eq('product_id', params.id).order('sort_order')
       if (vData) setVariants(vData)
+
+      const { data: cData } = await supabase.from('categories').select('*').eq('is_active', true).order('sort_order')
+      if (cData) setCategories(cData)
 
       const { data: sData } = await supabase.from('supply_inventory').select('*').eq('is_active', true).order('supply_type')
       if (sData) setAllSupplies(sData)
@@ -362,6 +368,7 @@ export default function EditProductPage() {
       .from('products')
       .update({
         ...form,
+        category_id: form.category_id || null,
         base_price: parseFloat(form.base_price) || 0,
         retail_markup_pct: parseFloat(form.retail_markup_pct) || 30,
         images: coverImage ? [coverImage] : [],
@@ -493,6 +500,27 @@ export default function EditProductPage() {
               <option value="arcade">Arcade / Consola</option>
               <option value="accessory">Accesorio</option>
               <option value="bundle">Bundle / Combo</option>
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label className="form-label" htmlFor="product-category">Categoría</label>
+            <select
+              id="product-category"
+              className="form-input form-select"
+              value={form.category_id}
+              onChange={(e) => setForm((p) => ({ ...p, category_id: e.target.value }))}
+              disabled={categories.length === 0}
+            >
+              {categories.length === 0 ? (
+                <option value="">No hay categorías activas</option>
+              ) : (
+                categories.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))
+              )}
             </select>
           </div>
         </div>

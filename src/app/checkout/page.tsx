@@ -5,7 +5,7 @@ import { useCartStore } from '@/lib/stores/cart'
 import { useAuth } from '@/components/auth/AuthProvider'
 import { useToast } from '@/lib/stores/toast'
 import { createClient } from '@/lib/supabase/client'
-import { createStoreOrder, type CreatedOrderResult } from './actions'
+import { createStoreOrder, createMercadoPagoCheckout, type CreatedOrderResult } from './actions'
 import {
   formatPrice,
   STOCK_BADGE_CONFIG,
@@ -13,7 +13,7 @@ import {
   type PaymentMethod,
   type ShippingAddress,
 } from '@/lib/types'
-import { ArrowLeft, CreditCard, Banknote, Building2, Check, MapPin, Truck } from 'lucide-react'
+import { ArrowLeft, CreditCard, Banknote, Building2, Check, MapPin, Truck, Wallet } from 'lucide-react'
 import Link from 'next/link'
 
 type Step = 'cart-review' | 'shipping' | 'payment' | 'confirm'
@@ -44,6 +44,7 @@ export default function CheckoutPage() {
     transfer_discount_pct: 5,
     cash_discount_pct: 0,
     card_surcharge_pct: 7,
+    mercadopago_surcharge_pct: 0,
   })
   const [customerPhone, setCustomerPhone] = useState(profile?.phone ?? '')
   const [guestName, setGuestName] = useState('')
@@ -60,7 +61,7 @@ export default function CheckoutPage() {
       const { data } = await supabase
         .from('delivery_config')
         .select('key, value')
-        .in('key', ['transfer_discount_pct', 'cash_discount_pct', 'card_surcharge_pct'])
+        .in('key', ['transfer_discount_pct', 'cash_discount_pct', 'card_surcharge_pct', 'mercadopago_surcharge_pct'])
 
       if (ignore || !data) return
 
@@ -85,7 +86,12 @@ export default function CheckoutPage() {
         : paymentMethod === 'cash'
           ? paymentRules.cash_discount_pct
           : 0
-    const nextSurchargePct = paymentMethod === 'card' ? paymentRules.card_surcharge_pct : 0
+    const nextSurchargePct =
+      paymentMethod === 'card'
+        ? paymentRules.card_surcharge_pct
+        : paymentMethod === 'mercadopago'
+          ? paymentRules.mercadopago_surcharge_pct
+          : 0
     const nextDiscountAmount = totalAmount * (nextDiscountPct / 100)
     const nextSurchargeAmount = totalAmount * (nextSurchargePct / 100)
 
@@ -182,6 +188,21 @@ export default function CheckoutPage() {
         notes,
         items: orderItems,
       })
+
+      if (paymentMethod === 'mercadopago') {
+        const { checkoutUrl } = await createMercadoPagoCheckout({
+          orderId: result.orderId,
+          payerEmail: finalEmail,
+          items: items.map((item) => ({
+            title: item.product.name,
+            quantity: item.quantity,
+            unit_price: item.unit_price,
+          })),
+        })
+        clearCart()
+        window.location.href = checkoutUrl
+        return
+      }
 
       setCreatedOrder(result)
       setStep('confirm')
@@ -754,6 +775,13 @@ export default function CheckoutPage() {
                       desc: paymentRules.card_surcharge_pct > 0 ? 'Incluye gastos del operador' : 'Pago con tarjeta de crédito',
                       adjustment: paymentRules.card_surcharge_pct > 0 ? `+${paymentRules.card_surcharge_pct}%` : null,
                     },
+                    {
+                      id: 'mercadopago' as PaymentMethod,
+                      icon: <Wallet size={22} />,
+                      label: 'MercadoPago',
+                      desc: 'Tarjeta, dinero en cuenta o efectivo a través de MercadoPago',
+                      adjustment: paymentRules.mercadopago_surcharge_pct > 0 ? `+${paymentRules.mercadopago_surcharge_pct}%` : null,
+                    },
                   ].map((opt) => (
                     <button
                       key={opt.id}
@@ -894,6 +922,8 @@ export default function CheckoutPage() {
                       <>
                         <div className="spinner" /> Procesando...
                       </>
+                    ) : paymentMethod === 'mercadopago' ? (
+                      `Ir a pagar con MercadoPago — ${formatPrice(finalTotal)}`
                     ) : (
                       `Confirmar pedido — ${formatPrice(finalTotal)}`
                     )}

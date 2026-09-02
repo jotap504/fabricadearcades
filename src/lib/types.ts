@@ -12,7 +12,7 @@ export type SupplyType = 'button' | 'joystick' | 'vinyl' | 'led' | 'other'
 
 export type CabinetType = 'vertical' | 'horizontal' | 'bartop' | 'pedestal' | 'cocktail'
 
-export type PaymentMethod = 'cash' | 'transfer' | 'card' | 'pending' | 'current_account'
+export type PaymentMethod = 'cash' | 'transfer' | 'card' | 'pending' | 'current_account' | 'mercadopago'
 
 export type OrderStatus =
   | 'pending_confirmation'
@@ -392,6 +392,7 @@ export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
   card: 'Tarjeta de crédito',
   pending: 'A definir',
   current_account: 'Cuenta corriente',
+  mercadopago: 'MercadoPago',
 }
 
 export function formatPrice(amount: number): string {

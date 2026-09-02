@@ -16,7 +16,7 @@ interface Props {
   pricingConfig: Config[]
 }
 
-const PAYMENT_CONFIG_KEYS = ['cash_discount_pct', 'transfer_discount_pct', 'card_surcharge_pct']
+const PAYMENT_CONFIG_KEYS = ['cash_discount_pct', 'transfer_discount_pct', 'card_surcharge_pct', 'mercadopago_surcharge_pct']
 
 function ConfigForm({
   items,
@@ -81,6 +81,11 @@ export function ConfigClient({ deliveryConfig, pricingConfig }: Props) {
       key: 'card_surcharge_pct',
       label: '% recargo por tarjeta de crédito',
       value: deliveryConfig.find((item) => item.key === 'card_surcharge_pct')?.value ?? '7',
+    },
+    {
+      key: 'mercadopago_surcharge_pct',
+      label: '% recargo por MercadoPago',
+      value: deliveryConfig.find((item) => item.key === 'mercadopago_surcharge_pct')?.value ?? '0',
     },
   ]
   const shippingConfig = deliveryConfig.filter((item) => !PAYMENT_CONFIG_KEYS.includes(item.key))

@@ -3,6 +3,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { Resend } from 'resend'
 import type { ArcadeCustomization, PaymentMethod, ShippingAddress } from '@/lib/types'
+import { createPreference, pickCheckoutUrl } from '@/lib/mercadopago/client'
+import { isMercadoPagoConfigured } from '@/lib/mercadopago/config'
 
 export interface CheckoutOrderInput {
   customer: { name: string; email: string; phone: string }
@@ -74,4 +76,33 @@ export async function createStoreOrder(input: CheckoutOrderInput): Promise<Creat
   }
 
   return result
+}
+
+export interface MercadoPagoCheckoutInput {
+  orderId: string
+  payerEmail: string
+  items: Array<{ title: string; quantity: number; unit_price: number }>
+}
+
+export async function createMercadoPagoCheckout(input: MercadoPagoCheckoutInput): Promise<{ checkoutUrl: string }> {
+  if (!isMercadoPagoConfigured()) {
+    throw new Error('MercadoPago no está configurado todavía. Elegí otro método de pago.')
+  }
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+  // "outcome" (not "status") to avoid colliding with the query params
+  // MercadoPago itself appends to the back_url on redirect.
+  const preference = await createPreference({
+    items: input.items,
+    payerEmail: input.payerEmail,
+    externalReference: input.orderId,
+    backUrls: {
+      success: `${appUrl}/checkout/mercadopago/retorno?outcome=approved`,
+      failure: `${appUrl}/checkout/mercadopago/retorno?outcome=failure`,
+      pending: `${appUrl}/checkout/mercadopago/retorno?outcome=pending`,
+    },
+    notificationUrl: `${appUrl}/api/mercadopago/webhook`,
+  })
+
+  return { checkoutUrl: pickCheckoutUrl(preference) }
 }

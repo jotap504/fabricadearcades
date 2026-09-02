@@ -1,7 +1,7 @@
 import { askLlm } from './llmClient.js'
 import { countClarificationMessages, createHandoff, getOrCreateConversation, getRecentMessages, isKnownBotOutbox, markHumanTakeover, saveBotMessage, saveIncomingMessage } from './conversationService.js'
 import { sendWhatsAppText, sendWhatsAppMedia, sendWhatsAppPresence } from './evolution.js'
-import { forwardHandoffToResponsible, handleResponsibleReply, isResponsiblePhone } from './handoffRoutingService.js'
+import { forwardCustomerFollowupToResponsible, forwardHandoffToResponsible, handleResponsibleReply, isResponsiblePhone } from './handoffRoutingService.js'
 import { retrieveKnowledge } from './ragService.js'
 import { getBotSettings } from './settingsService.js'
 import { getSafeFirstName, getSimpleReply, isExplicitHandoffRequest } from './simpleIntents.js'
@@ -28,6 +28,12 @@ export async function processMessage(message: NormalizedMessage) {
 
   const savedMessage = await saveIncomingMessage(conversation.id, message)
   if (!savedMessage) return { status: 'duplicate' }
+
+  // If the conversation is already in HUMAN mode, forward any incoming customer follow-up message to the responsible seller
+  if (conversation.mode === 'HUMAN' && message.direction === 'inbound') {
+    await forwardCustomerFollowupToResponsible(conversation, message.content)
+    return { status: 'customer_followup_forwarded_to_human' }
+  }
 
   const settings = await getBotSettings()
   if (!settings.botActive) return { status: 'bot_inactive' }

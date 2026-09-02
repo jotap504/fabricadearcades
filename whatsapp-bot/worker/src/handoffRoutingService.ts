@@ -137,7 +137,72 @@ export async function forwardHandoffToResponsible(
     },
   })
 
-  return route
+export async function forwardCustomerFollowupToResponsible(
+  conversation: ConversationForHandoff,
+  messageText: string,
+) {
+  // Find the most recent active or answered handoff request for this conversation
+  const { data: lastRequest, error } = await supabase
+    .from('chatbot_handoff_requests')
+    .select('id,responsible_phone,route_key')
+    .eq('conversation_id', conversation.id)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (error) throw error
+
+  let responsiblePhone: string | null = null
+  let routeKey = 'arcades'
+
+  if (lastRequest?.responsible_phone) {
+    responsiblePhone = normalizePhoneDigits(lastRequest.responsible_phone)
+    routeKey = lastRequest.route_key
+  } else {
+    const routes = await getActiveRoutes()
+    const route = pickRoute(routes, messageText)
+    if (route) {
+      responsiblePhone = normalizePhoneDigits(route.responsible_phone)
+      routeKey = route.route_key
+    }
+  }
+
+  if (!responsiblePhone) return null
+
+  const name = conversation.display_name ? ` (${conversation.display_name})` : ''
+  const forwardText = [
+    `💬 Nuevo mensaje de cliente${name}:`,
+    `Tel: ${conversation.phone}`,
+    '',
+    messageText,
+    '',
+    'Respondé este WhatsApp para responderle al cliente.',
+  ].join('\n')
+
+  const externalId = await sendWhatsAppText(responsiblePhone, forwardText)
+
+  // Ensure there is a pending request waiting for response
+  await supabase.from('chatbot_handoff_requests').insert({
+    conversation_id: conversation.id,
+    customer_phone: conversation.phone,
+    responsible_phone: responsiblePhone,
+    route_key: routeKey,
+    question: messageText,
+    forwarded_message_id: externalId,
+    status: 'pending',
+  })
+
+  await supabase.from('chatbot_audit_log').insert({
+    event_type: 'handoff_followup_forwarded',
+    conversation_id: conversation.id,
+    metadata: {
+      route_key: routeKey,
+      responsible_phone: responsiblePhone,
+      forwarded_message_id: externalId,
+    },
+  })
+
+  return { responsiblePhone, externalId }
 }
 
 export async function handleResponsibleReply(responsiblePhone: string, answer: string, externalMessageId: string) {

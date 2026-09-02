@@ -207,7 +207,7 @@ export function ProductCard({ product, stockSummary }: ProductCardProps) {
           <small>{timeInfo}</small>
         </div>
 
-        {isImmediate ? (
+        {isImmediate && product.product_type === 'arcade' ? (
           <div className="product-card-console-logos">
             <ConsoleLogoRows
               primaryIds={(() => {

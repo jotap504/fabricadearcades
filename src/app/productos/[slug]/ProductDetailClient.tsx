@@ -835,10 +835,12 @@ export function ProductDetailClient({
                     🕹️ Incluye {productSpecs.games_count} juegos
                   </p>
                 )}
-                <ConsoleLogoRows
-                  primaryIds={productSpecs.primary_console_logo_ids as string[] | undefined}
-                  secondaryIds={productSpecs.secondary_console_logo_ids as string[] | undefined}
-                />
+                {product.product_type === 'arcade' && (
+                  <ConsoleLogoRows
+                    primaryIds={productSpecs.primary_console_logo_ids as string[] | undefined}
+                    secondaryIds={productSpecs.secondary_console_logo_ids as string[] | undefined}
+                  />
+                )}
               </div>
             )}
 

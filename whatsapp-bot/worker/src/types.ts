@@ -8,6 +8,11 @@ export type NormalizedMessage = {
   senderType: 'customer' | 'human' | 'bot'
   content: string
   raw: unknown
+  quotedMessage?: {
+    id?: string
+    text?: string
+    participant?: string
+  }
 }
 
 export type KnowledgeSource = {

@@ -13,7 +13,7 @@ export async function processMessage(message: NormalizedMessage) {
   }
 
   if (message.direction === 'inbound') {
-    const responsibleReply = await handleResponsibleReply(message.phone, message.content, message.externalMessageId)
+    const responsibleReply = await handleResponsibleReply(message.phone, message.content, message.externalMessageId, message.quotedMessage)
     if (responsibleReply) return { status: 'responsible_reply_forwarded' }
     if (await isResponsiblePhone(message.phone)) return { status: 'responsible_without_pending_handoff' }
   }

@@ -208,18 +208,63 @@ export async function forwardCustomerFollowupToResponsible(
   return { responsiblePhone, externalId }
 }
 
-export async function handleResponsibleReply(responsiblePhone: string, answer: string, externalMessageId: string) {
-  const { data: pendingList, error } = await supabase
-    .from('chatbot_handoff_requests')
-    .select('id,conversation_id,customer_phone,route_key,responsible_phone')
-    .eq('status', 'pending')
-    .order('created_at', { ascending: false })
-    .limit(10)
+export async function handleResponsibleReply(
+  responsiblePhone: string,
+  answer: string,
+  externalMessageId: string,
+  quotedMessage?: { id?: string; text?: string; participant?: string },
+) {
+  // 1. If the responsible user quoted/replied to a specific message, try to match by forwarded_message_id or phone extracted from quoted text
+  let pending: { id: string; conversation_id: string; customer_phone: string; route_key: string } | null = null
 
-  if (error) throw error
-  if (!pendingList || pendingList.length === 0) return null
+  if (quotedMessage?.id) {
+    const { data: matchedById } = await supabase
+      .from('chatbot_handoff_requests')
+      .select('id,conversation_id,customer_phone,route_key,responsible_phone')
+      .eq('forwarded_message_id', quotedMessage.id)
+      .limit(1)
+      .maybeSingle()
 
-  const pending = pendingList.find((item) => matchesPhone(item.responsible_phone, responsiblePhone))
+    if (matchedById && matchesPhone(matchedById.responsible_phone, responsiblePhone)) {
+      pending = matchedById
+    }
+  }
+
+  // If not matched by message ID, check if the quoted text contains the customer phone (e.g. "Tel: 54911...")
+  if (!pending && quotedMessage?.text) {
+    const phoneMatch = quotedMessage.text.match(/Tel(?:éfono cliente)?:\s*(\+?\d[\d\s-]{7,15})/i)
+    if (phoneMatch && phoneMatch[1]) {
+      const extractedPhone = normalizePhoneDigits(phoneMatch[1])
+      const { data: matchedByText } = await supabase
+        .from('chatbot_handoff_requests')
+        .select('id,conversation_id,customer_phone,route_key,responsible_phone')
+        .order('created_at', { ascending: false })
+        .limit(20)
+
+      const found = (matchedByText ?? []).find(
+        (item) => matchesPhone(item.responsible_phone, responsiblePhone) && matchesPhone(item.customer_phone, extractedPhone)
+      )
+      if (found) {
+        pending = found
+      }
+    }
+  }
+
+  // 2. Fallback: match by the most recent pending request for this responsible phone
+  if (!pending) {
+    const { data: pendingList, error } = await supabase
+      .from('chatbot_handoff_requests')
+      .select('id,conversation_id,customer_phone,route_key,responsible_phone')
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false })
+      .limit(10)
+
+    if (error) throw error
+    if (!pendingList || pendingList.length === 0) return null
+
+    pending = pendingList.find((item) => matchesPhone(item.responsible_phone, responsiblePhone)) ?? null
+  }
+
   if (!pending) return null
 
   const sentId = await sendWhatsAppText(pending.customer_phone, answer)

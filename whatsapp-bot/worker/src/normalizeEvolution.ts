@@ -28,6 +28,27 @@ function normalizeEvent(event: string | undefined): string {
   return (event ?? '').replace(/\./g, '_').toUpperCase()
 }
 
+function extractContextInfo(message: any): { id?: string; text?: string; participant?: string } | undefined {
+  const contextInfo =
+    message?.extendedTextMessage?.contextInfo
+    ?? message?.message?.extendedTextMessage?.contextInfo
+    ?? message?.contextInfo
+
+  if (!contextInfo) return undefined
+
+  const stanzaId = contextInfo.stanzaId
+  const participant = contextInfo.participant ? cleanPhone(contextInfo.participant) : undefined
+  const quotedText = extractText(contextInfo.quotedMessage)
+
+  if (!stanzaId && !quotedText) return undefined
+
+  return {
+    id: stanzaId,
+    text: quotedText || undefined,
+    participant: participant || undefined,
+  }
+}
+
 export function normalizeEvolutionWebhook(payload: unknown): NormalizedMessage | null {
   const parsed = webhookSchema.safeParse(payload)
   if (!parsed.success) return null
@@ -50,6 +71,7 @@ export function normalizeEvolutionWebhook(payload: unknown): NormalizedMessage |
   )
   const fromMe = Boolean(key?.fromMe ?? data?.fromMe)
   const content = extractText(data?.message ?? data?.message?.message ?? data)
+  const quotedMessage = extractContextInfo(data?.message ?? data?.message?.message ?? data)
 
   if (!externalMessageId || !phone || !content) return null
 
@@ -61,5 +83,6 @@ export function normalizeEvolutionWebhook(payload: unknown): NormalizedMessage |
     senderType: fromMe ? 'human' : 'customer',
     content,
     raw: payload,
+    quotedMessage,
   }
 }

@@ -1,4 +1,4 @@
-import { ExternalLink, Film } from 'lucide-react'
+import { ExternalLink, Play } from 'lucide-react'
 
 const InstagramIcon = ({ size = 20, ...props }: any) => (
   <svg
@@ -25,32 +25,31 @@ interface InstagramReel {
   tag: string
   reelUrl: string
   embedUrl: string
-  aspectRatio?: string
 }
 
 const REELS: InstagramReel[] = [
   {
     id: 'DbJgerMPV6g',
     title: 'Armado de una Bigbox Arcade',
-    subtitle: 'Proceso de fabricación artesanal, ensamble y cableado de alta precisión en nuestro taller.',
+    subtitle: 'Proceso de fabricación artesanal, ensamble y cableado en fábrica.',
     tag: 'Fabricación en taller',
-    reelUrl: 'https://www.instagram.com/reel/DbJgerMPV6g/?igsi=MzRlODBiNWFlZA==',
+    reelUrl: 'https://www.instagram.com/reel/DbJgerMPV6g/',
     embedUrl: 'https://www.instagram.com/reel/DbJgerMPV6g/embed',
   },
   {
     id: 'DNWNn1duUIz',
     title: 'Entrega de Arcade Premium 32" Led',
-    subtitle: 'Mueble completo de pie con marquesina y botones iluminados, listo para disfrutar.',
+    subtitle: 'Mueble completo de pie con marquesina y botones iluminados.',
     tag: 'Entrega a cliente',
-    reelUrl: 'https://www.instagram.com/reel/DNWNn1duUIz/?igsi=MzRlODBiNWFlZA==',
+    reelUrl: 'https://www.instagram.com/reel/DNWNn1duUIz/',
     embedUrl: 'https://www.instagram.com/reel/DNWNn1duUIz/embed',
   },
   {
     id: 'DPeY347gHyD',
-    title: 'Arcade 32" 100% Personalizado para IndiaBar',
-    subtitle: 'Diseño comercial exclusivo a medida con estética retro futurista para local gastronómico.',
+    title: 'Arcade 32" Personalizado IndiaBar',
+    subtitle: 'Diseño comercial exclusivo a medida para local gastronómico.',
     tag: 'Proyecto a medida',
-    reelUrl: 'https://www.instagram.com/reel/DPeY347gHyD/?igsi=MzRlODBiNWFlZA==',
+    reelUrl: 'https://www.instagram.com/reel/DPeY347gHyD/',
     embedUrl: 'https://www.instagram.com/reel/DPeY347gHyD/embed',
   },
 ]
@@ -102,7 +101,7 @@ export function InstagramReelsSection() {
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
             gap: 'var(--space-6)',
             alignItems: 'stretch',
           }}
@@ -123,14 +122,13 @@ export function InstagramReelsSection() {
                   transition: 'transform var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast)',
                 }}
               >
-                {/* Reel Video Container */}
+                {/* Clean Frame Video Container */}
                 <div
                   style={{
                     position: 'relative',
                     width: '100%',
-                    height: '460px',
-                    background: 'var(--color-bg)',
-                    borderBottom: '1px solid var(--color-border)',
+                    height: '420px',
+                    background: '#000000',
                     overflow: 'hidden',
                   }}
                 >
@@ -139,49 +137,68 @@ export function InstagramReelsSection() {
                     title={reel.title}
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
+                    scrolling="no"
                     style={{
                       width: '100%',
-                      height: '100%',
+                      height: '520px',
+                      marginTop: '-50px',
                       border: 'none',
                       display: 'block',
+                      overflow: 'hidden',
                     }}
                   />
+                  
+                  {/* Subtle click overlay link fallback */}
+                  <a
+                    href={reel.reelUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title={`Ver ${reel.title} en Instagram`}
+                    style={{
+                      position: 'absolute',
+                      top: '10px',
+                      right: '10px',
+                      background: 'rgba(0, 0, 0, 0.65)',
+                      backdropFilter: 'blur(8px)',
+                      color: '#ffffff',
+                      borderRadius: 'var(--radius-full)',
+                      padding: '6px 12px',
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      textDecoration: 'none',
+                      zIndex: 10,
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
+                    }}
+                  >
+                    <InstagramIcon size={13} /> Ver Reel <ExternalLink size={11} />
+                  </a>
                 </div>
 
-                {/* Card Content */}
-                <div style={{ padding: 'var(--space-5)', display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'space-between' }}>
+                {/* Minimal Card Content */}
+                <div style={{ padding: 'var(--space-4)', display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'space-between' }}>
                   <div>
                     <span
                       style={{
                         display: 'inline-block',
-                        fontSize: '0.75rem',
+                        fontSize: '0.72rem',
                         fontWeight: 800,
                         textTransform: 'uppercase',
                         letterSpacing: '0.05em',
                         color: 'var(--color-primary)',
-                        marginBottom: 'var(--space-2)',
+                        marginBottom: '4px',
                       }}
                     >
                       {reel.tag}
                     </span>
-                    <h3 style={{ fontSize: '1.15rem', fontWeight: 800, margin: '0 0 var(--space-2)', color: 'var(--color-text)' }}>
+                    <h3 style={{ fontSize: '1.05rem', fontWeight: 800, margin: '0 0 4px', color: 'var(--color-text)' }}>
                       {reel.title}
                     </h3>
-                    <p style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)', lineHeight: 1.5, margin: 0 }}>
+                    <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)', lineHeight: 1.45, margin: 0 }}>
                       {reel.subtitle}
                     </p>
-                  </div>
-
-                  <div style={{ marginTop: 'var(--space-4)', paddingTop: 'var(--space-4)', borderTop: '1px solid var(--color-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <a
-                      href={reel.reelUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="btn btn-ghost btn-sm"
-                      style={{ fontSize: '0.8125rem', gap: 'var(--space-2)', padding: '6px 10px' }}
-                    >
-                      <InstagramIcon size={15} /> Ver en Instagram <ExternalLink size={13} />
-                    </a>
                   </div>
                 </div>
               </div>

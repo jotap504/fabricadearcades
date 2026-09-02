@@ -186,7 +186,7 @@ export function Header() {
                           <User size={16} /> Mi cuenta
                         </Link>
                         <Link
-                          href="/mi-cuenta/pedidos"
+                          href="/mi-cuenta"
                           className="admin-nav-link"
                           onClick={() => setUserMenuOpen(false)}
                         >

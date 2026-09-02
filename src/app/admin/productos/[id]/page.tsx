@@ -93,6 +93,18 @@ export default function EditProductPage() {
   const [buttonsPerPlayer, setButtonsPerPlayer] = useState(6)
   const [gamesCount, setGamesCount] = useState('')
 
+  // Accessory general specifications
+  const [accessorySpecs, setAccessorySpecs] = useState({
+    brand: '',
+    model: '',
+    material: '',
+    dimensions: '',
+    compatibility: '',
+    connection_type: '',
+    weight: '',
+    warranty: '1 año de fábrica',
+  })
+
   const [newVariant, setNewVariant] = useState({
     cabinet_type: 'bartop',
     screen_size: '',
@@ -126,6 +138,9 @@ export default function EditProductPage() {
           setJoysticksCount(obj.joysticks_count ?? 2)
           setButtonsPerPlayer(obj.buttons_per_player ?? 6)
           setGamesCount(obj.games_count?.toString() || '')
+          if (obj.accessory_specs && typeof obj.accessory_specs === 'object') {
+            setAccessorySpecs((prev) => ({ ...prev, ...(obj.accessory_specs as Record<string, string>) }))
+          }
           setSelectedFamilies(obj.families || [])
           setSelectedVinylIds(obj.vinyl_supply_ids || [])
           setPrimaryConsoleLogoIds(obj.primary_console_logo_ids || [])
@@ -320,20 +335,28 @@ export default function EditProductPage() {
     e.preventDefault()
     setLoading(true)
 
-    const metaJSON = JSON.stringify({
-      ...productMeta,
-      led_surcharge: parseFloat(ledSurcharge) || 0,
-      led_enabled: ledEnabled,
-      players_count: playersCount,
-      joysticks_count: joysticksCount,
-      buttons_per_player: buttonsPerPlayer,
-      games_count: parseInt(gamesCount) || 0,
-      families: selectedFamilies,
-      vinyl_supply_ids: selectedVinylIds,
-      primary_console_logo_ids: primaryConsoleLogoIds.slice(0, 10),
-      secondary_console_logo_ids: secondaryConsoleLogoIds.filter((id) => !primaryConsoleLogoIds.includes(id)),
-      bom: bom
-    })
+    const metaJSON = JSON.stringify(
+      form.product_type === 'accessory'
+        ? {
+            ...productMeta,
+            accessory_specs: accessorySpecs,
+            is_accessory: true,
+          }
+        : {
+            ...productMeta,
+            led_surcharge: parseFloat(ledSurcharge) || 0,
+            led_enabled: ledEnabled,
+            players_count: playersCount,
+            joysticks_count: joysticksCount,
+            buttons_per_player: buttonsPerPlayer,
+            games_count: parseInt(gamesCount) || 0,
+            families: selectedFamilies,
+            vinyl_supply_ids: selectedVinylIds,
+            primary_console_logo_ids: primaryConsoleLogoIds.slice(0, 10),
+            secondary_console_logo_ids: secondaryConsoleLogoIds.filter((id) => !primaryConsoleLogoIds.includes(id)),
+            bom: bom,
+          }
+    )
 
     const { error } = await supabase
       .from('products')
@@ -459,169 +482,261 @@ export default function EditProductPage() {
               id="product-type"
               className="form-input form-select"
               value={form.product_type}
-              onChange={(e) => setForm((p) => ({ ...p, product_type: e.target.value as ProductType }))}
+              onChange={(e) =>
+                setForm((p) => ({
+                  ...p,
+                  product_type: e.target.value as ProductType,
+                  requires_production: e.target.value === 'arcade',
+                }))
+              }
             >
-              <option value="arcade">Arcade</option>
+              <option value="arcade">Arcade / Consola</option>
               <option value="accessory">Accesorio</option>
-              <option value="bundle">Bundle/Combo</option>
+              <option value="bundle">Bundle / Combo</option>
             </select>
           </div>
         </div>
 
-        {/* Ficha Técnica / Especificaciones del Modelo */}
-        <div className="card card-body" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-          <h3 style={{ fontSize: '0.9375rem', fontWeight: 700, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-            🎮 Ficha Técnica del Modelo (Fórmula de Armado)
-          </h3>
-          <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-muted)', margin: 0 }}>
-            Definí las especificaciones fijas de hardware que lleva este modelo.
-          </p>
+        {/* Ficha Técnica: ACCESORIO */}
+        {form.product_type === 'accessory' ? (
+          <div className="card card-body" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+            <h3 style={{ fontSize: '0.9375rem', fontWeight: 700, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+              🔌 Especificaciones del Accesorio
+            </h3>
+            <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-muted)', margin: 0 }}>
+              Completá los datos técnicos generales de este accesorio o componente.
+            </p>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 'var(--space-4)' }}>
-            <div className="form-group">
-              <label className="form-label">Jugadores</label>
-              <select
-                className="form-input form-select"
-                value={playersCount}
-                onChange={(e) => setPlayersCount(parseInt(e.target.value) || 2)}
-              >
-                <option value="1">1 Jugador</option>
-                <option value="2">2 Jugadores</option>
-                <option value="4">4 Jugadores</option>
-              </select>
-            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 'var(--space-4)' }}>
+              <div className="form-group">
+                <label className="form-label">Marca / Fabricante</label>
+                <input
+                  className="form-input"
+                  value={accessorySpecs.brand}
+                  onChange={(e) => setAccessorySpecs((p) => ({ ...p, brand: e.target.value }))}
+                  placeholder="Ej: Sanwa / Fábrica de Arcades"
+                />
+              </div>
 
-            <div className="form-group">
-              <label className="form-label">Cant. Palancas</label>
-              <input
-                type="number"
-                min="1"
-                max="4"
-                className="form-input"
-                value={joysticksCount}
-                onChange={(e) => setJoysticksCount(parseInt(e.target.value) || 1)}
-              />
-            </div>
+              <div className="form-group">
+                <label className="form-label">Modelo / Referencia</label>
+                <input
+                  className="form-input"
+                  value={accessorySpecs.model}
+                  onChange={(e) => setAccessorySpecs((p) => ({ ...p, model: e.target.value }))}
+                  placeholder="Ej: JLF-TP-8YT / OBSF-30"
+                />
+              </div>
 
-            <div className="form-group">
-              <label className="form-label">Botones / Jugador</label>
-              <select
-                className="form-input form-select"
-                value={buttonsPerPlayer}
-                onChange={(e) => setButtonsPerPlayer(parseInt(e.target.value) || 6)}
-              >
-                <option value="4">4 Botones</option>
-                <option value="6">6 Botones</option>
-                <option value="8">8 Botones</option>
-                <option value="12">12 Botones</option>
-                <option value="16">16 Botones</option>
-              </select>
-            </div>
+              <div className="form-group">
+                <label className="form-label">Compatibilidad</label>
+                <input
+                  className="form-input"
+                  value={accessorySpecs.compatibility}
+                  onChange={(e) => setAccessorySpecs((p) => ({ ...p, compatibility: e.target.value }))}
+                  placeholder="Ej: PC, PS4, Raspberry Pi, Bartops"
+                />
+              </div>
 
-            <div className="form-group">
-              <label className="form-label" htmlFor="product-games-count">Cantidad de juegos</label>
-              <input
-                id="product-games-count"
-                type="number"
-                min="0"
-                className="form-input"
-                value={gamesCount}
-                onChange={(e) => setGamesCount(e.target.value)}
-                placeholder="500"
-              />
+              <div className="form-group">
+                <label className="form-label">Tipo de Conexión / Ficha</label>
+                <input
+                  className="form-input"
+                  value={accessorySpecs.connection_type}
+                  onChange={(e) => setAccessorySpecs((p) => ({ ...p, connection_type: e.target.value }))}
+                  placeholder="Ej: USB 2.0 / Terminal 4.8mm / Bluetooth"
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Material / Terminación</label>
+                <input
+                  className="form-input"
+                  value={accessorySpecs.material}
+                  onChange={(e) => setAccessorySpecs((p) => ({ ...p, material: e.target.value }))}
+                  placeholder="Ej: Acrílico / Plástico ABS / Metal"
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Dimensiones / Medidas</label>
+                <input
+                  className="form-input"
+                  value={accessorySpecs.dimensions}
+                  onChange={(e) => setAccessorySpecs((p) => ({ ...p, dimensions: e.target.value }))}
+                  placeholder="Ej: 30mm diámetro / 20x15x5 cm"
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Garantía</label>
+                <input
+                  className="form-input"
+                  value={accessorySpecs.warranty}
+                  onChange={(e) => setAccessorySpecs((p) => ({ ...p, warranty: e.target.value }))}
+                  placeholder="Ej: 1 año de fábrica / 6 meses"
+                />
+              </div>
             </div>
           </div>
+        ) : (
+          <>
+            {/* Ficha Técnica: ARCADE / CONSOLA */}
+            <div className="card card-body" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+              <h3 style={{ fontSize: '0.9375rem', fontWeight: 700, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                🎮 Ficha Técnica del Modelo (Fórmula de Armado)
+              </h3>
+              <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-muted)', margin: 0 }}>
+                Definí las especificaciones fijas de hardware que lleva este modelo.
+              </p>
 
-          {/* Opciones LED */}
-          <div style={{ padding: 'var(--space-3)', background: 'var(--color-surface-2)', borderRadius: 'var(--radius-md)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', cursor: 'pointer' }}>
-              <input
-                type="checkbox"
-                checked={ledEnabled}
-                onChange={(e) => setLedEnabled(e.target.checked)}
-                style={{ width: 18, height: 18, accentColor: 'var(--color-cyan)' }}
-              />
-              <span style={{ fontWeight: 600, fontSize: '0.875rem' }}>Habilitar opción de Controles LED en este producto</span>
-            </label>
-
-            {ledEnabled && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 'var(--space-4)' }}>
                 <div className="form-group">
-                  <label className="form-label" htmlFor="product-led-surcharge">Valor Adicional LED Completo ($)</label>
+                  <label className="form-label">Jugadores</label>
+                  <select
+                    className="form-input form-select"
+                    value={playersCount}
+                    onChange={(e) => setPlayersCount(parseInt(e.target.value) || 2)}
+                  >
+                    <option value="1">1 Jugador</option>
+                    <option value="2">2 Jugadores</option>
+                    <option value="4">4 Jugadores</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Cant. Palancas</label>
                   <input
-                    id="product-led-surcharge"
-                    className="form-input"
                     type="number"
-                    min="0"
-                    step="100"
-                    value={ledSurcharge}
-                    onChange={(e) => setLedSurcharge(e.target.value)}
-                    placeholder="25000"
+                    min="1"
+                    max="4"
+                    className="form-input"
+                    value={joysticksCount}
+                    onChange={(e) => setJoysticksCount(parseInt(e.target.value) || 1)}
                   />
                 </div>
-                <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', margin: 0 }}>
-                  💡 Si el cliente elige solo palancas LED o solo botones LED, el sistema calculará automáticamente el <strong>50%</strong> (${(parseFloat(ledSurcharge || '0') / 2).toLocaleString('es-AR')}). Si elige ambos, sumará el 100%.
-                </p>
+
+                <div className="form-group">
+                  <label className="form-label">Botones / Jugador</label>
+                  <select
+                    className="form-input form-select"
+                    value={buttonsPerPlayer}
+                    onChange={(e) => setButtonsPerPlayer(parseInt(e.target.value) || 6)}
+                  >
+                    <option value="4">4 Botones</option>
+                    <option value="6">6 Botones</option>
+                    <option value="8">8 Botones</option>
+                    <option value="12">12 Botones</option>
+                    <option value="16">16 Botones</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label" htmlFor="product-games-count">Cantidad de juegos</label>
+                  <input
+                    id="product-games-count"
+                    type="number"
+                    min="0"
+                    className="form-input"
+                    value={gamesCount}
+                    onChange={(e) => setGamesCount(e.target.value)}
+                    placeholder="500"
+                  />
+                </div>
+              </div>
+
+              {/* Opciones LED */}
+              <div style={{ padding: 'var(--space-3)', background: 'var(--color-surface-2)', borderRadius: 'var(--radius-md)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={ledEnabled}
+                    onChange={(e) => setLedEnabled(e.target.checked)}
+                    style={{ width: 18, height: 18, accentColor: 'var(--color-cyan)' }}
+                  />
+                  <span style={{ fontWeight: 600, fontSize: '0.875rem' }}>Habilitar opción de Controles LED en este producto</span>
+                </label>
+
+                {ledEnabled && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+                    <div className="form-group">
+                      <label className="form-label" htmlFor="product-led-surcharge">Valor Adicional LED Completo ($)</label>
+                      <input
+                        id="product-led-surcharge"
+                        className="form-input"
+                        type="number"
+                        min="0"
+                        step="100"
+                        value={ledSurcharge}
+                        onChange={(e) => setLedSurcharge(e.target.value)}
+                        placeholder="25000"
+                      />
+                    </div>
+                    <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', margin: 0 }}>
+                      💡 Si el cliente elige solo palancas LED o solo botones LED, el sistema calculará automáticamente el <strong>50%</strong> (${(parseFloat(ledSurcharge || '0') / 2).toLocaleString('es-AR')}). Si elige ambos, sumará el 100%.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Emparejar Familias de Insumos */}
+            {families.length > 0 && (
+              <div className="card card-body" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <h3 style={{ fontSize: '0.9375rem', fontWeight: 700, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                      📦 Familias de Insumos Compatibles
+                    </h3>
+                    <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-muted)', margin: 0 }}>
+                      Tildá qué familias de insumos son compatibles y se ofrecerán para este modelo.
+                    </p>
+                  </div>
+                  <a href="/admin/familias" className="btn btn-ghost btn-xs" target="_blank">
+                    + Administrar Familias ↗
+                  </a>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 'var(--space-2)' }}>
+                  {families.map((fam: any) => {
+                    const isSelected = selectedFamilies.includes(fam.id)
+                    return (
+                      <label
+                        key={fam.id}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 'var(--space-3)',
+                          padding: 'var(--space-2) var(--space-3)',
+                          background: isSelected ? 'var(--color-cyan-dim)' : 'var(--color-surface-2)',
+                          border: isSelected ? '1px solid var(--color-cyan)' : '1px solid var(--color-border)',
+                          borderRadius: 'var(--radius-md)',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => {
+                            setSelectedFamilies((prev) =>
+                              isSelected ? prev.filter((id) => id !== fam.id) : [...prev, fam.id]
+                            )
+                          }}
+                          style={{ width: 16, height: 16, accentColor: 'var(--color-cyan)' }}
+                        />
+                        <div>
+                          <div style={{ fontSize: '0.875rem', fontWeight: 600 }}>{fam.name}</div>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
+                            {fam.supply_ids?.length || 0} insumos vinculados
+                          </div>
+                        </div>
+                      </label>
+                    )
+                  })}
+                </div>
               </div>
             )}
-          </div>
-        </div>
-
-        {/* Emparejar Familias de Insumos */}
-        {families.length > 0 && (
-          <div className="card card-body" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <h3 style={{ fontSize: '0.9375rem', fontWeight: 700, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>
-                  📦 Familias de Insumos Compatibles
-                </h3>
-                <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-muted)', margin: 0 }}>
-                  Tildá qué familias de insumos son compatibles y se ofrecerán para este modelo.
-                </p>
-              </div>
-              <a href="/admin/familias" className="btn btn-ghost btn-xs" target="_blank">
-                + Administrar Familias ↗
-              </a>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 'var(--space-2)' }}>
-              {families.map((fam: any) => {
-                const isSelected = selectedFamilies.includes(fam.id)
-                return (
-                  <label
-                    key={fam.id}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 'var(--space-3)',
-                      padding: 'var(--space-2) var(--space-3)',
-                      background: isSelected ? 'var(--color-cyan-dim)' : 'var(--color-surface-2)',
-                      border: isSelected ? '1px solid var(--color-cyan)' : '1px solid var(--color-border)',
-                      borderRadius: 'var(--radius-md)',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={isSelected}
-                      onChange={() => {
-                        setSelectedFamilies((prev) =>
-                          isSelected ? prev.filter((id) => id !== fam.id) : [...prev, fam.id]
-                        )
-                      }}
-                      style={{ width: 16, height: 16, accentColor: 'var(--color-cyan)' }}
-                    />
-                    <div>
-                      <div style={{ fontSize: '0.875rem', fontWeight: 600 }}>{fam.name}</div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
-                        {fam.supply_ids?.length || 0} insumos vinculados
-                      </div>
-                    </div>
-                  </label>
-                )
-              })}
-            </div>
-          </div>
+          </>
         )}
 
         <div className="card card-body" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>

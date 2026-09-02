@@ -992,40 +992,84 @@ export function ProductDetailClient({
                 </p>
               )}
 
-              <div className="purchase-mode-grid">
-                <button
-                  type="button"
-                  className={clsx('purchase-mode-card', { active: selectedPresetId !== null })}
-                  onClick={() => {
-                    if (presets.length > 0) {
-                      handleSelectPreset(presets[0])
-                    }
-                  }}
-                  disabled={presets.length === 0}
-                  style={{ textAlign: 'left', cursor: presets.length > 0 ? 'pointer' : 'not-allowed', border: '1px solid var(--color-border)' }}
-                >
-                  <strong>⚡ Comprar listo para entregar</strong>
-                  <span>
-                    Equipo ya armado en fábrica. La configuración no se modifica.
-                  </span>
-                  <small>{stockSummary.immediate > 0 ? `${stockSummary.immediate} disponible(s)` : 'Sin equipos listos ahora'}</small>
-                </button>
-                <button
-                  type="button"
-                  className={clsx('purchase-mode-card', { active: selectedPresetId === null })}
-                  onClick={() => handleSelectCustom()}
-                  style={{ textAlign: 'left', cursor: 'pointer', border: '1px solid var(--color-border)' }}
-                >
-                  <strong>🎨 Comprar a medida</strong>
-                  <span>
-                    Elegís vinilo, palancas, botones y adicionales antes de iniciar el pedido.
-                  </span>
-                  <small>
-                    {vinylSource === 'stock' && selectedVinyl?.quantity ? '24/48 hs con vinilo impreso' : `${designedDaysLabel} con impresión`}
-                  </small>
-                </button>
-              </div>
+              {product.requires_production && (
+                <div className="purchase-mode-grid">
+                  <button
+                    type="button"
+                    className={clsx('purchase-mode-card', { active: selectedPresetId !== null })}
+                    onClick={() => {
+                      if (presets.length > 0) {
+                        handleSelectPreset(presets[0])
+                      }
+                    }}
+                    disabled={presets.length === 0}
+                    style={{ textAlign: 'left', cursor: presets.length > 0 ? 'pointer' : 'not-allowed', border: '1px solid var(--color-border)' }}
+                  >
+                    <strong>⚡ Comprar listo para entregar</strong>
+                    <span>
+                      Equipo ya armado en fábrica. La configuración no se modifica.
+                    </span>
+                    <small>{stockSummary.immediate > 0 ? `${stockSummary.immediate} disponible(s)` : 'Sin equipos listos ahora'}</small>
+                  </button>
+                  <button
+                    type="button"
+                    className={clsx('purchase-mode-card', { active: selectedPresetId === null })}
+                    onClick={() => handleSelectCustom()}
+                    style={{ textAlign: 'left', cursor: 'pointer', border: '1px solid var(--color-border)' }}
+                  >
+                    <strong>🎨 Comprar a medida</strong>
+                    <span>
+                      Elegís vinilo, palancas, botones y adicionales antes de iniciar el pedido.
+                    </span>
+                    <small>
+                      {vinylSource === 'stock' && selectedVinyl?.quantity ? '24/48 hs con vinilo impreso' : `${designedDaysLabel} con impresión`}
+                    </small>
+                  </button>
+                </div>
+              )}
             </div>
+
+            {/* Accessory Specifications Box */}
+            {productSpecs.accessory_specs && Object.values(productSpecs.accessory_specs).some(Boolean) && (
+              <div
+                style={{
+                  padding: 'var(--space-4)',
+                  background: 'var(--color-surface-2)',
+                  borderRadius: 'var(--radius-lg)',
+                  border: '1px solid var(--color-border)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 'var(--space-3)',
+                }}
+              >
+                <div style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--color-cyan)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  🔌 Especificaciones Técnicas
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 'var(--space-2) var(--space-4)', fontSize: '0.875rem' }}>
+                  {productSpecs.accessory_specs.brand && (
+                    <div><span style={{ color: 'var(--color-text-muted)' }}>Marca:</span> <strong>{productSpecs.accessory_specs.brand}</strong></div>
+                  )}
+                  {productSpecs.accessory_specs.model && (
+                    <div><span style={{ color: 'var(--color-text-muted)' }}>Modelo:</span> <strong>{productSpecs.accessory_specs.model}</strong></div>
+                  )}
+                  {productSpecs.accessory_specs.compatibility && (
+                    <div><span style={{ color: 'var(--color-text-muted)' }}>Compatibilidad:</span> <strong>{productSpecs.accessory_specs.compatibility}</strong></div>
+                  )}
+                  {productSpecs.accessory_specs.connection_type && (
+                    <div><span style={{ color: 'var(--color-text-muted)' }}>Conexión:</span> <strong>{productSpecs.accessory_specs.connection_type}</strong></div>
+                  )}
+                  {productSpecs.accessory_specs.material && (
+                    <div><span style={{ color: 'var(--color-text-muted)' }}>Material:</span> <strong>{productSpecs.accessory_specs.material}</strong></div>
+                  )}
+                  {productSpecs.accessory_specs.dimensions && (
+                    <div><span style={{ color: 'var(--color-text-muted)' }}>Dimensiones:</span> <strong>{productSpecs.accessory_specs.dimensions}</strong></div>
+                  )}
+                  {productSpecs.accessory_specs.warranty && (
+                    <div><span style={{ color: 'var(--color-text-muted)' }}>Garantía:</span> <strong>{productSpecs.accessory_specs.warranty}</strong></div>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Price */}
             <div

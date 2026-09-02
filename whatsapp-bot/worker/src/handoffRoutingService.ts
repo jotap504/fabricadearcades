@@ -137,6 +137,9 @@ export async function forwardHandoffToResponsible(
     },
   })
 
+  return route
+}
+
 export async function forwardCustomerFollowupToResponsible(
   conversation: ConversationForHandoff,
   messageText: string,

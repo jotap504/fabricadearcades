@@ -44,7 +44,8 @@ export function Header() {
         <div className="header-inner">
           {/* Logo */}
           <Link href="/" className="header-logo" style={{ padding: 0, background: 'none', border: 'none' }}>
-            <img src="/logo.png" alt="Fábrica de Arcades" style={{ height: 40, width: 'auto' }} />
+            <img src="/logo.png" alt="Fábrica de Arcades" className="logo-dark" style={{ height: 40, width: 'auto' }} />
+            <img src="/logo-light.png" alt="Fábrica de Arcades" className="logo-light" style={{ height: 40, width: 'auto' }} />
           </Link>
 
           {/* Desktop Nav */}
@@ -239,7 +240,8 @@ export function Header() {
       <div className={clsx('drawer', { open: mobileOpen })}>
         <div>
           <Link href="/" className="header-logo" onClick={() => setMobileOpen(false)} style={{ padding: 0, background: 'none', border: 'none', marginBottom: 'var(--space-6)' }}>
-            <img src="/logo.png" alt="Fábrica de Arcades" style={{ height: 40, width: 'auto' }} />
+            <img src="/logo.png" alt="Fábrica de Arcades" className="logo-dark" style={{ height: 40, width: 'auto' }} />
+            <img src="/logo-light.png" alt="Fábrica de Arcades" className="logo-light" style={{ height: 40, width: 'auto' }} />
           </Link>
           <nav style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}>
             {NAV_LINKS.map((link) => (

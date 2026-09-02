@@ -526,6 +526,22 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--color-cyan);
 }
 
+.logo-light {
+  display: none !important;
+}
+
+.logo-dark {
+  display: block !important;
+}
+
+:root[data-theme='light'] .logo-light {
+  display: block !important;
+}
+
+:root[data-theme='light'] .logo-dark {
+  display: none !important;
+}
+
 .header-logo-icon {
   width: 36px;
   height: 36px;

@@ -45,7 +45,8 @@ export function Footer() {
           {/* Brand */}
           <div style={{ marginBottom: 'var(--space-6)' }}>
             <Link href="/" style={{ display: 'inline-block', marginBottom: 'var(--space-4)' }}>
-              <img src="/logo.png" alt="Fábrica de Arcades" style={{ height: 48, width: 'auto' }} />
+              <img src="/logo.png" alt="Fábrica de Arcades" className="logo-dark" style={{ height: 48, width: 'auto' }} />
+              <img src="/logo-light.png" alt="Fábrica de Arcades" className="logo-light" style={{ height: 48, width: 'auto' }} />
             </Link>
             <p style={{ color: 'var(--color-text-secondary)', lineHeight: 1.6, maxWidth: 320 }}>
               Fabricamos consolas arcade personalizadas en Argentina. Calidad premium,

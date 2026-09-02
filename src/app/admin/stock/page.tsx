@@ -2,7 +2,7 @@ import { createClient, getAuthUser } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { revalidatePath } from 'next/cache'
-import { Search, SlidersHorizontal } from 'lucide-react'
+import { Search, SlidersHorizontal, Trash2 } from 'lucide-react'
 import { QuickStockModal } from '@/components/admin/QuickStockModal'
 
 type StockSearchParams = Promise<{
@@ -82,7 +82,7 @@ export default async function AdminStockPage({ searchParams }: { searchParams: S
   })
 
   const stockTypeLabel: Record<string, string> = {
-    immediate: '✅ Equipo terminado',
+    immediate: '✅ Equipo terminado / Stock listo',
     printed: '⏱ Impreso (24 hs)',
     designed: '🎨 Diseñado (7 días)',
   }
@@ -93,15 +93,6 @@ export default async function AdminStockPage({ searchParams }: { searchParams: S
     const quantity = parseInt(formData.get('quantity') as string) || 0
 
     const supabase = await createClient()
-    const { data: stockItem } = await supabase
-      .from('stock_items')
-      .select('stock_type')
-      .eq('id', stockId)
-      .single()
-    if (stockItem?.stock_type === 'immediate') {
-      revalidatePath('/admin/stock')
-      return
-    }
     const { error } = await supabase
       .from('stock_items')
       .update({ quantity: Math.max(0, quantity), updated_at: new Date().toISOString() })
@@ -109,6 +100,23 @@ export default async function AdminStockPage({ searchParams }: { searchParams: S
 
     if (error) {
       console.error('Error updating stock item quantity:', error)
+    }
+
+    revalidatePath('/admin/stock')
+  }
+
+  async function deleteStockItemAction(formData: FormData) {
+    'use server'
+    const stockId = formData.get('stock_id') as string
+
+    const supabase = await createClient()
+    const { error } = await supabase
+      .from('stock_items')
+      .delete()
+      .eq('id', stockId)
+
+    if (error) {
+      console.error('Error deleting stock item:', error)
     }
 
     revalidatePath('/admin/stock')
@@ -213,15 +221,16 @@ export default async function AdminStockPage({ searchParams }: { searchParams: S
               <th>Vinilo / configuración</th>
               <th>Variante</th>
               <th>Tipo de stock</th>
-              <th style={{ width: '180px' }}>Cantidad</th>
+              <th style={{ width: '200px' }}>Cantidad</th>
               <th>Actualizado</th>
+              <th style={{ width: '60px', textAlign: 'center' }}>Acciones</th>
             </tr>
           </thead>
           <tbody>
             {stockItems.map((item) => (
               <tr key={item.id}>
                 <td>
-                  <Link href={`/productos/${item.product?.slug}`} style={{ color: 'var(--color-cyan)' }}>
+                  <Link href={`/productos/${item.product?.slug}`} style={{ color: 'var(--color-cyan)', fontWeight: 600 }}>
                     {item.product?.name ?? '—'}
                   </Link>
                 </td>
@@ -260,16 +269,6 @@ export default async function AdminStockPage({ searchParams }: { searchParams: S
                   </span>
                 </td>
                 <td>
-                  {item.stock_type === 'immediate' ? (
-                    <div>
-                      <strong style={{ color: item.quantity > 0 ? 'var(--color-green)' : 'var(--color-red)' }}>
-                        {item.quantity}
-                      </strong>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
-                        Se modifica al armar, vender o cancelar
-                      </div>
-                    </div>
-                  ) : (
                   <form action={updateStockQuantityAction} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     <input type="hidden" name="stock_id" value={item.id} />
                     <input
@@ -295,16 +294,29 @@ export default async function AdminStockPage({ searchParams }: { searchParams: S
                       Guardar
                     </button>
                   </form>
-                  )}
                 </td>
                 <td style={{ color: 'var(--color-text-muted)', fontSize: '0.875rem' }}>
                   {new Date(item.updated_at).toLocaleDateString('es-AR')}
+                </td>
+                <td style={{ textAlign: 'center' }}>
+                  <form action={deleteStockItemAction}>
+                    <input type="hidden" name="stock_id" value={item.id} />
+                    <button
+                      type="submit"
+                      className="btn btn-ghost btn-icon btn-sm"
+                      style={{ color: 'var(--color-danger)' }}
+                      title="Eliminar este registro de stock"
+                      id={`stock-delete-${item.id}`}
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  </form>
                 </td>
               </tr>
             ))}
             {stockItems.length === 0 && (
               <tr>
-                <td colSpan={6} style={{ textAlign: 'center', padding: 'var(--space-10)', color: 'var(--color-text-muted)' }}>
+                <td colSpan={7} style={{ textAlign: 'center', padding: 'var(--space-10)', color: 'var(--color-text-muted)' }}>
                   No hay registros de stock que coincidan con la búsqueda.
                 </td>
               </tr>

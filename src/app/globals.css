@@ -153,6 +153,10 @@ html {
   scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* body's overflow-x:hidden doesn't clip position:fixed descendants
+     (e.g. .cart-sidebar while closed) since they escape body's
+     containing block — this is what actually clips them. */
+  overflow-x: hidden;
 }
 
 body {

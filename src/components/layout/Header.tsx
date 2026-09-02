@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
@@ -31,9 +31,19 @@ export function Header() {
   const pathname = usePathname()
   const { user, profile, signOut } = useAuth()
   const openCart = useCartStore((s) => s.openCart)
-  const itemCount = useCartStore((s) => s.itemCount())
+  const persistedItemCount = useCartStore((s) => s.itemCount())
   const [mobileOpen, setMobileOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // The cart is persisted client-side (localStorage), so the server always
+  // renders 0. Hold at 0 until after mount so the first client render still
+  // matches the server, instead of causing a hydration mismatch.
+  const itemCount = mounted ? persistedItemCount : 0
 
   const isAdmin = profile?.role === 'admin'
   const isFabricante = profile?.role === 'fabricante'

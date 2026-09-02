@@ -80,8 +80,16 @@ export async function createStoreOrder(input: CheckoutOrderInput): Promise<Creat
 
 export interface MercadoPagoCheckoutInput {
   orderId: string
+  orderNumber: string
   payerEmail: string
-  items: Array<{ title: string; quantity: number; unit_price: number }>
+  payerName: string
+  total: number
+  items: Array<{ title: string; quantity: number }>
+}
+
+function splitName(fullName: string): { firstName: string; lastName: string } {
+  const parts = fullName.trim().split(/\s+/)
+  return { firstName: parts[0] ?? '', lastName: parts.slice(1).join(' ') || parts[0] || '' }
 }
 
 export async function createMercadoPagoCheckout(input: MercadoPagoCheckoutInput): Promise<{ checkoutUrl: string }> {
@@ -90,11 +98,24 @@ export async function createMercadoPagoCheckout(input: MercadoPagoCheckoutInput)
   }
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-  // "outcome" (not "status") to avoid colliding with the query params
-  // MercadoPago itself appends to the back_url on redirect.
+  const { firstName, lastName } = splitName(input.payerName)
+  const description = input.items.map((item) => `${item.quantity}x ${item.title}`).join(', ')
+
+  // Single consolidated line item priced at the order's authoritative total
+  // (already includes any mercadopago_surcharge_pct) so the amount charged
+  // through MercadoPago always matches the order stored in Supabase.
   const preference = await createPreference({
-    items: input.items,
+    items: [
+      {
+        title: `Pedido ${input.orderNumber} — Fábrica de Arcades`,
+        description: description.slice(0, 250),
+        quantity: 1,
+        unit_price: input.total,
+      },
+    ],
     payerEmail: input.payerEmail,
+    payerFirstName: firstName,
+    payerLastName: lastName,
     externalReference: input.orderId,
     backUrls: {
       success: `${appUrl}/checkout/mercadopago/retorno?outcome=approved`,
@@ -102,6 +123,7 @@ export async function createMercadoPagoCheckout(input: MercadoPagoCheckoutInput)
       pending: `${appUrl}/checkout/mercadopago/retorno?outcome=pending`,
     },
     notificationUrl: `${appUrl}/api/mercadopago/webhook`,
+    statementDescriptor: 'FABRICARCADE',
   })
 
   return { checkoutUrl: await pickCheckoutUrl(preference) }

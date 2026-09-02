@@ -192,11 +192,13 @@ export default function CheckoutPage() {
       if (paymentMethod === 'mercadopago') {
         const { checkoutUrl } = await createMercadoPagoCheckout({
           orderId: result.orderId,
+          orderNumber: result.orderNumber,
           payerEmail: finalEmail,
+          payerName: finalName,
+          total: result.total,
           items: items.map((item) => ({
             title: item.product.name,
             quantity: item.quantity,
-            unit_price: item.unit_price,
           })),
         })
         clearCart()

@@ -2,14 +2,18 @@ export interface MPPreferenceItem {
   title: string
   quantity: number
   unit_price: number
+  description?: string
 }
 
 export interface MPCreatePreferenceInput {
   items: MPPreferenceItem[]
   payerEmail: string
+  payerFirstName?: string
+  payerLastName?: string
   externalReference: string
   backUrls: { success: string; failure: string; pending: string }
   notificationUrl: string
+  statementDescriptor?: string
 }
 
 export interface MPPreferenceResponse {

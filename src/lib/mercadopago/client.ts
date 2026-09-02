@@ -40,12 +40,21 @@ export async function createPreference(input: MPCreatePreferenceInput): Promise<
         quantity: item.quantity,
         unit_price: item.unit_price,
         currency_id: 'ARS',
+        ...(item.description ? { description: item.description } : {}),
       })),
-      payer: { email: input.payerEmail },
+      payer: {
+        email: input.payerEmail,
+        ...(input.payerFirstName ? { first_name: input.payerFirstName } : {}),
+        ...(input.payerLastName ? { last_name: input.payerLastName } : {}),
+      },
       external_reference: input.externalReference,
       back_urls: input.backUrls,
       auto_return: 'approved',
       notification_url: input.notificationUrl,
+      // Instant approve/reject only — avoids orders left dangling in "pending"
+      // against the 48h stock-reservation window.
+      binary_mode: true,
+      ...(input.statementDescriptor ? { statement_descriptor: input.statementDescriptor } : {}),
     }),
   })
 }

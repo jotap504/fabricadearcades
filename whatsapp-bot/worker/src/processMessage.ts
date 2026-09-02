@@ -66,7 +66,6 @@ export async function processMessage(message: NormalizedMessage) {
 
   const answer = await askLlm(message.content, sources, history)
   const allowedSourceIds = new Set(sources.map((source) => source.id))
-  // Accept catalog and valid sources
   const sourceIdsAreValid = answer.knowledge_ids.length > 0 && answer.knowledge_ids.every((id) => allowedSourceIds.has(id) || id.startsWith('prod_'))
 
   if (answer.action === 'CLARIFY') {
@@ -79,9 +78,12 @@ export async function processMessage(message: NormalizedMessage) {
   }
 
   // Use a sensible confidence threshold (0.5 or setting) so it doesn't drop answers
-  const minConfidence = Math.min(settings.confidenceThreshold || 0.75, 0.5)
+  const minConfidence = Math.min(settings.confidenceThreshold || 0.75, 0.45)
 
-  if (answer.action !== 'ANSWER' || answer.confidence < minConfidence) {
+  // If the model gave an answer with text, prioritize answering rather than handing off
+  const hasUsefulAnswer = Boolean(answer.answer && answer.answer.trim().length > 5)
+
+  if ((answer.action === 'HANDOFF' && !hasUsefulAnswer) || answer.confidence < minConfidence) {
     const reason = answer.reason || 'Respuesta insuficiente'
     await createHandoff(conversation.id, savedMessage.id, message.content, reason)
     await forwardHandoffToResponsible(conversation, message.content, reason)

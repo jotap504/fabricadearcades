@@ -4,7 +4,7 @@ import { sendWhatsAppText, sendWhatsAppMedia, sendWhatsAppPresence } from './evo
 import { forwardHandoffToResponsible, handleResponsibleReply, isResponsiblePhone } from './handoffRoutingService.js'
 import { retrieveKnowledge } from './ragService.js'
 import { getBotSettings } from './settingsService.js'
-import { getSafeFirstName, getSimpleReply } from './simpleIntents.js'
+import { getSafeFirstName, getSimpleReply, isExplicitHandoffRequest } from './simpleIntents.js'
 import type { NormalizedMessage } from './types.js'
 
 export async function processMessage(message: NormalizedMessage) {
@@ -32,6 +32,15 @@ export async function processMessage(message: NormalizedMessage) {
   const settings = await getBotSettings()
   if (!settings.botActive) return { status: 'bot_inactive' }
   if (conversation.mode !== 'BOT') return { status: `conversation_${conversation.mode.toLowerCase()}` }
+
+  // Check explicit handoff intent (e.g., "vendedor", "humano", "asesor", "persona")
+  if (isExplicitHandoffRequest(message.content)) {
+    const reason = 'Solicitud explícita de atención humana'
+    await createHandoff(conversation.id, savedMessage.id, message.content, reason)
+    await forwardHandoffToResponsible(conversation, message.content, reason)
+    await sendWhatsAppText(message.phone, settings.handoffMessage)
+    return { status: 'handoff_explicit' }
+  }
 
   // Send "composing / escribiendo..." presence state to customer immediately
   sendWhatsAppPresence(message.phone, 'composing', 4000).catch(() => {})

@@ -21,6 +21,27 @@ export function getSimpleReply(text: string, firstName?: string | null): string 
   return null
 }
 
+export function isExplicitHandoffRequest(text: string): boolean {
+  const normalized = text
+    .trim()
+    .toLocaleLowerCase('es')
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .replace(/[¡!.,;:¿?()[\]{}"'`´]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+
+  const explicitPatterns = [
+    /\b(vendedor|asesor|humano|persona|representante|alguien real|atencion humana)\b/,
+    /\b(hablar con (un|una|el|la)?\s*(vendedor|asesor|humano|persona|alguien|representante|dueno|responsable))\b/,
+    /\b(pasame con|comunicame con|pasame al|derivame con|derivame al)\b/,
+    /\b(quiero hablar con|necesito hablar con)\b/,
+    /\b(atencion telefonica|llamenme|llamame|me podes llamar|me pueden llamar)\b/,
+  ]
+
+  return explicitPatterns.some((pattern) => pattern.test(normalized))
+}
+
 export function getSafeFirstName(displayName?: string | null): string | null {
   const clean = displayName?.trim()
   if (!clean) return null

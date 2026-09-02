@@ -228,6 +228,24 @@ h1, h2, h3, h4, h5, h6 {
   }
 }
 
+.hero-accordion-row {
+  flex-wrap: wrap;
+}
+
+.hero-accordion-images {
+  min-width: 100%;
+}
+
+@media (min-width: 900px) {
+  .hero-accordion-row {
+    flex-wrap: nowrap;
+  }
+
+  .hero-accordion-images {
+    min-width: 660px;
+  }
+}
+
 .flex-center {
   display: flex;
   align-items: center;

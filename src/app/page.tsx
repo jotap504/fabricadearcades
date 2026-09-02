@@ -6,7 +6,7 @@ import { createAdminClient, createClient } from '@/lib/supabase/server'
 import { ProductCard } from '@/components/products/ProductCard'
 import type { Product } from '@/lib/types'
 import { mockProducts, mockCategories } from '@/lib/mock-data'
-import { AnimatedMarqueeHero } from '@/components/ui/hero-3'
+import { ImageAccordionHero, type ImageAccordionItem } from '@/components/ui/interactive-image-accordion'
 
 const getCategoryIconLarge = (slug: string) => {
   switch (slug) {
@@ -169,15 +169,6 @@ export default async function HomePage() {
     .map(withStockSummary)
     .sort((a, b) => (a.stock_summary?.availability === 'immediate' ? 0 : 1) - (b.stock_summary?.availability === 'immediate' ? 0 : 1) || a.sort_order - b.sort_order || a.name.localeCompare(b.name, 'es'))
 
-  const heroImages = HERO_IMAGES.map((src, index) => {
-    const linkedProduct = featuredProducts[index % Math.max(featuredProducts.length, 1)]
-    return {
-      src,
-      href: linkedProduct?.slug ? `/productos/${linkedProduct.slug}` : '/productos',
-      alt: linkedProduct?.name ?? `Arcade destacado ${index + 1}`,
-    }
-  })
-
   // Fetch all categories
   const { data: categories } = supabase
     ? await supabase
@@ -187,10 +178,36 @@ export default async function HomePage() {
         .order('sort_order')
     : { data: mockCategories }
 
+  // One representative product image per category, for the hero accordion
+  const { data: categoryImageRows } = supabase
+    ? await supabase
+        .from('products')
+        .select('category_id, images')
+        .eq('is_active', true)
+        .not('category_id', 'is', null)
+        .order('is_featured', { ascending: false })
+        .order('sort_order', { ascending: true })
+    : { data: [] }
+
+  const categoryImageById = new Map<string, string>()
+  for (const row of categoryImageRows ?? []) {
+    const categoryId = (row as { category_id: string | null }).category_id
+    if (!categoryId || categoryImageById.has(categoryId)) continue
+    const images = (row as { images: string[] | null }).images
+    if (Array.isArray(images) && images[0]) categoryImageById.set(categoryId, images[0])
+  }
+
+  const accordionItems: ImageAccordionItem[] = (categories ?? []).map((cat: any, index: number) => ({
+    id: cat.id,
+    title: cat.name,
+    imageUrl: categoryImageById.get(cat.id) || HERO_IMAGES[index % HERO_IMAGES.length],
+    href: `/productos?categoria=${cat.slug}`,
+  }))
+
   return (
     <>
       {/* HERO */}
-      <AnimatedMarqueeHero
+      <ImageAccordionHero
         tagline="FÁBRICA DE ARCADES — Showroom en Devoto, CABA"
         title={
           <>
@@ -201,8 +218,7 @@ export default async function HomePage() {
         }
         description="Equipos multijuegos premium fabricados en Argentina. Elegí tu gabinete, vinilos de diseño, colores de palancas y botones. Envío express."
         ctaText="Ver Catálogo"
-        images={heroImages}
-        className="min-h-[80vh]"
+        items={accordionItems}
       />
 
       {/* FEATURES */}

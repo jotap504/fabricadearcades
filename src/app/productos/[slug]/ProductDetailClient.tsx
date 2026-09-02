@@ -173,32 +173,6 @@ export function ProductDetailClient({
     }
   })
 
-  // Dynamic images based on vinyl selection
-  const selectedVinyl = useMemo(() => {
-    if (customization.vinyl_supply_id) {
-      return supplies.find((s) => s.id === customization.vinyl_supply_id)
-    }
-    if (customization.vinyl_name) {
-      return supplies.find((s) => s.name === customization.vinyl_name)
-    }
-    return undefined
-  }, [supplies, customization.vinyl_supply_id, customization.vinyl_name])
-
-  const images = useMemo(() => {
-    const base = product.images ?? []
-    if (selectedVinyl?.image_url) {
-      return [selectedVinyl.image_url, ...base]
-    }
-    return base
-  }, [product.images, selectedVinyl])
-
-  // Image gallery state
-  const [activeImage, setActiveImage] = useState(0)
-
-  useEffect(() => {
-    setActiveImage(0)
-  }, [customization.vinyl_supply_id, customization.vinyl_name, customization.vinyl_source])
-
   const [quantity, setQuantity] = useState(1)
   const [openFaq, setOpenFaq] = useState<number | null>(null)
   const vinylParam = searchParams.get('vinilo')
@@ -316,6 +290,38 @@ export function ProductDetailClient({
       return true
     })
   }, [supplies, productVinylSupplyIds, allowedSupplyIds])
+
+  // Dynamic images based on vinyl selection
+  const selectedVinyl = useMemo(() => {
+    if (customization.vinyl_supply_id) {
+      return (
+        supplies.find((s) => s.id === customization.vinyl_supply_id) ||
+        allCompatibleVinyls.find((s) => s.id === customization.vinyl_supply_id)
+      )
+    }
+    if (customization.vinyl_name && customization.vinyl_name !== 'Personalizado a Medida') {
+      return (
+        supplies.find((s) => s.name.toLowerCase() === customization.vinyl_name?.toLowerCase()) ||
+        allCompatibleVinyls.find((s) => s.name.toLowerCase() === customization.vinyl_name?.toLowerCase())
+      )
+    }
+    return undefined
+  }, [supplies, allCompatibleVinyls, customization.vinyl_supply_id, customization.vinyl_name])
+
+  const images = useMemo(() => {
+    const base = product.images ?? []
+    if (selectedVinyl?.image_url) {
+      return [selectedVinyl.image_url, ...base]
+    }
+    return base
+  }, [product.images, selectedVinyl])
+
+  // Image gallery state
+  const [activeImage, setActiveImage] = useState(0)
+
+  useEffect(() => {
+    setActiveImage(0)
+  }, [selectedVinyl?.image_url, customization.vinyl_supply_id, customization.vinyl_name, customization.vinyl_source])
 
   useEffect(() => {
     if (vinylParam) {
@@ -1248,7 +1254,7 @@ export function ProductDetailClient({
                                   </select>
                                 </label>
                                 <div className="vinyl-picker-preview">
-                                  {selectedVinyl?.image_url && customization.vinyl_source === 'stock' ? (
+                                  {selectedVinyl?.image_url ? (
                                     <img src={selectedVinyl.image_url} alt={selectedVinyl.name} />
                                   ) : (
                                     <div className="vinyl-picker-empty">Elegí un vinilo para verlo en grande</div>

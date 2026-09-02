@@ -10,14 +10,19 @@ export default async function ChatbotConfiguracionPage() {
   if (profile?.role !== 'admin') redirect('/')
 
   let data: any[] = []
+  let routesData: any[] = []
   let databasePending = false
   try {
-    const result = await supabase.from('chatbot_bot_settings').select('key,value,label').order('key')
-    if (result.error) throw result.error
-    data = result.data ?? []
+    const [settingsResult, routesResult] = await Promise.all([
+      supabase.from('chatbot_bot_settings').select('key,value,label').order('key'),
+      supabase.from('chatbot_handoff_routes').select('*').order('priority', { ascending: false }),
+    ])
+    if (settingsResult.error) throw settingsResult.error
+    data = settingsResult.data ?? []
+    routesData = routesResult.data ?? []
   } catch (error) {
     if (isMissingChatbotTableError(error)) databasePending = true
     else throw error
   }
-  return <ChatbotSettingsClient initialSettings={data} databasePending={databasePending} />
+  return <ChatbotSettingsClient initialSettings={data} initialRoutes={routesData} databasePending={databasePending} />
 }

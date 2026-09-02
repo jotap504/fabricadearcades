@@ -342,12 +342,7 @@ Regla máxima:
 Rutas de derivación configuradas:
 
 - MercadoLibre / publicaciones externas: `5491153078610`.
-- Arcades / juegos / consolas: `5491164045074`.
-
-Estado temporal:
-
-- La ruta a `5491164045074` fue pausada para permitir usar ese número en pruebas.
-- No borrar la ruta; solo está inactiva.
+- Arcades / juegos / consolas: `5491164045074` (activa para derivación automática y respuesta directa).
 
 ### Respuestas desde teléfonos responsables
 

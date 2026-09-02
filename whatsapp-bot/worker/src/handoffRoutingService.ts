@@ -22,8 +22,32 @@ function normalizeText(value: string) {
     .replace(/\p{Diacritic}/gu, '')
 }
 
-function cleanPhone(value: string) {
-  return value.replace(/\D/g, '')
+function normalizePhoneDigits(value: string) {
+  const digits = value.replace(/\D/g, '')
+  if (digits.startsWith('549') && digits.length === 13) {
+    return digits
+  }
+  if (digits.startsWith('54') && digits.length === 12) {
+    return `549${digits.slice(2)}`
+  }
+  if (digits.startsWith('15') && digits.length === 10) {
+    return `54911${digits.slice(2)}`
+  }
+  if (digits.length === 10 && digits.startsWith('11')) {
+    return `549${digits}`
+  }
+  return digits
+}
+
+function matchesPhone(a: string, b: string) {
+  const normA = normalizePhoneDigits(a)
+  const normB = normalizePhoneDigits(b)
+  if (normA === normB) return true
+  // Match last 8 digits (local subscriber number, e.g. 64045074 or 53078610)
+  if (normA.length >= 8 && normB.length >= 8) {
+    return normA.slice(-8) === normB.slice(-8)
+  }
+  return false
 }
 
 async function getActiveRoutes() {
@@ -38,15 +62,30 @@ async function getActiveRoutes() {
 }
 
 function pickRoute(routes: HandoffRoute[], question: string) {
+  if (routes.length === 0) return null
   const normalizedQuestion = normalizeText(question)
+
+  // 1. Check MercadoLibre route first
   const isMercadoLibre = normalizedQuestion.includes('mercadolibre') || normalizedQuestion.includes('mercado libre') || normalizedQuestion.includes('meli')
-  
   if (isMercadoLibre) {
-    return routes.find((r) => r.route_key === 'mercadolibre' || cleanPhone(r.responsible_phone) === '5491153078610') ?? routes[0] ?? null
+    const meliRoute = routes.find((r) => r.route_key === 'mercadolibre' || matchesPhone(r.responsible_phone, '5491153078610'))
+    if (meliRoute) return meliRoute
   }
 
-  // If not MercadoLibre, do not automatically forward to 1153078610
-  return null
+  // 2. Check keywords match across active routes
+  for (const route of routes) {
+    if (route.keywords && Array.isArray(route.keywords)) {
+      const matched = route.keywords.some((kw) => {
+        const normKw = normalizeText(kw)
+        return normKw && normalizedQuestion.includes(normKw)
+      })
+      if (matched) return route
+    }
+  }
+
+  // 3. Default fallback: Arcades route (5491164045074) or top priority route
+  const arcadeRoute = routes.find((r) => r.route_key === 'arcades' || matchesPhone(r.responsible_phone, '5491164045074'))
+  return arcadeRoute ?? routes[0] ?? null
 }
 
 function buildForwardMessage(route: HandoffRoute, conversation: ConversationForHandoff, question: string, reason: string) {
@@ -72,7 +111,7 @@ export async function forwardHandoffToResponsible(
   const route = pickRoute(routes, question)
   if (!route) return null
 
-  const responsiblePhone = cleanPhone(route.responsible_phone)
+  const responsiblePhone = normalizePhoneDigits(route.responsible_phone)
   const forwardText = buildForwardMessage(route, conversation, question, reason)
   const externalId = await sendWhatsAppText(responsiblePhone, forwardText)
 
@@ -102,17 +141,17 @@ export async function forwardHandoffToResponsible(
 }
 
 export async function handleResponsibleReply(responsiblePhone: string, answer: string, externalMessageId: string) {
-  const phone = cleanPhone(responsiblePhone)
-  const { data: pending, error } = await supabase
+  const { data: pendingList, error } = await supabase
     .from('chatbot_handoff_requests')
-    .select('id,conversation_id,customer_phone,route_key')
-    .eq('responsible_phone', phone)
+    .select('id,conversation_id,customer_phone,route_key,responsible_phone')
     .eq('status', 'pending')
     .order('created_at', { ascending: false })
-    .limit(1)
-    .maybeSingle()
+    .limit(10)
 
   if (error) throw error
+  if (!pendingList || pendingList.length === 0) return null
+
+  const pending = pendingList.find((item) => matchesPhone(item.responsible_phone, responsiblePhone))
   if (!pending) return null
 
   const sentId = await sendWhatsAppText(pending.customer_phone, answer)
@@ -124,8 +163,8 @@ export async function handleResponsibleReply(responsiblePhone: string, answer: s
       direction: 'outbound',
       sender_type: 'human',
       content: answer,
-      raw_payload: { source: 'responsible_whatsapp', responsible_phone: phone, inbound_external_message_id: externalMessageId },
-      handled_by: phone,
+      raw_payload: { source: 'responsible_whatsapp', responsible_phone: responsiblePhone, inbound_external_message_id: externalMessageId },
+      handled_by: responsiblePhone,
       human_generated: true,
     })
     .select('id')
@@ -166,7 +205,7 @@ export async function handleResponsibleReply(responsiblePhone: string, answer: s
     conversation_id: pending.conversation_id,
     metadata: {
       route_key: pending.route_key,
-      responsible_phone: phone,
+      responsible_phone: responsiblePhone,
       customer_phone: pending.customer_phone,
       inbound_external_message_id: externalMessageId,
       outbound_external_message_id: sentId,
@@ -177,15 +216,6 @@ export async function handleResponsibleReply(responsiblePhone: string, answer: s
 }
 
 export async function isResponsiblePhone(phone: string) {
-  const clean = cleanPhone(phone)
-  const { data, error } = await supabase
-    .from('chatbot_handoff_routes')
-    .select('id')
-    .eq('active', true)
-    .eq('responsible_phone', clean)
-    .limit(1)
-    .maybeSingle()
-
-  if (error) throw error
-  return Boolean(data)
+  const routes = await getActiveRoutes()
+  return routes.some((route) => matchesPhone(route.responsible_phone, phone))
 }

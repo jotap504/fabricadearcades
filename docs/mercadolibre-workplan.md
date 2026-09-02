@@ -38,6 +38,8 @@ Supabase sigue siendo la base principal de productos, stock, pedidos, clientes y
 
 Primero intentar usar el MCP oficial/disponible de MercadoLibre si está conectado en Codex.
 
+**Auditoría (2026-09-02, Fase 0):** revisado `.mcp.json` del repo — solo hay un MCP `supabase` configurado, ningún MCP de MercadoLibre. Se procede con API REST oficial.
+
 Si no hay herramienta MCP disponible en la sesión:
 
 - usar API REST oficial de MercadoLibre;
@@ -529,7 +531,7 @@ Para MercadoLibre hay que validar además:
 ## Definiciones pendientes
 
 - Cuenta/app de MercadoLibre a usar.
-- Si se usará MCP oficial o API REST directa.
+- ~~Si se usará MCP oficial o API REST directa.~~ RESUELTO (2026-09-02): no hay MCP de MercadoLibre disponible en este repo; se usa API REST oficial vía un cliente desacoplado en `src/lib/mercadolibre/`.
 - Alcance inicial: preguntas solamente, publicaciones, ventas o todo.
 - Si las respuestas automáticas a preguntas ML deben publicarse sin aprobación o primero como sugerencia.
 - Margen/costo específico para MercadoLibre.

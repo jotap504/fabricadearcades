@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { revalidatePath } from 'next/cache'
 import { Search, SlidersHorizontal } from 'lucide-react'
+import { QuickStockModal } from '@/components/admin/QuickStockModal'
 
 type StockSearchParams = Promise<{
   q?: string
@@ -38,11 +39,29 @@ export default async function AdminStockPage({ searchParams }: { searchParams: S
   const typeFilter = params.type ?? 'immediate'
   const availabilityFilter = params.availability ?? 'available'
 
-  const { data: stockData } = await supabase
-    .from('stock_items')
-    .select('*, product:products(name, slug), variant:product_variants(cabinet_type, screen_size), vinyl:supply_inventory(name, image_url)')
-    .order('stock_type')
-    .order('quantity', { ascending: false })
+  // Fetch stockData, active products and supplies for quick stock management
+  const [stockRes, productsRes, suppliesRes] = await Promise.all([
+    supabase
+      .from('stock_items')
+      .select('*, product:products(name, slug), variant:product_variants(cabinet_type, screen_size), vinyl:supply_inventory(name, image_url)')
+      .order('stock_type')
+      .order('quantity', { ascending: false }),
+    supabase
+      .from('products')
+      .select('id, name, slug, product_type, base_price, images')
+      .eq('is_active', true)
+      .order('name'),
+    supabase
+      .from('supply_inventory')
+      .select('id, name, supply_type, quantity, color_label, image_url')
+      .eq('is_active', true)
+      .order('supply_type')
+      .order('name'),
+  ])
+
+  const stockData = stockRes.data
+  const allProducts = productsRes.data ?? []
+  const allSupplies = suppliesRes.data ?? []
 
   const stockItems = ((stockData ?? []) as StockRow[]).filter((item) => {
     const matchesType = typeFilter === 'all' || item.stock_type === typeFilter
@@ -128,13 +147,14 @@ export default async function AdminStockPage({ searchParams }: { searchParams: S
             Vista principal de equipos armados y listos para vender. Los registros en cero quedan ocultos salvo que los filtres.
           </p>
         </div>
-        <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+        <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
+          <QuickStockModal products={allProducts} supplies={allSupplies} />
           <form action={syncMissingStockAction}>
             <button type="submit" className="btn btn-ghost btn-sm" id="btn-sync-stock">
               🔄 Crear registros faltantes
             </button>
           </form>
-          <Link href="/admin/stock/armar" className="btn btn-primary btn-sm" id="btn-armar-stock">
+          <Link href="/admin/stock/armar" className="btn btn-secondary btn-sm" id="btn-armar-stock">
             🛠️ Armar Consola en Stock
           </Link>
           <Link href="/admin/stock/presets" className="btn btn-ghost btn-sm" id="btn-stock-presets">

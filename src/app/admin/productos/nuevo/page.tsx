@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useToast } from '@/lib/stores/toast'
 import type { Category, ProductType } from '@/lib/types'
+import { Sparkles, Upload, X, Image as ImageIcon, Plus, Package } from 'lucide-react'
 
 export default function NewProductPage() {
   const router = useRouter()
@@ -26,6 +27,13 @@ export default function NewProductPage() {
     is_featured: false,
     meta_description: '{}',
   })
+
+  // Images & Stock
+  const [images, setImages] = useState<string[]>([])
+  const [initialStock, setInitialStock] = useState<number>(0)
+  const [generatingAiImage, setGeneratingAiImage] = useState(false)
+  const [aiPrompt, setAiPrompt] = useState('')
+  const [showAiModal, setShowAiModal] = useState(false)
 
   const [allSupplies, setAllSupplies] = useState<any[]>([])
   const [categories, setCategories] = useState<Category[]>([])
@@ -98,6 +106,85 @@ export default function NewProductPage() {
     }))
   }
 
+  function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files || [])
+    if (files.length === 0) return
+
+    files.forEach((file) => {
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Archivo muy pesado', `${file.name} supera el máximo de 5MB`)
+        return
+      }
+
+      const reader = new FileReader()
+      reader.readAsDataURL(file)
+      reader.onload = (uploadEvent) => {
+        const img = new Image()
+        img.src = uploadEvent.target?.result as string
+        img.onload = () => {
+          let width = img.width
+          let height = img.height
+          const maxDimension = 1200
+          if (width > maxDimension || height > maxDimension) {
+            if (width > height) {
+              height = Math.round((height * maxDimension) / width)
+              width = maxDimension
+            } else {
+              width = Math.round((width * maxDimension) / height)
+              height = maxDimension
+            }
+          }
+          const canvas = document.createElement('canvas')
+          canvas.width = width
+          canvas.height = height
+          const ctx = canvas.getContext('2d')
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, width, height)
+            const compressed = canvas.toDataURL('image/webp', 0.85)
+            setImages((prev) => [...prev, compressed])
+            toast.success('Imagen agregada y optimizada')
+          } else {
+            setImages((prev) => [...prev, uploadEvent.target?.result as string])
+            toast.success('Imagen agregada')
+          }
+        }
+      }
+    })
+  }
+
+  async function handleGenerateAiImage() {
+    if (!form.name.trim() && !aiPrompt.trim()) {
+      toast.error('Ingresá el nombre del producto o una descripción para la IA')
+      return
+    }
+
+    setGeneratingAiImage(true)
+    try {
+      const res = await fetch('/api/admin/generate-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          product_name: form.name,
+          prompt: aiPrompt.trim(),
+        }),
+      })
+
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Error al generar imagen')
+
+      if (data.image_url) {
+        setImages((prev) => [...prev, data.image_url])
+        toast.success('¡Imagen generada con IA agregada con éxito!')
+        setShowAiModal(false)
+        setAiPrompt('')
+      }
+    } catch (err: any) {
+      toast.error('Error generando imagen IA', err.message)
+    } finally {
+      setGeneratingAiImage(false)
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
@@ -125,6 +212,7 @@ export default function NewProductPage() {
       .insert({
         ...form,
         category_id: form.category_id || null,
+        images: images,
         base_price: parseFloat(form.base_price) || 0,
         retail_markup_pct: parseFloat(form.retail_markup_pct) || 30,
         meta_description: metaJSON,
@@ -133,9 +221,9 @@ export default function NewProductPage() {
       .single()
 
     if (data) {
-      // Automatically generate default stock_items rows for this new product
+      // Automatically generate stock_items rows with requested initial stock
       await supabase.from('stock_items').insert([
-        { product_id: data.id, stock_type: 'immediate', quantity: 0 },
+        { product_id: data.id, stock_type: 'immediate', quantity: Math.max(0, initialStock) },
         { product_id: data.id, stock_type: 'printed', quantity: 0 },
         { product_id: data.id, stock_type: 'designed', quantity: 0 },
       ])
@@ -148,7 +236,7 @@ export default function NewProductPage() {
       return
     }
 
-    toast.success('Producto creado', form.name)
+    toast.success('Producto creado con éxito', form.name)
     router.push('/admin/productos')
   }
 
@@ -538,6 +626,262 @@ export default function NewProductPage() {
               👤 Precio público: <strong>${(parseFloat(form.base_price) * (1 + parseFloat(form.retail_markup_pct) / 100)).toLocaleString('es-AR')}</strong>
             </div>
           )}
+        </div>
+
+        {/* Fotos del Producto & Generación IA */}
+        <div className="card card-body" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
+            <div>
+              <h3 style={{ fontSize: '0.9375rem', fontWeight: 700, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', margin: 0 }}>
+                📸 Fotos del Producto ({images.length})
+              </h3>
+              <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-muted)', margin: 0 }}>
+                Subí una o varias fotos desde tu PC o generalas automáticamente con Inteligencia Artificial.
+              </p>
+            </div>
+            <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                onClick={() => setShowAiModal(true)}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 6, borderColor: 'var(--color-cyan)', color: 'var(--color-cyan)' }}
+              >
+                <Sparkles size={16} /> Generar con IA
+              </button>
+              <label
+                className="btn btn-primary btn-sm"
+                style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}
+              >
+                <Upload size={16} /> Subir fotos
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                  onChange={handleFileUpload}
+                />
+              </label>
+            </div>
+          </div>
+
+          {images.length > 0 ? (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: 'var(--space-3)' }}>
+              {images.map((imgUrl, idx) => (
+                <div
+                  key={idx}
+                  style={{
+                    position: 'relative',
+                    aspectRatio: '1',
+                    borderRadius: 'var(--radius-md)',
+                    overflow: 'hidden',
+                    border: idx === 0 ? '2px solid var(--color-cyan)' : '1px solid var(--color-border)',
+                    background: 'var(--color-surface-2)',
+                  }}
+                >
+                  <img
+                    src={imgUrl}
+                    alt={`Foto ${idx + 1}`}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
+                  {idx === 0 && (
+                    <span
+                      style={{
+                        position: 'absolute',
+                        bottom: 4,
+                        left: 4,
+                        background: 'rgba(0,0,0,0.75)',
+                        color: 'var(--color-cyan)',
+                        fontSize: '0.6875rem',
+                        fontWeight: 700,
+                        padding: '2px 6px',
+                        borderRadius: 4,
+                      }}
+                    >
+                      Portada
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setImages((prev) => prev.filter((_, i) => i !== idx))}
+                    style={{
+                      position: 'absolute',
+                      top: 4,
+                      right: 4,
+                      background: 'rgba(0,0,0,0.75)',
+                      border: 'none',
+                      color: 'var(--color-danger)',
+                      borderRadius: '50%',
+                      width: 24,
+                      height: 24,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                    title="Eliminar foto"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div
+              style={{
+                border: '2px dashed var(--color-border)',
+                borderRadius: 'var(--radius-md)',
+                padding: 'var(--space-6)',
+                textAlign: 'center',
+                color: 'var(--color-text-muted)',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 'var(--space-2)',
+              }}
+            >
+              <ImageIcon size={32} />
+              <div>Podés subir fotos del producto o generarlas con IA antes de guardar.</div>
+            </div>
+          )}
+        </div>
+
+        {/* Modal Generador de Fotos con IA */}
+        {showAiModal && (
+          <div
+            style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 9999,
+              backgroundColor: 'rgba(0,0,0,0.7)',
+              backdropFilter: 'blur(4px)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: 'var(--space-4)',
+            }}
+            onClick={() => !generatingAiImage && setShowAiModal(false)}
+          >
+            <div
+              className="card"
+              style={{
+                width: '100%',
+                maxWidth: 540,
+                background: 'var(--color-surface)',
+                border: '1px solid var(--color-border)',
+                borderRadius: 'var(--radius-xl)',
+                boxShadow: '0 20px 40px rgba(0,0,0,0.5)',
+                overflow: 'hidden',
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: 'var(--space-4) var(--space-5)',
+                  borderBottom: '1px solid var(--color-border)',
+                  background: 'var(--color-surface-2)',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Sparkles size={18} className="text-cyan" />
+                  <h3 style={{ fontSize: '1.0625rem', fontWeight: 700, margin: 0 }}>
+                    Generar Foto de Producto con IA
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-icon btn-sm"
+                  onClick={() => setShowAiModal(false)}
+                  disabled={generatingAiImage}
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <div style={{ padding: 'var(--space-5)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+                <p style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)', margin: 0 }}>
+                  La IA creará una imagen fotográfica de estudio para <strong>{form.name || 'este producto'}</strong> con estética arcade y calidad comercial.
+                </p>
+
+                <div className="form-group">
+                  <label className="form-label">Detalles visuales adicionales (opcional)</label>
+                  <textarea
+                    className="form-input form-textarea"
+                    rows={3}
+                    placeholder="Ej: Arcade bartop con marquesina iluminada, botones azul neón, vinilo de Street Fighter..."
+                    value={aiPrompt}
+                    onChange={(e) => setAiPrompt(e.target.value)}
+                    disabled={generatingAiImage}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-3)' }}>
+                  <button
+                    type="button"
+                    className="btn btn-ghost"
+                    onClick={() => setShowAiModal(false)}
+                    disabled={generatingAiImage}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={handleGenerateAiImage}
+                    disabled={generatingAiImage}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}
+                  >
+                    {generatingAiImage ? (
+                      <>✨ Generando imagen con IA...</>
+                    ) : (
+                      <>✨ Generar y Adjuntar</>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Carga Directa de Stock Inicial */}
+        <div className="card card-body" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Package size={18} className="text-cyan" />
+            <h3 style={{ fontSize: '0.9375rem', fontWeight: 700, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', margin: 0 }}>
+              📦 Stock Inmediato Inicial
+            </h3>
+          </div>
+          <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-muted)', margin: 0 }}>
+            Indicá cuántas unidades tenés listas en este momento para que queden disponibles automáticamente en la tienda.
+          </p>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '160px 1fr', gap: 'var(--space-4)', alignItems: 'center' }}>
+            <div className="form-group" style={{ margin: 0 }}>
+              <label className="form-label">Unidades en stock</label>
+              <input
+                type="number"
+                min="0"
+                className="form-input"
+                value={initialStock}
+                onChange={(e) => setInitialStock(parseInt(e.target.value) || 0)}
+              />
+            </div>
+            <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+              {[0, 1, 3, 5, 10].map((val) => (
+                <button
+                  key={val}
+                  type="button"
+                  className="btn btn-ghost btn-sm"
+                  style={{ border: '1px solid var(--color-border)' }}
+                  onClick={() => setInitialStock(val)}
+                >
+                  {val === 0 ? 'Sin stock' : `${val} un.`}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
         <div className="card card-body" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>

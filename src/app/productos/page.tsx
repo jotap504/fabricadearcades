@@ -164,14 +164,12 @@ export default async function ProductsPage({ searchParams }: PageProps) {
 
   // Filter by category client-side after fetch (slug match)
   let products = allProducts
-  if (params.categoria === 'express') {
+  if (params.categoria === 'express' || params.categoria === 'inmediata') {
     products = products.filter((p: Product) => {
-      try {
-        const meta = JSON.parse(p.meta_description || '{}')
-        return Array.isArray(meta.presets) && meta.presets.length > 0
-      } catch {
-        return false
-      }
+      return (
+        p.stock_summary?.availability === 'immediate' ||
+        (p.stock_summary?.immediate && p.stock_summary.immediate > 0)
+      )
     })
   } else if (params.categoria && params.categoria !== 'todos') {
     products = products.filter(

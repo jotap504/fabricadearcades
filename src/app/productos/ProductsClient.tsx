@@ -47,7 +47,7 @@ export function ProductsClient({
   }
 
   const allTab = { id: 'todos', name: 'Todos', slug: 'todos', icon: <LayoutGrid size={16} /> }
-  const expressTab = { id: 'express', name: 'Entrega Express', slug: 'express', icon: <Zap size={16} /> }
+  const expressTab = { id: 'express', name: 'Entrega Inmediata', slug: 'express', icon: <Zap size={16} /> }
   const tabs = [allTab, expressTab, ...categories]
 
   return (

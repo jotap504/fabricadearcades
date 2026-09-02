@@ -17,10 +17,26 @@ interface AccordionSlideProps {
 }
 
 function AccordionSlide({ item, isActive, onActivate }: AccordionSlideProps) {
+  function handlePointerEnter(e: React.PointerEvent<HTMLDivElement>) {
+    // Only a real mouse hover pre-activates the slide. Touch taps are
+    // handled entirely by handleClick below, so a mobile tap never
+    // arrives "already active" and skips straight to navigation.
+    if (e.pointerType === 'mouse') onActivate()
+  }
+
+  function handleClick(e: React.MouseEvent<HTMLDivElement>) {
+    if (!isActive) {
+      // First tap on a collapsed slide: expand it, don't navigate yet.
+      e.preventDefault()
+      onActivate()
+    }
+    // Already active: let the click bubble to the Link and navigate.
+  }
+
   const content = (
     <div
-      onMouseEnter={onActivate}
-      onClick={onActivate}
+      onPointerEnter={handlePointerEnter}
+      onClick={handleClick}
       style={{
         position: 'relative',
         height: 'clamp(190px, 58vw, 450px)',

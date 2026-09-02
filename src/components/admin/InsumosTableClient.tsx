@@ -245,19 +245,15 @@ export function InsumosTableClient({ supplies }: Props) {
                   </div>
                 </td>
                 <td>
-                  <div style={{ display: 'flex', justifyContent: 'center' }}>
-                    {isDesignOnly(item) ? (
-                      <div className="insumo-design-stock">
-                        <span>Diseño cargado</span>
-                        <small>No descuenta stock físico</small>
-                      </div>
-                    ) : (
-                      <InsumoInput
-                        id={item.id}
-                        initialQuantity={item.quantity}
-                        lowStockThreshold={item.low_stock_threshold}
-                        unit={item.unit || 'u'}
-                      />
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                    <InsumoInput
+                      id={item.id}
+                      initialQuantity={item.quantity}
+                      lowStockThreshold={item.low_stock_threshold}
+                      unit={isDesignOnly(item) ? 'u' : item.unit || 'u'}
+                    />
+                    {isDesignOnly(item) && (
+                      <small style={{ fontSize: '0.6875rem', color: 'var(--color-text-muted)' }}>impresos en stock</small>
                     )}
                   </div>
                 </td>

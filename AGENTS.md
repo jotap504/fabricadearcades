@@ -390,6 +390,21 @@ Configuraciones típicas:
 
 Mantener temperatura baja. Se busca consistencia, no creatividad factual.
 
+## Integración MercadoLibre
+
+Existe una ruta de trabajo específica en `docs/mercadolibre-workplan.md`.
+
+Principio:
+
+- MercadoLibre debe integrarse como canal externo, no reemplazar el ecommerce propio.
+- Supabase sigue siendo la fuente principal de productos, stock, pedidos, clientes y conversaciones.
+- Antes de implementar, verificar si hay MCP oficial/disponible de MercadoLibre conectado en Codex.
+- Si no hay MCP disponible, usar API REST oficial de MercadoLibre con un cliente desacoplado.
+- Empezar en modo seguro: importar publicaciones/preguntas, vincular con productos internos y sugerir respuestas antes de publicar automáticamente.
+- No responder ni publicar automáticamente en MercadoLibre información no autorizada por conocimiento interno.
+- Cuidar restricciones de MercadoLibre sobre datos de contacto, links externos, títulos, descripciones, stock y moderaciones.
+- Responsable humano previsto para MercadoLibre: `5491153078610`.
+
 ## Supabase y migraciones
 
 Archivos SQL relevantes:

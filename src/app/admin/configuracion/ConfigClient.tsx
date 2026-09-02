@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useToast } from '@/lib/stores/toast'
-import { CreditCard, Save, Truck } from 'lucide-react'
+import { CreditCard, Save, Truck, Wallet, ShieldCheck } from 'lucide-react'
 
 interface Config {
   key: string
@@ -11,9 +11,16 @@ interface Config {
   label: string | null
 }
 
+interface MercadoPagoStatus {
+  access_token_set: boolean
+  webhook_secret_set: boolean
+  updated_at: string | null
+}
+
 interface Props {
   deliveryConfig: Config[]
   pricingConfig: Config[]
+  mercadoPagoStatus: MercadoPagoStatus
 }
 
 const PAYMENT_CONFIG_KEYS = ['cash_discount_pct', 'transfer_discount_pct', 'card_surcharge_pct', 'mercadopago_surcharge_pct']
@@ -63,9 +70,39 @@ function ConfigForm({
   )
 }
 
-export function ConfigClient({ deliveryConfig, pricingConfig }: Props) {
+export function ConfigClient({ deliveryConfig, pricingConfig, mercadoPagoStatus }: Props) {
   const supabase = createClient()
   const toast = useToast()
+  const [mpStatus, setMpStatus] = useState(mercadoPagoStatus)
+  const [mpAccessToken, setMpAccessToken] = useState('')
+  const [mpWebhookSecret, setMpWebhookSecret] = useState('')
+  const [savingMp, setSavingMp] = useState(false)
+
+  async function saveMercadoPagoCredentials() {
+    if (!mpAccessToken.trim() && !mpWebhookSecret.trim()) {
+      toast.error('Completá al menos un campo para guardar')
+      return
+    }
+    setSavingMp(true)
+    const { error } = await supabase.rpc('mercadopago_set_credentials', {
+      p_access_token: mpAccessToken.trim() || null,
+      p_webhook_secret: mpWebhookSecret.trim() || null,
+    })
+    setSavingMp(false)
+    if (error) {
+      toast.error('Error al guardar credenciales', error.message)
+      return
+    }
+    setMpStatus((prev) => ({
+      access_token_set: prev.access_token_set || Boolean(mpAccessToken.trim()),
+      webhook_secret_set: prev.webhook_secret_set || Boolean(mpWebhookSecret.trim()),
+      updated_at: new Date().toISOString(),
+    }))
+    setMpAccessToken('')
+    setMpWebhookSecret('')
+    toast.success('Credenciales de MercadoPago guardadas', 'Se almacenaron cifradas en Supabase Vault')
+  }
+
   const paymentConfig: Config[] = [
     {
       key: 'transfer_discount_pct',
@@ -124,6 +161,58 @@ export function ConfigClient({ deliveryConfig, pricingConfig }: Props) {
 
   return (
     <div style={{ maxWidth: 720, display: 'flex', flexDirection: 'column', gap: 'var(--space-8)' }}>
+      <div>
+        <h2 style={{ fontSize: '1.125rem', fontWeight: 700, marginBottom: 'var(--space-5)', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Wallet size={20} className="text-cyan" />
+          Credenciales de MercadoPago
+        </h2>
+        <div className="card card-body" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+          <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-muted)', margin: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <ShieldCheck size={14} /> Se guardan cifradas en Supabase Vault, nunca en texto plano. Dejá un campo vacío para no tocarlo.
+          </p>
+          <div className="form-group">
+            <label className="form-label" htmlFor="mp-access-token">
+              Access Token {mpStatus.access_token_set ? '✓ Configurado' : '— No configurado'}
+            </label>
+            <input
+              id="mp-access-token"
+              className="form-input"
+              type="password"
+              autoComplete="off"
+              placeholder={mpStatus.access_token_set ? '•••••••••••• (dejar vacío para no cambiar)' : 'APP_USR-... o TEST-...'}
+              value={mpAccessToken}
+              onChange={(e) => setMpAccessToken(e.target.value)}
+            />
+          </div>
+          <div className="form-group">
+            <label className="form-label" htmlFor="mp-webhook-secret">
+              Webhook Secret {mpStatus.webhook_secret_set ? '✓ Configurado' : '— No configurado'}
+            </label>
+            <input
+              id="mp-webhook-secret"
+              className="form-input"
+              type="password"
+              autoComplete="off"
+              placeholder={mpStatus.webhook_secret_set ? '•••••••••••• (dejar vacío para no cambiar)' : 'Secret de la sección Webhooks de tu app'}
+              value={mpWebhookSecret}
+              onChange={(e) => setMpWebhookSecret(e.target.value)}
+            />
+          </div>
+          <div>
+            <button
+              type="button"
+              className="btn btn-primary btn-sm"
+              onClick={saveMercadoPagoCredentials}
+              disabled={savingMp}
+              id="save-mercadopago-credentials-btn"
+            >
+              <Save size={16} />
+              {savingMp ? 'Guardando...' : 'Guardar credenciales'}
+            </button>
+          </div>
+        </div>
+      </div>
+
       <div>
         <h2 style={{ fontSize: '1.125rem', fontWeight: 700, marginBottom: 'var(--space-5)', display: 'flex', alignItems: 'center', gap: 8 }}>
           <CreditCard size={20} className="text-cyan" />

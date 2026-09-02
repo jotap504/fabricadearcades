@@ -11,6 +11,7 @@ export default async function AdminConfigPage() {
 
   const { data: deliveryConfig } = await supabase.from('delivery_config').select('*')
   const { data: pricingConfig } = await supabase.from('pricing_config').select('*')
+  const { data: mercadoPagoStatus } = await supabase.rpc('mercadopago_credentials_status')
 
   return (
     <div>
@@ -23,6 +24,7 @@ export default async function AdminConfigPage() {
       <ConfigClient
         deliveryConfig={deliveryConfig ?? []}
         pricingConfig={pricingConfig ?? []}
+        mercadoPagoStatus={mercadoPagoStatus ?? { access_token_set: false, webhook_secret_set: false, updated_at: null }}
       />
     </div>
   )

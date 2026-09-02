@@ -19,7 +19,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ ignored: true }, { status: 200 })
   }
 
-  const secret = getMercadoPagoWebhookSecret()
+  const secret = await getMercadoPagoWebhookSecret()
   const verified = verifyMercadoPagoSignature({
     xSignature: request.headers.get('x-signature'),
     xRequestId: request.headers.get('x-request-id'),

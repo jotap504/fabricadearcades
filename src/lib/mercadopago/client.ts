@@ -4,7 +4,7 @@ import type { MPCreatePreferenceInput, MPPayment, MPPreferenceResponse } from '.
 const API_BASE = 'https://api.mercadopago.com'
 
 async function mpFetch<T>(path: string, init: RequestInit): Promise<T> {
-  const token = getMercadoPagoAccessToken()
+  const token = await getMercadoPagoAccessToken()
   const response = await fetch(`${API_BASE}${path}`, {
     ...init,
     headers: {
@@ -56,7 +56,7 @@ export async function getPayment(paymentId: string): Promise<MPPayment> {
 
 // Test (sandbox) access tokens are prefixed "TEST-"; MercadoPago only honors
 // sandbox_init_point in that case, init_point is for live credentials.
-export function pickCheckoutUrl(preference: MPPreferenceResponse): string {
-  const token = getMercadoPagoAccessToken()
+export async function pickCheckoutUrl(preference: MPPreferenceResponse): Promise<string> {
+  const token = await getMercadoPagoAccessToken()
   return token.startsWith('TEST-') ? preference.sandbox_init_point : preference.init_point
 }

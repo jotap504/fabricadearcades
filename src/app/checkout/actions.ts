@@ -85,7 +85,7 @@ export interface MercadoPagoCheckoutInput {
 }
 
 export async function createMercadoPagoCheckout(input: MercadoPagoCheckoutInput): Promise<{ checkoutUrl: string }> {
-  if (!isMercadoPagoConfigured()) {
+  if (!(await isMercadoPagoConfigured())) {
     throw new Error('MercadoPago no está configurado todavía. Elegí otro método de pago.')
   }
 
@@ -104,5 +104,5 @@ export async function createMercadoPagoCheckout(input: MercadoPagoCheckoutInput)
     notificationUrl: `${appUrl}/api/mercadopago/webhook`,
   })
 
-  return { checkoutUrl: pickCheckoutUrl(preference) }
+  return { checkoutUrl: await pickCheckoutUrl(preference) }
 }

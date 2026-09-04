@@ -66,9 +66,15 @@ function pickRoute(routes: HandoffRoute[], question: string) {
   const normalizedQuestion = normalizeText(question)
 
   // 1. Check MercadoLibre route first
-  const isMercadoLibre = normalizedQuestion.includes('mercadolibre') || normalizedQuestion.includes('mercado libre') || normalizedQuestion.includes('meli')
+  const isMercadoLibre =
+    normalizedQuestion.includes('mercadolibre') ||
+    normalizedQuestion.includes('mercado libre') ||
+    normalizedQuestion.includes('meli') ||
+    normalizedQuestion.includes('publicacion') ||
+    normalizedQuestion.includes('publicaciones') ||
+    normalizedQuestion.includes('mla')
   if (isMercadoLibre) {
-    const meliRoute = routes.find((r) => r.route_key === 'mercadolibre' || matchesPhone(r.responsible_phone, '5491153078610'))
+    const meliRoute = routes.find((r) => r.route_key === 'mercadolibre' || matchesPhone(r.responsible_phone, '5491131295019'))
     if (meliRoute) return meliRoute
   }
 

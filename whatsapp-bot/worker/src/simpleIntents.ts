@@ -21,6 +21,25 @@ export function getSimpleReply(text: string, firstName?: string | null): string 
   return null
 }
 
+export function isMercadoLibreQuery(text: string): boolean {
+  const normalized = text
+    .trim()
+    .toLocaleLowerCase('es')
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+
+  const meliPatterns = [
+    /\b(mercadolibre|mercado\s*libre|meli|mercadopago|mercado\s*pago)\b/,
+    /\b(publicacion|publicaciones|publicado|publicada)\b/,
+    /\b(mla[-\s]?\d+)\b/,
+    /\b(articulo\.mercadolibre|mercadolibre\.com)\b/,
+    /\b(compre por ml|vi en ml|link de ml|link ml|link de mercadolibre)\b/,
+    /\b(envio full|envio por mercado envios|mercado envios)\b/,
+  ]
+
+  return meliPatterns.some((pattern) => pattern.test(normalized))
+}
+
 export function isExplicitHandoffRequest(text: string): boolean {
   const normalized = text
     .trim()

@@ -4,7 +4,7 @@ import { sendWhatsAppText, sendWhatsAppMedia, sendWhatsAppPresence } from './evo
 import { forwardCustomerFollowupToResponsible, forwardHandoffToResponsible, handleResponsibleReply, isResponsiblePhone } from './handoffRoutingService.js'
 import { retrieveKnowledge } from './ragService.js'
 import { getBotSettings } from './settingsService.js'
-import { getSafeFirstName, getSimpleReply, isExplicitHandoffRequest } from './simpleIntents.js'
+import { getSafeFirstName, getSimpleReply, isExplicitHandoffRequest, isMercadoLibreQuery } from './simpleIntents.js'
 import type { NormalizedMessage } from './types.js'
 
 export async function processMessage(message: NormalizedMessage) {
@@ -39,6 +39,15 @@ export async function processMessage(message: NormalizedMessage) {
   if (!settings.botActive) return { status: 'bot_inactive' }
   if (conversation.mode !== 'BOT') return { status: `conversation_${conversation.mode.toLowerCase()}` }
 
+  // Immediate handoff if asking about MercadoLibre or a publication
+  if (isMercadoLibreQuery(message.content)) {
+    const reason = 'Consulta sobre MercadoLibre / publicación'
+    await createHandoff(conversation.id, savedMessage.id, message.content, reason)
+    await forwardHandoffToResponsible(conversation, message.content, reason)
+    await sendWhatsAppText(message.phone, settings.handoffMessage)
+    return { status: 'handoff_mercadolibre' }
+  }
+
   // Check explicit handoff intent (e.g., "vendedor", "humano", "asesor", "persona")
   if (isExplicitHandoffRequest(message.content)) {
     const reason = 'Solicitud explícita de atención humana'
@@ -65,7 +74,7 @@ export async function processMessage(message: NormalizedMessage) {
 
   if (sources.length === 0) {
     const clarificationCount = await countClarificationMessages(conversation.id)
-    if (clarificationCount < 2) {
+    if (clarificationCount < 1) {
       const clarification = '¿Me contás un poco más sobre qué producto o tema querés consultar? Así te puedo responder mejor.'
       const externalId = await sendWhatsAppText(message.phone, clarification)
       await saveBotMessage(conversation.id, message.phone, clarification, externalId, 'rules:clarification', 0.45)

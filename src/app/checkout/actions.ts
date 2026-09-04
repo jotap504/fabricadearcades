@@ -106,13 +106,30 @@ export type CreateMercadoPagoCheckoutResponse =
   | { success: true; checkoutUrl: string }
   | { success: false; error: string }
 
+import { headers } from 'next/headers'
+
 export async function createMercadoPagoCheckout(input: MercadoPagoCheckoutInput): Promise<CreateMercadoPagoCheckoutResponse> {
   try {
     if (!(await isMercadoPagoConfigured())) {
       return { success: false, error: 'MercadoPago no está configurado todavía. Elegí otro método de pago.' }
     }
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+    const headerList = await headers()
+    const host = headerList.get('host') || headerList.get('x-forwarded-host')
+    const proto = headerList.get('x-forwarded-proto') || 'https'
+    
+    let appUrl = process.env.NEXT_PUBLIC_APP_URL
+    if (!appUrl || appUrl.includes('localhost') && host) {
+      appUrl = `${proto}://${host}`
+    } else if (!appUrl && process.env.VERCEL_URL) {
+      appUrl = `https://${process.env.VERCEL_URL}`
+    } else if (!appUrl) {
+      appUrl = 'https://fabricadearcades.vercel.app'
+    }
+    
+    // Ensure no trailing slash
+    appUrl = appUrl.replace(/\/$/, '')
+
     const { firstName, lastName } = splitName(input.payerName)
     const description = input.items.map((item) => `${item.quantity}x ${item.title}`).join(', ')
 

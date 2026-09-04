@@ -37,6 +37,7 @@ export async function saveIncomingMessage(conversationId: string, message: Norma
       content: message.content,
       raw_payload: message.raw,
       handled_by: message.senderType,
+      message_type: message.mediaType || 'text',
     })
     .select('*')
     .single()

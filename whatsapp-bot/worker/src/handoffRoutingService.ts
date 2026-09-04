@@ -1,5 +1,6 @@
-import { sendWhatsAppText } from './evolution.js'
+import { sendWhatsAppText, sendWhatsAppMedia, sendWhatsAppBase64Media, getMediaBase64 } from './evolution.js'
 import { supabase } from './supabase.js'
+import type { NormalizedMessage } from './types.js'
 
 type HandoffRoute = {
   route_key: string
@@ -104,7 +105,7 @@ function buildForwardMessage(route: HandoffRoute, conversation: ConversationForH
     '',
     `Mensaje: ${question}`,
     '',
-    'Respondé este WhatsApp y envío tu respuesta al cliente automáticamente.',
+    'Respondé este WhatsApp (con texto o fotos) y envío tu respuesta al cliente automáticamente.',
   ].filter(Boolean).join('\n')
 }
 
@@ -112,6 +113,7 @@ export async function forwardHandoffToResponsible(
   conversation: ConversationForHandoff,
   question: string,
   reason: string,
+  mediaMessage?: NormalizedMessage,
 ) {
   const routes = await getActiveRoutes()
   const route = pickRoute(routes, question)
@@ -119,7 +121,20 @@ export async function forwardHandoffToResponsible(
 
   const responsiblePhone = normalizePhoneDigits(route.responsible_phone)
   const forwardText = buildForwardMessage(route, conversation, question, reason)
-  const externalId = await sendWhatsAppText(responsiblePhone, forwardText)
+  
+  let externalId: string | null = null
+
+  // If customer sent an image, forward the photo to the responsible seller
+  if (mediaMessage?.mediaType === 'image') {
+    const base64 = mediaMessage.mediaBase64 || (await getMediaBase64(mediaMessage.raw))
+    if (base64) {
+      externalId = await sendWhatsAppBase64Media(responsiblePhone, base64, 'image', forwardText)
+    }
+  }
+
+  if (!externalId) {
+    externalId = await sendWhatsAppText(responsiblePhone, forwardText)
+  }
 
   const { error } = await supabase.from('chatbot_handoff_requests').insert({
     conversation_id: conversation.id,
@@ -140,6 +155,7 @@ export async function forwardHandoffToResponsible(
       responsible_phone: responsiblePhone,
       reason,
       forwarded_message_id: externalId,
+      has_media: Boolean(mediaMessage?.mediaType),
     },
   })
 
@@ -148,8 +164,10 @@ export async function forwardHandoffToResponsible(
 
 export async function forwardCustomerFollowupToResponsible(
   conversation: ConversationForHandoff,
-  messageText: string,
+  message: NormalizedMessage,
 ) {
+  const messageText = message.content || '[FOTO]'
+
   // Find the most recent active or answered handoff request for this conversation
   const { data: lastRequest, error } = await supabase
     .from('chatbot_handoff_requests')
@@ -185,10 +203,21 @@ export async function forwardCustomerFollowupToResponsible(
     '',
     messageText,
     '',
-    'Respondé este WhatsApp para responderle al cliente.',
+    'Respondé este WhatsApp (texto o fotos) para responderle al cliente.',
   ].join('\n')
 
-  const externalId = await sendWhatsAppText(responsiblePhone, forwardText)
+  let externalId: string | null = null
+
+  if (message.mediaType === 'image') {
+    const base64 = message.mediaBase64 || (await getMediaBase64(message.raw))
+    if (base64) {
+      externalId = await sendWhatsAppBase64Media(responsiblePhone, base64, 'image', forwardText)
+    }
+  }
+
+  if (!externalId) {
+    externalId = await sendWhatsAppText(responsiblePhone, forwardText)
+  }
 
   // Ensure there is a pending request waiting for response
   await supabase.from('chatbot_handoff_requests').insert({
@@ -208,6 +237,7 @@ export async function forwardCustomerFollowupToResponsible(
       route_key: routeKey,
       responsible_phone: responsiblePhone,
       forwarded_message_id: externalId,
+      has_media: Boolean(message.mediaType),
     },
   })
 
@@ -216,10 +246,12 @@ export async function forwardCustomerFollowupToResponsible(
 
 export async function handleResponsibleReply(
   responsiblePhone: string,
-  answer: string,
-  externalMessageId: string,
-  quotedMessage?: { id?: string; text?: string; participant?: string },
+  message: NormalizedMessage,
 ) {
+  const answer = message.content || ''
+  const externalMessageId = message.externalMessageId
+  const quotedMessage = message.quotedMessage
+
   // 1. If the responsible user quoted/replied to a specific message, try to match by forwarded_message_id or phone extracted from quoted text
   let pending: { id: string; conversation_id: string; customer_phone: string; route_key: string } | null = null
 
@@ -273,7 +305,20 @@ export async function handleResponsibleReply(
 
   if (!pending) return null
 
-  const sentId = await sendWhatsAppText(pending.customer_phone, answer)
+  let sentId: string | null = null
+
+  // If responsible sent an image/photo, forward the image directly to the customer
+  if (message.mediaType === 'image') {
+    const base64 = message.mediaBase64 || (await getMediaBase64(message.raw))
+    if (base64) {
+      sentId = await sendWhatsAppBase64Media(pending.customer_phone, base64, 'image', answer)
+    }
+  }
+
+  if (!sentId) {
+    sentId = await sendWhatsAppText(pending.customer_phone, answer)
+  }
+
   const { data: savedMessage, error: messageError } = await supabase
     .from('chatbot_messages')
     .insert({
@@ -282,9 +327,15 @@ export async function handleResponsibleReply(
       direction: 'outbound',
       sender_type: 'human',
       content: answer,
-      raw_payload: { source: 'responsible_whatsapp', responsible_phone: responsiblePhone, inbound_external_message_id: externalMessageId },
+      raw_payload: {
+        source: 'responsible_whatsapp',
+        responsible_phone: responsiblePhone,
+        inbound_external_message_id: externalMessageId,
+        media_type: message.mediaType,
+      },
       handled_by: responsiblePhone,
       human_generated: true,
+      message_type: message.mediaType || 'text',
     })
     .select('id')
     .single()
@@ -296,7 +347,7 @@ export async function handleResponsibleReply(
     external_message_id: sentId,
     content: answer,
     status: 'sent',
-    provider_response: { phone: pending.customer_phone, source: 'responsible_whatsapp' },
+    provider_response: { phone: pending.customer_phone, source: 'responsible_whatsapp', media_type: message.mediaType },
   })
 
   await supabase
@@ -328,6 +379,7 @@ export async function handleResponsibleReply(
       customer_phone: pending.customer_phone,
       inbound_external_message_id: externalMessageId,
       outbound_external_message_id: sentId,
+      media_type: message.mediaType,
     },
   })
 

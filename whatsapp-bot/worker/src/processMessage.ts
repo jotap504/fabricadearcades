@@ -13,7 +13,7 @@ export async function processMessage(message: NormalizedMessage) {
   }
 
   if (message.direction === 'inbound') {
-    const responsibleReply = await handleResponsibleReply(message.phone, message.content, message.externalMessageId, message.quotedMessage)
+    const responsibleReply = await handleResponsibleReply(message.phone, message)
     if (responsibleReply) return { status: 'responsible_reply_forwarded' }
     if (await isResponsiblePhone(message.phone)) return { status: 'responsible_without_pending_handoff' }
   }
@@ -31,7 +31,7 @@ export async function processMessage(message: NormalizedMessage) {
 
   // If the conversation is already in HUMAN mode, forward any incoming customer follow-up message to the responsible seller
   if (conversation.mode === 'HUMAN' && message.direction === 'inbound') {
-    await forwardCustomerFollowupToResponsible(conversation, message.content)
+    await forwardCustomerFollowupToResponsible(conversation, message)
     return { status: 'customer_followup_forwarded_to_human' }
   }
 
@@ -43,7 +43,7 @@ export async function processMessage(message: NormalizedMessage) {
   if (isMercadoLibreQuery(message.content)) {
     const reason = 'Consulta sobre MercadoLibre / publicación'
     await createHandoff(conversation.id, savedMessage.id, message.content, reason)
-    await forwardHandoffToResponsible(conversation, message.content, reason)
+    await forwardHandoffToResponsible(conversation, message.content, reason, message)
     await sendWhatsAppText(message.phone, settings.handoffMessage)
     return { status: 'handoff_mercadolibre' }
   }
@@ -52,7 +52,7 @@ export async function processMessage(message: NormalizedMessage) {
   if (isExplicitHandoffRequest(message.content)) {
     const reason = 'Solicitud explícita de atención humana'
     await createHandoff(conversation.id, savedMessage.id, message.content, reason)
-    await forwardHandoffToResponsible(conversation, message.content, reason)
+    await forwardHandoffToResponsible(conversation, message.content, reason, message)
     await sendWhatsAppText(message.phone, settings.handoffMessage)
     return { status: 'handoff_explicit' }
   }

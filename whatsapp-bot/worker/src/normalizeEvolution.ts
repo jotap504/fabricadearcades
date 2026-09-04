@@ -49,6 +49,35 @@ function extractContextInfo(message: any): { id?: string; text?: string; partici
   }
 }
 
+function extractMediaInfo(message: any): { mediaType?: 'image' | 'video' | 'audio' | 'document'; caption?: string; base64?: string; url?: string } | null {
+  const msg = message?.message ?? message
+  if (msg?.imageMessage) {
+    return {
+      mediaType: 'image',
+      caption: msg.imageMessage.caption?.trim() || '',
+      base64: msg.imageMessage.base64 || msg.base64 || undefined,
+      url: msg.imageMessage.url || undefined,
+    }
+  }
+  if (msg?.videoMessage) {
+    return {
+      mediaType: 'video',
+      caption: msg.videoMessage.caption?.trim() || '',
+      base64: msg.videoMessage.base64 || msg.base64 || undefined,
+      url: msg.videoMessage.url || undefined,
+    }
+  }
+  if (msg?.documentMessage) {
+    return {
+      mediaType: 'document',
+      caption: msg.documentMessage.caption?.trim() || msg.documentMessage.fileName || '',
+      base64: msg.documentMessage.base64 || msg.base64 || undefined,
+      url: msg.documentMessage.url || undefined,
+    }
+  }
+  return null
+}
+
 export function normalizeEvolutionWebhook(payload: unknown): NormalizedMessage | null {
   const parsed = webhookSchema.safeParse(payload)
   if (!parsed.success) return null
@@ -70,10 +99,12 @@ export function normalizeEvolutionWebhook(payload: unknown): NormalizedMessage |
     ?? data?.key?.remoteJid,
   )
   const fromMe = Boolean(key?.fromMe ?? data?.fromMe)
-  const content = extractText(data?.message ?? data?.message?.message ?? data)
+  const mediaInfo = extractMediaInfo(data?.message ?? data?.message?.message ?? data)
+  const rawContent = extractText(data?.message ?? data?.message?.message ?? data)
+  const content = rawContent || mediaInfo?.caption || (mediaInfo ? `[${mediaInfo.mediaType?.toUpperCase()}]` : '')
   const quotedMessage = extractContextInfo(data?.message ?? data?.message?.message ?? data)
 
-  if (!externalMessageId || !phone || !content) return null
+  if (!externalMessageId || !phone || (!content && !mediaInfo)) return null
 
   return {
     externalMessageId,
@@ -81,7 +112,10 @@ export function normalizeEvolutionWebhook(payload: unknown): NormalizedMessage |
     displayName: data?.pushName ?? data?.notifyName,
     direction: fromMe ? 'outbound' : 'inbound',
     senderType: fromMe ? 'human' : 'customer',
-    content,
+    content: content || '[FOTO]',
+    mediaType: mediaInfo?.mediaType,
+    mediaBase64: mediaInfo?.base64,
+    mediaUrl: mediaInfo?.url,
     raw: payload,
     quotedMessage,
   }

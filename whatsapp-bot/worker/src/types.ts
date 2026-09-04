@@ -7,6 +7,9 @@ export type NormalizedMessage = {
   direction: 'inbound' | 'outbound'
   senderType: 'customer' | 'human' | 'bot'
   content: string
+  mediaType?: 'image' | 'video' | 'audio' | 'document'
+  mediaBase64?: string
+  mediaUrl?: string
   raw: unknown
   quotedMessage?: {
     id?: string

@@ -32,50 +32,60 @@ export interface CreatedOrderResult {
   total: number
 }
 
-export async function createStoreOrder(input: CheckoutOrderInput): Promise<CreatedOrderResult> {
-  const supabase = await createClient()
-  const { data, error } = await supabase.rpc('create_store_order', {
-    p_customer: input.customer,
-    p_shipping: input.shipping,
-    p_payment_method: input.paymentMethod,
-    p_notes: input.notes,
-    p_items: input.items,
-  })
+export type CreateStoreOrderResponse =
+  | { success: true; data: CreatedOrderResult }
+  | { success: false; error: string }
 
-  if (error) {
-    console.error('Error creating store order:', error)
-    throw new Error(error.message || 'No se pudo crear el pedido')
-  }
+export async function createStoreOrder(input: CheckoutOrderInput): Promise<CreateStoreOrderResponse> {
+  try {
+    const supabase = await createClient()
+    const { data, error } = await supabase.rpc('create_store_order', {
+      p_customer: input.customer,
+      p_shipping: input.shipping,
+      p_payment_method: input.paymentMethod,
+      p_notes: input.notes,
+      p_items: input.items,
+    })
 
-  const result = data as CreatedOrderResult
-  const resendKey = process.env.RESEND_API_KEY
-  const emailFrom = process.env.ORDER_EMAIL_FROM
-  if (resendKey && emailFrom && !resendKey.includes('your-')) {
-    const resend = new Resend(resendKey)
-    const escapeHtml = (value: string) =>
-      value.replace(/[&<>'"]/g, (char) => ({
-        '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;',
-      })[char] ?? char)
-    const expiry = result.reservationExpiresAt
-      ? new Date(result.reservationExpiresAt).toLocaleString('es-AR')
-      : null
-    try {
-      await resend.emails.send({
-        from: emailFrom,
-        to: input.customer.email,
-        subject: `Recibimos tu pedido ${result.orderNumber}`,
-        html: `<h1>Pedido ${escapeHtml(result.orderNumber)}</h1>
-          <p>Hola ${escapeHtml(input.customer.name)}, recibimos tu pedido.</p>
-          ${expiry ? `<p>Tu stock está reservado hasta el <strong>${escapeHtml(expiry)}</strong>.</p>` : '<p>El pedido pasó directamente a producción por cuenta corriente.</p>'}
-          <p>Total confirmado: <strong>$${Number(result.total).toLocaleString('es-AR')}</strong>.</p>
-          <p>Te contactaremos por este email con las próximas novedades.</p>`,
-      })
-    } catch (emailError) {
-      console.error('Order created, but confirmation email failed:', emailError)
+    if (error) {
+      console.error('Error in create_store_order RPC:', error)
+      return { success: false, error: error.message || 'No se pudo crear el pedido' }
     }
-  }
 
-  return result
+    const result = data as CreatedOrderResult
+    const resendKey = process.env.RESEND_API_KEY
+    const emailFrom = process.env.ORDER_EMAIL_FROM
+    if (resendKey && emailFrom && !resendKey.includes('your-')) {
+      try {
+        const resend = new Resend(resendKey)
+        const escapeHtml = (value: string) =>
+          value.replace(/[&<>'"]/g, (char) => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;',
+          })[char] ?? char)
+        const expiry = result.reservationExpiresAt
+          ? new Date(result.reservationExpiresAt).toLocaleString('es-AR')
+          : null
+
+        await resend.emails.send({
+          from: emailFrom,
+          to: input.customer.email,
+          subject: `Recibimos tu pedido ${result.orderNumber}`,
+          html: `<h1>Pedido ${escapeHtml(result.orderNumber)}</h1>
+            <p>Hola ${escapeHtml(input.customer.name)}, recibimos tu pedido.</p>
+            ${expiry ? `<p>Tu stock está reservado hasta el <strong>${escapeHtml(expiry)}</strong>.</p>` : '<p>El pedido pasó directamente a producción por cuenta corriente.</p>'}
+            <p>Total confirmado: <strong>$${Number(result.total).toLocaleString('es-AR')}</strong>.</p>
+            <p>Te contactaremos por este email con las próximas novedades.</p>`,
+        })
+      } catch (emailError) {
+        console.error('Order created, but confirmation email failed:', emailError)
+      }
+    }
+
+    return { success: true, data: result }
+  } catch (err: any) {
+    console.error('Unexpected error in createStoreOrder:', err)
+    return { success: false, error: err?.message || 'Error inesperado al crear el pedido' }
+  }
 }
 
 export interface MercadoPagoCheckoutInput {
@@ -92,39 +102,46 @@ function splitName(fullName: string): { firstName: string; lastName: string } {
   return { firstName: parts[0] ?? '', lastName: parts.slice(1).join(' ') || parts[0] || '' }
 }
 
-export async function createMercadoPagoCheckout(input: MercadoPagoCheckoutInput): Promise<{ checkoutUrl: string }> {
-  if (!(await isMercadoPagoConfigured())) {
-    throw new Error('MercadoPago no está configurado todavía. Elegí otro método de pago.')
-  }
+export type CreateMercadoPagoCheckoutResponse =
+  | { success: true; checkoutUrl: string }
+  | { success: false; error: string }
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-  const { firstName, lastName } = splitName(input.payerName)
-  const description = input.items.map((item) => `${item.quantity}x ${item.title}`).join(', ')
+export async function createMercadoPagoCheckout(input: MercadoPagoCheckoutInput): Promise<CreateMercadoPagoCheckoutResponse> {
+  try {
+    if (!(await isMercadoPagoConfigured())) {
+      return { success: false, error: 'MercadoPago no está configurado todavía. Elegí otro método de pago.' }
+    }
 
-  // Single consolidated line item priced at the order's authoritative total
-  // (already includes any mercadopago_surcharge_pct) so the amount charged
-  // through MercadoPago always matches the order stored in Supabase.
-  const preference = await createPreference({
-    items: [
-      {
-        title: `Pedido ${input.orderNumber} — Fábrica de Arcades`,
-        description: description.slice(0, 250),
-        quantity: 1,
-        unit_price: input.total,
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+    const { firstName, lastName } = splitName(input.payerName)
+    const description = input.items.map((item) => `${item.quantity}x ${item.title}`).join(', ')
+
+    const preference = await createPreference({
+      items: [
+        {
+          title: `Pedido ${input.orderNumber} — Fábrica de Arcades`,
+          description: description.slice(0, 250),
+          quantity: 1,
+          unit_price: input.total,
+        },
+      ],
+      payerEmail: input.payerEmail,
+      payerFirstName: firstName,
+      payerLastName: lastName,
+      externalReference: input.orderId,
+      backUrls: {
+        success: `${appUrl}/checkout/mercadopago/retorno?outcome=approved`,
+        failure: `${appUrl}/checkout/mercadopago/retorno?outcome=failure`,
+        pending: `${appUrl}/checkout/mercadopago/retorno?outcome=pending`,
       },
-    ],
-    payerEmail: input.payerEmail,
-    payerFirstName: firstName,
-    payerLastName: lastName,
-    externalReference: input.orderId,
-    backUrls: {
-      success: `${appUrl}/checkout/mercadopago/retorno?outcome=approved`,
-      failure: `${appUrl}/checkout/mercadopago/retorno?outcome=failure`,
-      pending: `${appUrl}/checkout/mercadopago/retorno?outcome=pending`,
-    },
-    notificationUrl: `${appUrl}/api/mercadopago/webhook`,
-    statementDescriptor: 'FABRICARCADE',
-  })
+      notificationUrl: `${appUrl}/api/mercadopago/webhook`,
+      statementDescriptor: 'FABRICARCADE',
+    })
 
-  return { checkoutUrl: await pickCheckoutUrl(preference) }
+    const checkoutUrl = await pickCheckoutUrl(preference)
+    return { success: true, checkoutUrl }
+  } catch (err: any) {
+    console.error('Unexpected error in createMercadoPagoCheckout:', err)
+    return { success: false, error: err?.message || 'Error al conectar con MercadoPago' }
+  }
 }

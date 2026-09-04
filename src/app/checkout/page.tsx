@@ -181,7 +181,7 @@ export default function CheckoutPage() {
         customization: item.customization,
       }))
 
-      const result = await createStoreOrder({
+      const orderResponse = await createStoreOrder({
         customer: { name: finalName, email: finalEmail, phone: customerPhone },
         shipping: shippingForOrder,
         paymentMethod,
@@ -189,8 +189,15 @@ export default function CheckoutPage() {
         items: orderItems,
       })
 
+      if (!orderResponse.success) {
+        toast.error('Error al procesar el pedido', orderResponse.error)
+        return
+      }
+
+      const result = orderResponse.data
+
       if (paymentMethod === 'mercadopago') {
-        const { checkoutUrl } = await createMercadoPagoCheckout({
+        const mpResponse = await createMercadoPagoCheckout({
           orderId: result.orderId,
           orderNumber: result.orderNumber,
           payerEmail: finalEmail,
@@ -201,8 +208,14 @@ export default function CheckoutPage() {
             quantity: item.quantity,
           })),
         })
+
+        if (!mpResponse.success) {
+          toast.error('Error al conectar con MercadoPago', mpResponse.error)
+          return
+        }
+
         clearCart()
-        window.location.href = checkoutUrl
+        window.location.href = mpResponse.checkoutUrl
         return
       }
 

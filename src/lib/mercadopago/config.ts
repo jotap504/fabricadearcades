@@ -3,7 +3,10 @@ import { createAdminClient } from '@/lib/supabase/server'
 export async function isMercadoPagoConfigured(): Promise<boolean> {
   if (process.env.MERCADOPAGO_ACCESS_TOKEN) return true
   const admin = await createAdminClient()
-  const { data } = await admin.rpc('mercadopago_get_access_token')
+  const { data, error } = await admin.rpc('mercadopago_get_access_token')
+  if (error) {
+    console.error('mercadopago_get_access_token RPC failed:', error.message)
+  }
   return Boolean(data)
 }
 

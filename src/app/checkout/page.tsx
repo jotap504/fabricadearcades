@@ -209,9 +209,9 @@ export default function CheckoutPage() {
       setCreatedOrder(result)
       setStep('confirm')
       clearCart()
-    } catch (err) {
+    } catch (err: any) {
       console.error(err)
-      toast.error('Error al procesar el pedido', 'Intentá nuevamente o contactanos')
+      toast.error('Error al procesar el pedido', err?.message || 'Intentá nuevamente o contactanos')
     } finally {
       setLoading(false)
     }

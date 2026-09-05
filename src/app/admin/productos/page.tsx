@@ -2,6 +2,7 @@ import { createClient, getAuthUser } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Search, SlidersHorizontal } from 'lucide-react'
+import { ProductPriceMarkupInputs } from '@/components/admin/ProductPriceMarkupInputs'
 
 interface PageProps { searchParams: Promise<{ q?: string; type?: string; state?: string }> }
 
@@ -65,8 +66,7 @@ export default async function AdminProductsPage({ searchParams }: PageProps) {
               <th>Categoría</th>
               <th>Tipo</th>
               <th>Catálogo</th>
-              <th>Precio base</th>
-              <th>Margen</th>
+              <th style={{ minWidth: '220px' }}>Precio Base y Margen</th>
               <th>Estado</th>
               <th></th>
             </tr>
@@ -103,9 +103,12 @@ export default async function AdminProductsPage({ searchParams }: PageProps) {
                     </div>
                   </td>
                   <td>
-                    {new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 }).format(p.base_price)}
+                    <ProductPriceMarkupInputs
+                      id={p.id}
+                      initialBasePrice={p.base_price}
+                      initialMarkupPct={p.retail_markup_pct}
+                    />
                   </td>
-                  <td>{p.retail_markup_pct}%</td>
                   <td>
                     <span className={`badge ${p.is_active ? 'badge-immediate' : 'badge-none'}`}>
                       {p.is_active ? 'Activo' : 'Inactivo'}
@@ -121,7 +124,7 @@ export default async function AdminProductsPage({ searchParams }: PageProps) {
             })}
             {(!products || products.length === 0) && (
               <tr>
-                <td colSpan={8} style={{ textAlign: 'center', padding: 'var(--space-10)', color: 'var(--color-text-muted)' }}>
+                <td colSpan={7} style={{ textAlign: 'center', padding: 'var(--space-10)', color: 'var(--color-text-muted)' }}>
                   No hay productos aún. <Link href="/admin/productos/nuevo" style={{ color: 'var(--color-cyan)' }}>Crear el primero →</Link>
                 </td>
               </tr>

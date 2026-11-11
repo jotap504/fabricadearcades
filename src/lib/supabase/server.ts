@@ -1,3 +1,4 @@
+import type { SupabaseClient } from '@supabase/supabase-js'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
@@ -45,7 +46,7 @@ export const isSupabaseConfigured =
   process.env.NEXT_PUBLIC_SUPABASE_URL &&
   !process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder')
 
-export async function getAuthUser(supabase: any) {
+export async function getAuthUser(supabase: SupabaseClient) {
   if (!isSupabaseConfigured) {
     return {
       data: { user: { id: 'dev-admin-id', email: 'admin@dev.local' } },

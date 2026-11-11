@@ -1,9 +1,33 @@
 import Link from 'next/link'
+import { buildPageMetadata } from '@/lib/seo'
+import { JsonLd } from '@/components/seo/JsonLd'
 import { ShoppingBag, CreditCard, Sparkles, Truck, CheckCircle2, ArrowRight } from 'lucide-react'
 
-export const metadata = {
-  title: 'Cómo Comprar | Fábrica de Arcades',
+export const metadata = buildPageMetadata({
+  title: 'Cómo Comprar',
   description: 'Conocé los pasos sencillos para adquirir tu arcade terminado o personalizarlo a medida.',
+  path: '/como-comprar',
+})
+
+const FAQS = [
+  {
+    q: '¿Cuánto demora la fabricación de un arcade a medida?',
+    a: 'Los productos en stock listo se entregan de inmediato. Los pedidos a medida demoran entre 3 y 7 días hábiles según personalización y disponibilidad de componentes.',
+  },
+  {
+    q: '¿Qué formas de pago reciben?',
+    a: 'Aceptamos MercadoPago con tarjetas de débito/crédito, transferencias bancarias directas y efectivo.',
+  },
+]
+
+const faqJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: FAQS.map((item) => ({
+    '@type': 'Question',
+    name: item.q,
+    acceptedAnswer: { '@type': 'Answer', text: item.a },
+  })),
 }
 
 export default function ComoComprarPage() {
@@ -36,10 +60,8 @@ export default function ComoComprarPage() {
 
   return (
     <div className="container" style={{ padding: 'var(--space-12) var(--space-4)', maxWidth: '900px' }}>
+      <JsonLd data={faqJsonLd} />
       <div style={{ textAlign: 'center', marginBottom: 'var(--space-10)' }}>
-        <span className="badge badge-primary" style={{ marginBottom: 'var(--space-3)', display: 'inline-flex' }}>
-          🛒 Guía paso a paso
-        </span>
         <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '2.5rem', fontWeight: 800, marginBottom: 'var(--space-3)' }}>
           Cómo Comprar
         </h1>
@@ -90,22 +112,16 @@ export default function ComoComprarPage() {
           Preguntas Frecuentes de Compra
         </h2>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-          <div>
-            <h4 style={{ fontWeight: 600, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
-              <CheckCircle2 size={16} style={{ color: 'var(--color-green)' }} /> ¿Cuánto demora la fabricación de un arcade a medida?
-            </h4>
-            <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.9375rem', paddingLeft: 22 }}>
-              Los productos en stock listo se entregan de inmediato. Los pedidos a medida demoran entre 3 y 7 días hábiles según personalización y disponibilidad de componentes.
-            </p>
-          </div>
-          <div>
-            <h4 style={{ fontWeight: 600, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
-              <CheckCircle2 size={16} style={{ color: 'var(--color-green)' }} /> ¿Qué formas de pago reciben?
-            </h4>
-            <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.9375rem', paddingLeft: 22 }}>
-              Aceptamos MercadoPago con tarjetas de débito/crédito, transferencias bancarias directas y efectivo.
-            </p>
-          </div>
+          {FAQS.map((item) => (
+            <div key={item.q}>
+              <h3 style={{ fontWeight: 600, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6, fontSize: '1rem' }}>
+                <CheckCircle2 size={16} style={{ color: 'var(--color-green)' }} /> {item.q}
+              </h3>
+              <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.9375rem', paddingLeft: 22 }}>
+                {item.a}
+              </p>
+            </div>
+          ))}
         </div>
       </div>
 

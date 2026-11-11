@@ -57,7 +57,7 @@ export async function updateChatbotCustomerProfile(conversationId: string, data:
   }
 
   if (conv?.customer_id) {
-    const customerUpdates: Record<string, any> = {}
+    const customerUpdates: Record<string, unknown> = {}
     if (data.name !== undefined) customerUpdates.display_name = data.name.trim() || null
     if (data.email !== undefined) customerUpdates.email = data.email.trim() || null
     if (data.notes !== undefined) customerUpdates.notes = data.notes.trim() || null

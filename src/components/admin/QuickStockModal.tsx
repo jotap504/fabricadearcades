@@ -1,7 +1,8 @@
 'use client'
 
+import { getErrorMessage } from '@/lib/rows'
 import { useState } from 'react'
-import { Plus, Check, RefreshCw, X, PackagePlus } from 'lucide-react'
+import { X, PackagePlus } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useToast } from '@/lib/stores/toast'
 import { useRouter } from 'next/navigation'
@@ -113,8 +114,8 @@ export function QuickStockModal({ products, supplies }: Props) {
 
       setIsOpen(false)
       router.refresh()
-    } catch (err: any) {
-      toast.error('Error al agregar stock', err.message)
+    } catch (err) {
+      toast.error('Error al agregar stock', getErrorMessage(err))
     } finally {
       setLoading(false)
     }

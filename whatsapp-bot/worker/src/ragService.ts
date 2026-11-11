@@ -1,6 +1,7 @@
 import { supabase } from './supabase.js'
 import { config } from './config.js'
 import type { KnowledgeSource } from './types.js'
+import type { Loose } from './loose.js'
 
 const STOPWORDS = new Set([
   'a', 'al', 'algo', 'como', 'con', 'cuanto', 'cuánto', 'de', 'del', 'el', 'en', 'es', 'esta', 'está', 'esto',
@@ -121,7 +122,7 @@ async function retrieveCatalogKnowledge(text: string): Promise<KnowledgeSource[]
       const current = stockByProduct.get(item.product_id) || 0
       stockByProduct.set(item.product_id, current + item.quantity)
       if (item.stock_type === 'immediate' && item.configuration) {
-        const conf = item.configuration as any
+        const conf = item.configuration as Loose
         const vinylObj = conf.vinyl_supply_id ? vinylsById.get(conf.vinyl_supply_id) : null
         const vinylImg = vinylObj?.image_url || conf.image_url
         const details = `Vinilo: ${conf.vinyl_name || vinylObj?.name || 'Diseño de stock'}, Palanca: ${conf.joystick_color || 'Estándar'}, Botones: ${conf.button_color || 'Estándar'}`
@@ -151,7 +152,7 @@ async function retrieveCatalogKnowledge(text: string): Promise<KnowledgeSource[]
       }
 
       // Collect available vinyl images for this product
-      let meta: any = {}
+      let meta: Loose = {}
       try {
         meta = JSON.parse(p.meta_description || '{}')
       } catch {}

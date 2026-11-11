@@ -1,11 +1,12 @@
 'use client'
 
+import Link from 'next/link'
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/components/auth/AuthProvider'
 import { useToast } from '@/lib/stores/toast'
 import { useRouter } from 'next/navigation'
-import { Building2, User, Phone, Mail } from 'lucide-react'
+import { Building2, User, Phone, Mail, CheckCircle2, Check } from 'lucide-react'
 
 export default function DistributorRegistrationPage() {
   const { user } = useAuth()
@@ -80,15 +81,15 @@ export default function DistributorRegistrationPage() {
           textAlign: 'center',
         }}
       >
-        <div style={{ fontSize: '4rem' }}>🎉</div>
+        <CheckCircle2 size={64} aria-hidden="true" style={{ color: 'var(--color-green)' }} />
         <h1 style={{ fontSize: '1.5rem' }}>¡Solicitud enviada!</h1>
         <p style={{ color: 'var(--color-text-secondary)', maxWidth: 480 }}>
           Revisaremos tu solicitud y te notificaremos por email cuando tu cuenta de
           distribuidor esté activa (generalmente dentro de 24 horas hábiles).
         </p>
-        <a href="/" className="btn btn-primary" id="distributor-success-home-btn">
+        <Link href="/" className="btn btn-primary" id="distributor-success-home-btn">
           Volver al inicio
-        </a>
+        </Link>
       </div>
     )
   }
@@ -107,9 +108,6 @@ export default function DistributorRegistrationPage() {
     >
       <div style={{ width: '100%', maxWidth: 520 }}>
         <div style={{ marginBottom: 'var(--space-8)', textAlign: 'center' }}>
-          <span className="badge badge-distributor" style={{ marginBottom: 'var(--space-4)', display: 'inline-flex' }}>
-            💼 Para revendedores
-          </span>
           <h1 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: 'var(--space-3)' }}>
             Cuenta de distribuidor
           </h1>
@@ -271,10 +269,10 @@ export default function DistributorRegistrationPage() {
                 color: 'var(--color-text-secondary)',
               }}
             >
-              ✅ Acceso a precios mayoristas sin margen adicional<br />
-              ✅ Compras en cantidad con precios preferenciales<br />
-              ✅ Soporte comercial dedicado<br />
-              ✅ Aprobación en 24 horas hábiles
+              <Check size={14} aria-hidden="true" style={{ verticalAlign: '-2px', marginRight: 6, color: 'var(--color-green)' }} />Acceso a precios mayoristas sin margen adicional<br />
+              <Check size={14} aria-hidden="true" style={{ verticalAlign: '-2px', marginRight: 6, color: 'var(--color-green)' }} />Compras en cantidad con precios preferenciales<br />
+              <Check size={14} aria-hidden="true" style={{ verticalAlign: '-2px', marginRight: 6, color: 'var(--color-green)' }} />Soporte comercial dedicado<br />
+              <Check size={14} aria-hidden="true" style={{ verticalAlign: '-2px', marginRight: 6, color: 'var(--color-green)' }} />Aprobación en 24 horas hábiles
             </div>
 
             <button

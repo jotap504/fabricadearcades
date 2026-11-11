@@ -3,11 +3,13 @@ import { createAdminClient, createClient } from '@/lib/supabase/server'
 import { ProductsClient } from './ProductsClient'
 import type { Product, Category } from '@/lib/types'
 import { mockProducts, mockCategories } from '@/lib/mock-data'
+import { buildPageMetadata } from '@/lib/seo'
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title: 'Catálogo de Arcades',
   description: 'Explorá nuestro catálogo completo de arcades, bartops, pedestales y accesorios personalizados.',
-}
+  path: '/productos',
+})
 
 interface PageProps {
   searchParams: Promise<{ categoria?: string; buscar?: string; tipo?: string }>
@@ -162,6 +164,11 @@ export default async function ProductsPage({ searchParams }: PageProps) {
     }
   }
 
+  // Hide categories with no active products (empty tabs lead to a dead-end page)
+  const categoriesWithProducts = (categories ?? []).filter((c: Category) =>
+    allProducts.some((p: Product) => (p.category as unknown as Category | null)?.slug === c.slug)
+  )
+
   // Filter by category client-side after fetch (slug match)
   let products = allProducts
   if (params.categoria === 'express' || params.categoria === 'inmediata') {
@@ -189,7 +196,7 @@ export default async function ProductsPage({ searchParams }: PageProps) {
   return (
     <ProductsClient
       products={products}
-      categories={categories ?? []}
+      categories={categoriesWithProducts}
       activeCategory={params.categoria ?? 'todos'}
       searchQuery={params.buscar ?? ''}
     />

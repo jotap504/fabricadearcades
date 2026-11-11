@@ -1,8 +1,9 @@
+import { type Row } from '@/lib/rows'
 import { createClient, getAuthUser } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { formatPrice } from '@/lib/types'
-import { User, Package, Bell, LogOut } from 'lucide-react'
+import { User, Package, Bell } from 'lucide-react'
 
 const STATUS_LABELS: Record<string, string> = {
   pending_confirmation: 'Pendiente de pago',
@@ -39,7 +40,7 @@ export default async function MyAccountPage() {
     .order('created_at', { ascending: false })
     .limit(10)
 
-  const unreadCount = notifications?.filter((n: any) => !n.is_read).length ?? 0
+  const unreadCount = notifications?.filter((n: Row) => !n.is_read).length ?? 0
 
   return (
     <div style={{ paddingBottom: 'var(--space-16)' }}>
@@ -92,7 +93,7 @@ export default async function MyAccountPage() {
                   {user.email}
                 </span>
                 {profile?.role === 'distribuidor' && (
-                  <span className="badge badge-distributor">💼 Distribuidor</span>
+                  <span className="badge badge-distributor">Distribuidor</span>
                 )}
                 {profile?.role === 'distribuidor' && !profile.distributor_approved && (
                   <span className="badge badge-printed">⏳ Aprobación pendiente</span>
@@ -137,7 +138,7 @@ export default async function MyAccountPage() {
 
             {orders && orders.length > 0 ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-                {orders.map((order: any) => (
+                {orders.map((order: Row) => (
                   <div
                     key={order.id}
                     className="card card-body"
@@ -231,7 +232,7 @@ export default async function MyAccountPage() {
 
             {notifications && notifications.length > 0 ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-                {notifications.map((notif: any) => (
+                {notifications.map((notif: Row) => (
                   <div
                     key={notif.id}
                     className="card card-body"

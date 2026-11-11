@@ -12,7 +12,14 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Compiled output of the WhatsApp worker.
+    "whatsapp-bot/worker/dist/**",
   ]),
+  // Standalone Node scripts are CommonJS: `require` is the correct import there.
+  {
+    files: ["scripts/**/*.js", "**/*.cjs"],
+    rules: { "@typescript-eslint/no-require-imports": "off" },
+  },
 ]);
 
 export default eslintConfig;

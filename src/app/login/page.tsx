@@ -87,7 +87,7 @@ function LoginForm() {
 
         {sent ? (
           <div style={{ textAlign: 'center', padding: 'var(--space-6) 0' }}>
-            <div style={{ fontSize: '3rem', marginBottom: 'var(--space-4)' }}>📧</div>
+            <Mail size={48} aria-hidden="true" style={{ color: 'var(--color-cyan)', marginBottom: 'var(--space-4)' }} />
             <h2 style={{ marginBottom: 'var(--space-3)', fontSize: '1.125rem' }}>
               ¡Revisá tu email!
             </h2>

@@ -1,7 +1,8 @@
+import { type Row } from '@/lib/rows'
 import Link from 'next/link'
 import fs from 'node:fs'
 import path from 'node:path'
-import { ArrowRight, Zap, Clock, Palette, Shield, Gamepad2, Wrench } from 'lucide-react'
+import { ArrowRight, Zap, Clock, Palette, Shield } from 'lucide-react'
 import { createAdminClient, createClient } from '@/lib/supabase/server'
 import { ProductCard } from '@/components/products/ProductCard'
 import type { Product } from '@/lib/types'
@@ -9,16 +10,10 @@ import { mockProducts, mockCategories } from '@/lib/mock-data'
 import { ImageAccordionHero, type ImageAccordionItem } from '@/components/ui/interactive-image-accordion'
 import { SalesMilestoneStats } from '@/components/ui/sales-milestone-stats'
 import { InstagramReelsSection } from '@/components/home/InstagramReelsSection'
+import type { Metadata } from 'next'
 
-const getCategoryIconLarge = (slug: string) => {
-  switch (slug) {
-    case 'arcades':
-      return <Gamepad2 size={40} className="text-primary" />
-    case 'accesorios':
-      return <Wrench size={40} className="text-primary" />
-    default:
-      return <Gamepad2 size={40} className="text-primary" />
-  }
+export const metadata: Metadata = {
+  alternates: { canonical: '/', languages: { 'es-AR': '/' } },
 }
 
 
@@ -199,7 +194,9 @@ export default async function HomePage() {
     if (Array.isArray(images) && images[0]) categoryImageById.set(categoryId, images[0])
   }
 
-  const accordionItems: ImageAccordionItem[] = (categories ?? []).map((cat: any, index: number) => ({
+  const accordionItems: ImageAccordionItem[] = (categories ?? [])
+    .filter((cat: Row) => !supabase || categoryImageById.has(cat.id))
+    .map((cat: Row, index: number) => ({
     id: cat.id,
     title: cat.name,
     imageUrl: categoryImageById.get(cat.id) || HERO_IMAGES[index % HERO_IMAGES.length],
@@ -210,12 +207,10 @@ export default async function HomePage() {
     <>
       {/* HERO */}
       <ImageAccordionHero
-        tagline="FÁBRICA DE ARCADES — Showroom en Devoto, CABA"
         title={
           <>
-            Consolas Arcade
-            <br />
-            A Tu Medida
+            Consolas arcade
+            <br />a tu medida
           </>
         }
         description="Equipos multijuegos premium fabricados en Argentina. Elegí tu gabinete, vinilos de diseño, colores de palancas y botones. Envío express."
@@ -426,7 +421,7 @@ export default async function HomePage() {
                 className="badge badge-distributor"
                 style={{ fontSize: '0.8125rem', marginBottom: 'var(--space-4)', display: 'inline-flex' }}
               >
-                💼 Para revendedores
+                Para revendedores
               </span>
               <h2
                 className="section-title"

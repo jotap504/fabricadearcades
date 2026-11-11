@@ -90,7 +90,7 @@ export async function sendWhatsAppBase64Media(
   return data.key?.id ?? data.messageId ?? data.id ?? null
 }
 
-export async function getMediaBase64(messageKeyOrId: any): Promise<string | null> {
+export async function getMediaBase64(messageKeyOrId: unknown): Promise<string | null> {
   try {
     const url = new URL(`/chat/getBase64FromMediaMessage/${config.EVOLUTION_INSTANCE}`, config.EVOLUTION_API_URL)
     const response = await fetch(url, {

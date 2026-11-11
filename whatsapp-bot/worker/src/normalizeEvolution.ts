@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import type { NormalizedMessage } from './types.js'
+import type { Loose } from './loose.js'
 
 const webhookSchema = z.object({
   event: z.string().optional(),
@@ -13,7 +14,7 @@ function cleanPhone(remoteJid: string | undefined): string | null {
   return remoteJid.replace(/@s\.whatsapp\.net|@c\.us|@g\.us|@lid/g, '')
 }
 
-function extractText(message: any): string {
+function extractText(message: Loose | undefined): string {
   return (
     message?.conversation
     ?? message?.extendedTextMessage?.text
@@ -28,7 +29,7 @@ function normalizeEvent(event: string | undefined): string {
   return (event ?? '').replace(/\./g, '_').toUpperCase()
 }
 
-function extractContextInfo(message: any): { id?: string; text?: string; participant?: string } | undefined {
+function extractContextInfo(message: Loose | undefined): { id?: string; text?: string; participant?: string } | undefined {
   const contextInfo =
     message?.extendedTextMessage?.contextInfo
     ?? message?.message?.extendedTextMessage?.contextInfo
@@ -49,7 +50,7 @@ function extractContextInfo(message: any): { id?: string; text?: string; partici
   }
 }
 
-function extractMediaInfo(message: any): { mediaType?: 'image' | 'video' | 'audio' | 'document'; caption?: string; base64?: string; url?: string } | null {
+function extractMediaInfo(message: Loose | undefined): { mediaType?: 'image' | 'video' | 'audio' | 'document'; caption?: string; base64?: string; url?: string } | null {
   const msg = message?.message ?? message
   if (msg?.imageMessage) {
     return {

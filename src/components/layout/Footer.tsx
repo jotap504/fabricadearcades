@@ -1,39 +1,6 @@
 import Link from 'next/link'
-import { Gamepad2, Mail, Phone, MapPin } from 'lucide-react'
-
-const InstagramIcon = ({ size = 24, ...props }: any) => (
-  <svg
-    viewBox="0 0 24 24"
-    width={size}
-    height={size}
-    stroke="currentColor"
-    strokeWidth="2"
-    fill="none"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    {...props}
-  >
-    <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
-    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
-    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
-  </svg>
-)
-
-const TikTokIcon = ({ size = 24, ...props }: any) => (
-  <svg
-    viewBox="0 0 24 24"
-    width={size}
-    height={size}
-    stroke="currentColor"
-    strokeWidth="2"
-    fill="none"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    {...props}
-  >
-    <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"></path>
-  </svg>
-)
+import { Mail, Phone, MapPin } from 'lucide-react'
+import { InstagramIcon, TikTokIcon } from '@/components/ui/SocialIcons'
 
 export function Footer() {
   const currentYear = new Date().getFullYear()
@@ -82,19 +49,22 @@ export function Footer() {
           <div>
             <h3 className="footer-heading">Productos</h3>
             <Link href="/productos?categoria=arcades" className="footer-link">
-              Arcades verticales
+              Arcades
             </Link>
-            <Link href="/productos?categoria=arcades" className="footer-link">
+            <Link href="/productos?categoria=bartops" className="footer-link">
               Bartops
+            </Link>
+            <Link href="/productos?categoria=consolas" className="footer-link">
+              Consolas
+            </Link>
+            <Link href="/productos?categoria=fightsticks" className="footer-link">
+              Fightsticks
             </Link>
             <Link href="/productos?categoria=pedestales" className="footer-link">
               Pedestales
             </Link>
-            <Link href="/productos?categoria=bundles" className="footer-link">
-              Combos
-            </Link>
-            <Link href="/productos?categoria=accesorios" className="footer-link">
-              Accesorios
+            <Link href="/productos?categoria=insumos" className="footer-link">
+              Insumos
             </Link>
           </div>
 

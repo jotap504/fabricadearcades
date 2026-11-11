@@ -1,5 +1,6 @@
 'use client'
 
+import { type Row } from '@/lib/rows'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -11,7 +12,7 @@ export default function NewInsumoPage() {
   const supabase = createClient()
   const toast = useToast()
   const [loading, setLoading] = useState(false)
-  const [families, setFamilies] = useState<any[]>([])
+  const [families, setFamilies] = useState<Row[]>([])
   const [selectedFamilyId, setSelectedFamilyId] = useState<string>('')
 
   const [form, setForm] = useState({
@@ -66,7 +67,7 @@ export default function NewInsumoPage() {
       if (fConfig?.value) {
         try {
           const list = typeof fConfig.value === 'string' ? JSON.parse(fConfig.value) : fConfig.value
-          const updated = list.map((f: any) => {
+          const updated = list.map((f: Row) => {
             if (f.id === selectedFamilyId) {
               const ids = f.supply_ids || []
               return { ...f, supply_ids: Array.from(new Set([...ids, data.id])) }
@@ -135,7 +136,7 @@ export default function NewInsumoPage() {
               onChange={(e) => setSelectedFamilyId(e.target.value)}
             >
               <option value="">-- Sin Familia / Asignar después --</option>
-              {families.map((f: any) => (
+              {families.map((f: Row) => (
                 <option key={f.id} value={f.id}>
                   {f.name}
                 </option>

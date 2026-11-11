@@ -1,24 +1,133 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 import { CartSidebar } from '@/components/cart/CartSidebar'
 import { ToastContainer } from '@/components/ui/ToastContainer'
 import { AuthProvider } from '@/components/auth/AuthProvider'
+import { JsonLd } from '@/components/seo/JsonLd'
+import {
+  SITE_URL,
+  SITE_NAME,
+  SITE_LOCALE,
+  SITE_LOGO,
+  SITE_CONTACT,
+  SITE_DEFAULT_OG_IMAGE,
+  absoluteUrl,
+} from '@/lib/site'
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: {
     default: 'Fábrica de Arcades | Consolas Arcade Personalizadas en Argentina',
     template: '%s | Fábrica de Arcades',
   },
   description:
     'Fabricamos consolas arcade personalizadas en Argentina. Elegí tu gabinete, colores y temática. Stock disponible, envío a todo el país.',
+  applicationName: SITE_NAME,
   keywords: ['arcade', 'consola arcade', 'máquina arcade', 'Argentina', 'retro gaming', 'personalizado'],
+  authors: [{ name: SITE_NAME, url: SITE_URL }],
+  creator: SITE_NAME,
+  publisher: SITE_NAME,
+  formatDetection: { telephone: false, email: false, address: false },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+      'max-video-preview': -1,
+    },
+  },
   openGraph: {
     type: 'website',
-    locale: 'es_AR',
-    siteName: 'Fábrica de Arcades',
+    locale: SITE_LOCALE,
+    siteName: SITE_NAME,
+    url: '/',
+    title: 'Fábrica de Arcades | Consolas Arcade Personalizadas en Argentina',
+    description:
+      'Fabricamos consolas arcade personalizadas en Argentina. Elegí tu gabinete, colores y temática. Stock disponible, envío a todo el país.',
+    images: [{ url: SITE_DEFAULT_OG_IMAGE, alt: 'Consolas arcade fabricadas por Fábrica de Arcades' }],
   },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Fábrica de Arcades | Consolas Arcade Personalizadas en Argentina',
+    description:
+      'Fabricamos consolas arcade personalizadas en Argentina. Elegí tu gabinete, colores y temática.',
+    images: [SITE_DEFAULT_OG_IMAGE],
+  },
+}
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#f4f5f7' },
+    { media: '(prefers-color-scheme: dark)', color: '#09090b' },
+  ],
+}
+
+const siteJsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Organization',
+      '@id': `${SITE_URL}/#organization`,
+      name: SITE_NAME,
+      url: SITE_URL,
+      logo: absoluteUrl(SITE_LOGO),
+      email: SITE_CONTACT.email,
+      telephone: SITE_CONTACT.telephone,
+      sameAs: [SITE_CONTACT.instagram, SITE_CONTACT.tiktok],
+      contactPoint: [
+        {
+          '@type': 'ContactPoint',
+          contactType: 'customer service',
+          telephone: SITE_CONTACT.telephone,
+          email: SITE_CONTACT.email,
+          availableLanguage: 'es',
+          areaServed: 'AR',
+        },
+      ],
+    },
+    {
+      '@type': 'Store',
+      '@id': `${SITE_URL}/#localbusiness`,
+      name: SITE_NAME,
+      description:
+        'Fábrica y showroom de consolas arcade personalizadas en Devoto, Ciudad de Buenos Aires. Equipos listos para entregar y pedidos a medida.',
+      url: SITE_URL,
+      image: absoluteUrl(SITE_DEFAULT_OG_IMAGE),
+      logo: absoluteUrl(SITE_LOGO),
+      email: SITE_CONTACT.email,
+      telephone: SITE_CONTACT.telephone,
+      address: {
+        '@type': 'PostalAddress',
+        streetAddress: SITE_CONTACT.streetAddress,
+        addressLocality: SITE_CONTACT.addressLocality,
+        addressCountry: SITE_CONTACT.addressCountry,
+      },
+      openingHoursSpecification: [
+        {
+          '@type': 'OpeningHoursSpecification',
+          dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+          opens: '09:00',
+          closes: '18:00',
+        },
+      ],
+      areaServed: { '@type': 'Country', name: 'Argentina' },
+      parentOrganization: { '@id': `${SITE_URL}/#organization` },
+      sameAs: [SITE_CONTACT.instagram, SITE_CONTACT.tiktok],
+    },
+    {
+      '@type': 'WebSite',
+      '@id': `${SITE_URL}/#website`,
+      url: SITE_URL,
+      name: SITE_NAME,
+      inLanguage: 'es-AR',
+      publisher: { '@id': `${SITE_URL}/#organization` },
+    },
+  ],
 }
 
 import { WhatsAppFloat } from '@/components/layout/WhatsAppFloat'
@@ -43,6 +152,7 @@ export default function RootLayout({
         />
       </head>
       <body>
+        <JsonLd data={siteJsonLd} />
         <AuthProvider>
           <Header />
           <main>{children}</main>

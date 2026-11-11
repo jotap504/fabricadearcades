@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { config } from './config.js'
 import type { KnowledgeSource } from './types.js'
+import type { Loose } from './loose.js'
 
 const answerSchema = z.object({
   action: z.enum(['ANSWER', 'CLARIFY', 'HANDOFF']),
@@ -136,7 +137,7 @@ export async function askLlm(question: string, sources: KnowledgeSource[], histo
   const responseText = await response.text()
   if (!response.ok) throw new Error(`OpenRouter failed: ${response.status} ${responseText.slice(0, 500)}`)
 
-  let data: any
+  let data: Loose
   try {
     data = JSON.parse(responseText)
   } catch {

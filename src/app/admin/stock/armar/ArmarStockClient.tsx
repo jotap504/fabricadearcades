@@ -1,5 +1,6 @@
 'use client'
 
+import { type Row, getErrorMessage } from '@/lib/rows'
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useToast } from '@/lib/stores/toast'
@@ -7,9 +8,9 @@ import { useRouter } from 'next/navigation'
 import { Wrench } from 'lucide-react'
 
 interface Props {
-  products: any[]
-  supplies: any[]
-  supplyFamilies?: any[]
+  products: Row[]
+  supplies: Row[]
+  supplyFamilies?: Row[]
 }
 
 interface PlayerConfig {
@@ -23,7 +24,7 @@ export function ArmarStockClient({ products, supplies, supplyFamilies = [] }: Pr
   const router = useRouter()
 
   const [selectedProductId, setSelectedProductId] = useState<string>(products[0]?.id || '')
-  const [selectedProduct, setSelectedProduct] = useState<any>(products[0] || null)
+  const [selectedProduct, setSelectedProduct] = useState<Row | null>(products[0] || null)
 
   const [unitsToAssemble, setUnitsToAssemble] = useState<number>(1)
   const [presetName, setPresetName] = useState<string>('')
@@ -34,7 +35,7 @@ export function ArmarStockClient({ products, supplies, supplyFamilies = [] }: Pr
   const [buttonType, setButtonType] = useState<'standard' | 'led'>('standard')
 
   // Parse product specs
-  let productSpecs: any = {
+  let productSpecs: Row = {
     players_count: 2,
     joysticks_count: 2,
     buttons_per_player: 6,
@@ -57,8 +58,8 @@ export function ArmarStockClient({ products, supplies, supplyFamilies = [] }: Pr
     if (!productFamilies || productFamilies.length === 0) return null
     const ids = new Set<string>()
     supplyFamilies
-      .filter((f: any) => productFamilies.includes(f.id) || productFamilies.includes(f.name))
-      .forEach((f: any) => {
+      .filter((f: Row) => productFamilies.includes(f.id) || productFamilies.includes(f.name))
+      .forEach((f: Row) => {
         (f.supply_ids || []).forEach((id: string) => ids.add(id))
       })
     return ids
@@ -81,7 +82,7 @@ export function ArmarStockClient({ products, supplies, supplyFamilies = [] }: Pr
     return true
   })
   
-  const isLedSupply = (s: any) => {
+  const isLedSupply = (s: Row) => {
     const text = `${s.name} ${s.color_label || ''}`.toLowerCase()
     return text.includes('led') || s.supply_type === 'led'
   }
@@ -105,7 +106,7 @@ export function ArmarStockClient({ products, supplies, supplyFamilies = [] }: Pr
     const prod = products.find((p) => p.id === productId)
     setSelectedProduct(prod || null)
 
-    let specs: any = { players_count: 2, buttons_per_player: 6 }
+    let specs: Row = { players_count: 2, buttons_per_player: 6 }
     try {
       if (prod?.meta_description) {
         specs = { ...specs, ...JSON.parse(prod.meta_description) }
@@ -135,7 +136,7 @@ export function ArmarStockClient({ products, supplies, supplyFamilies = [] }: Pr
   const supplyDiscountsMap: Record<string, { name: string; needed: number; stock: number }> = {}
 
   // Fixed BOM parts (wood, computer, screen, wiring, etc.) are consumed too.
-  ;(productSpecs.bom || []).forEach((bomItem: any) => {
+  ;(productSpecs.bom || []).forEach((bomItem: Row) => {
     if (!bomItem.supply_id || bomItem.supply_type !== 'other') return
     const supply = supplies.find((item) => item.id === bomItem.supply_id)
     if (!supply) return
@@ -205,7 +206,7 @@ export function ArmarStockClient({ products, supplies, supplyFamilies = [] }: Pr
       })
 
       const configuration = {
-        name: presetName || `${selectedProduct.name} - ${selectedVinyl?.name || 'Armado'} (${unitsToAssemble} un)`,
+        name: presetName || `${selectedProduct?.name} - ${selectedVinyl?.name || 'Armado'} (${unitsToAssemble} un)`,
         vinyl_supply_id: selectedVinylId || null,
         vinyl_name: selectedVinyl?.name || null,
         joystick_color: p1Joy?.color_label || null,
@@ -235,8 +236,8 @@ export function ArmarStockClient({ products, supplies, supplyFamilies = [] }: Pr
 
       router.push('/admin/stock')
       router.refresh()
-    } catch (err: any) {
-      toast.error('Error al armar el equipo', err.message)
+    } catch (err) {
+      toast.error('Error al armar el equipo', getErrorMessage(err))
     } finally {
       setLoading(false)
     }
@@ -331,7 +332,7 @@ export function ArmarStockClient({ products, supplies, supplyFamilies = [] }: Pr
               <select
                 className="form-input form-select"
                 value={joystickType}
-                onChange={(e) => setJoystickType(e.target.value as any)}
+                onChange={(e) => setJoystickType(e.target.value as 'standard' | 'led')}
               >
                 <option value="standard">🕹️ Estándar</option>
                 <option value="led">💡 LED Iluminada</option>
@@ -343,7 +344,7 @@ export function ArmarStockClient({ products, supplies, supplyFamilies = [] }: Pr
               <select
                 className="form-input form-select"
                 value={buttonType}
-                onChange={(e) => setButtonType(e.target.value as any)}
+                onChange={(e) => setButtonType(e.target.value as 'standard' | 'led')}
               >
                 <option value="standard">🔴 Estándar</option>
                 <option value="led">💡 LED Iluminado</option>

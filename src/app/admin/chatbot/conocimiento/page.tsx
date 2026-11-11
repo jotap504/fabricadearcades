@@ -1,3 +1,4 @@
+import type { ComponentProps } from 'react'
 import { redirect } from 'next/navigation'
 import { createClient, getAuthUser } from '@/lib/supabase/server'
 import { ChatbotKnowledgeClient } from './ChatbotKnowledgeClient'
@@ -9,7 +10,7 @@ export default async function ChatbotConocimientoPage() {
   if (!user) redirect('/login?redirect=/admin/chatbot/conocimiento')
   if (profile?.role !== 'admin') redirect('/')
 
-  let data: any[] = []
+  let data: ComponentProps<typeof ChatbotKnowledgeClient>['initialItems'] = []
   let databasePending = false
   try {
     const result = await supabase

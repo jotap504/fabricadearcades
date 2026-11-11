@@ -1,3 +1,4 @@
+import { getErrorMessage } from '@/lib/rows'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
@@ -80,8 +81,8 @@ export async function POST(req: NextRequest) {
       success: true,
       image_url: imageUrl,
     })
-  } catch (err: any) {
+  } catch (err) {
     console.error('Error generating image:', err)
-    return NextResponse.json({ error: err.message || 'Error interno del servidor' }, { status: 500 })
+    return NextResponse.json({ error: getErrorMessage(err, 'Error interno del servidor') }, { status: 500 })
   }
 }

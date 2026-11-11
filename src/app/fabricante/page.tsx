@@ -1,3 +1,4 @@
+import { Wrench } from 'lucide-react'
 import { createClient, getAuthUser } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { ProductionQueueClient } from '../admin/produccion/ProductionQueueClient'
@@ -33,7 +34,7 @@ export default async function FabricantePanel() {
           gap: 'var(--space-3)',
         }}
       >
-        <span style={{ fontSize: '2rem' }}>🔧</span>
+        <Wrench size={32} aria-hidden="true" style={{ color: 'var(--color-cyan)' }} />
         <div>
           <h1 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Panel de Producción</h1>
           <p style={{ color: 'var(--color-text-muted)' }}>Cola de trabajo activa</p>

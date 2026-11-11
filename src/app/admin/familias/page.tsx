@@ -1,3 +1,4 @@
+import type { ComponentProps } from 'react'
 import { createClient, getAuthUser } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { FamiliasClient } from './FamiliasClient'
@@ -14,7 +15,7 @@ export default async function AdminFamiliasPage() {
     .eq('key', 'supply_families')
     .single()
 
-  let families: any[] = []
+  let families: ComponentProps<typeof FamiliasClient>['initialFamilies'] = []
   try {
     if (config?.value) {
       families = typeof config.value === 'string' ? JSON.parse(config.value) : config.value

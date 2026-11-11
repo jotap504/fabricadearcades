@@ -1,9 +1,10 @@
 'use client'
 
+import { type Row } from '@/lib/rows'
 import { useState, useMemo, useEffect } from 'react'
 import type { CSSProperties } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { ShoppingCart, ChevronLeft, ChevronRight, Play, Check } from 'lucide-react'
+import { ShoppingCart, ChevronLeft, ChevronRight, Play, Check, Gamepad2, Zap } from 'lucide-react'
 import { useAuth } from '@/components/auth/AuthProvider'
 import { useCartStore } from '@/lib/stores/cart'
 import { useToast } from '@/lib/stores/toast'
@@ -11,7 +12,6 @@ import {
   formatPrice,
   getEffectivePrice,
   STOCK_BADGE_CONFIG,
-  CABINET_TYPE_LABELS,
   type Product,
   type ProductVariant,
   type StockItem,
@@ -56,7 +56,7 @@ export function ProductDetailClient({
 
   // Parse product specs from meta_description
   const productSpecs = useMemo(() => {
-    let specs: any = {
+    let specs: Row = {
       players_count: 2,
       joysticks_count: 2,
       buttons_per_player: 6,
@@ -90,7 +90,7 @@ export function ProductDetailClient({
   const productVinylSupplyIds: string[] = productSpecs.vinyl_supply_ids || []
 
   // All families defined
-  const allSupplyFamilies: any[] = (product as any).supply_families || []
+  const allSupplyFamilies: Row[] = (product as Row).supply_families || []
 
   // Helper to test if a supply is LED
   const isLedSupply = (s: SupplyInventory) => {
@@ -194,7 +194,7 @@ export function ProductDetailClient({
     }, 0)
   }, [customization.addons])
 
-  const handleSelectPreset = (preset: any) => {
+  const handleSelectPreset = (preset: Row) => {
     setSelectedPresetId(preset.stock_id || preset.id)
 
     const stockItem = stockItems.find((s) => s.id === preset.stock_id)
@@ -240,7 +240,7 @@ export function ProductDetailClient({
     if (allowedSupplyIds && allowedSupplyIds.size > 0) {
       list = list.filter((s) => allowedSupplyIds.has(s.id))
     } else if (bom.length > 0) {
-      list = list.filter((s) => bom.some((b: any) => b.supply_id === s.id))
+      list = list.filter((s) => bom.some((b: Row) => b.supply_id === s.id))
     }
     const isLed = joystickType === 'led'
     return list.filter((s) => (isLed ? isLedSupply(s) : !isLedSupply(s)))
@@ -251,7 +251,7 @@ export function ProductDetailClient({
     if (allowedSupplyIds && allowedSupplyIds.size > 0) {
       list = list.filter((s) => allowedSupplyIds.has(s.id))
     } else if (bom.length > 0) {
-      list = list.filter((s) => bom.some((b: any) => b.supply_id === s.id))
+      list = list.filter((s) => bom.some((b: Row) => b.supply_id === s.id))
     }
     const isLed = buttonType === 'led'
     return list.filter((s) => (isLed ? isLedSupply(s) : !isLedSupply(s)))
@@ -264,7 +264,7 @@ export function ProductDetailClient({
     } else if (allowedSupplyIds && allowedSupplyIds.size > 0) {
       list = list.filter((s) => allowedSupplyIds.has(s.id))
     } else if (bom.length > 0) {
-      list = list.filter((s) => bom.some((b: any) => b.supply_id === s.id))
+      list = list.filter((s) => bom.some((b: Row) => b.supply_id === s.id))
     }
     const seen = new Set<string>()
     return list.filter((vinyl) => {
@@ -384,13 +384,13 @@ export function ProductDetailClient({
   // Compute delivery badge based on selection
   const deliveryEstimate = useMemo(() => {
     if (selectedPresetId) {
-      return { badge: '⚡ Entrega Inmediata', subtitle: 'Listo para retirar / despachar hoy', type: 'immediate' }
+      return { badge: 'Entrega Inmediata', subtitle: 'Listo para retirar / despachar hoy', type: 'immediate' }
     }
     if (vinylSource === 'stock' && selectedVinyl && selectedVinyl.quantity > 0) {
       const label = withPrintedVinylDays ? `${withPrintedVinylDays} días hábiles` : '24/48 hs'
       return { badge: `⏱️ Listo en ${label}`, subtitle: 'Vinilo ya impreso en fábrica', type: 'printed' }
     }
-    return { badge: `🎨 Diseñado / impresión a medida: ${designedDaysLabel}`, subtitle: 'Imprimimos y armamos tu diseño a medida', type: 'designed' }
+    return { badge: `Diseñado / impresión a medida: ${designedDaysLabel}`, subtitle: 'Imprimimos y armamos tu diseño a medida', type: 'designed' }
   }, [selectedPresetId, vinylSource, selectedVinyl, withPrintedVinylDays, designedDaysLabel])
 
   // Compute stock availability
@@ -683,7 +683,7 @@ export function ProductDetailClient({
                     }}
                   />
                 ) : (
-                  '🕹️'
+                  <Gamepad2 size={48} aria-hidden="true" />
                 )}
                 {images.length > 1 && (
                   <>
@@ -765,7 +765,7 @@ export function ProductDetailClient({
                     >
                       <img
                         src={img}
-                        alt={`Imagen ${i + 1}`}
+                        alt={`${product.name} - imagen ${i + 1}`}
                         style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: 2 }}
                       />
                     </button>
@@ -832,7 +832,7 @@ export function ProductDetailClient({
                       marginTop: 'var(--space-3)',
                     }}
                   >
-                    🕹️ Incluye {productSpecs.games_count} juegos
+                    Incluye {productSpecs.games_count} juegos
                   </p>
                 )}
                 {product.product_type === 'arcade' && (
@@ -859,7 +859,7 @@ export function ProductDetailClient({
                   fontSize: '0.8125rem',
                 }}
               >
-                Preguntas Frecuentes 🕹️
+                Preguntas Frecuentes
               </h2>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
                 {[
@@ -944,7 +944,7 @@ export function ProductDetailClient({
                   marginBottom: 'var(--space-2)',
                 }}
               >
-                {(product.category as any)?.name ?? product.product_type}
+                {(product.category as Row | null)?.name ?? product.product_type}
               </div>
               <h1
                 style={{
@@ -1007,7 +1007,7 @@ export function ProductDetailClient({
                     disabled={presets.length === 0}
                     style={{ textAlign: 'left', cursor: presets.length > 0 ? 'pointer' : 'not-allowed', border: '1px solid var(--color-border)' }}
                   >
-                    <strong>⚡ Comprar listo para entregar</strong>
+                    <strong>Comprar listo para entregar</strong>
                     <span>
                       Equipo ya armado en fábrica. La configuración no se modifica.
                     </span>
@@ -1019,7 +1019,7 @@ export function ProductDetailClient({
                     onClick={() => handleSelectCustom()}
                     style={{ textAlign: 'left', cursor: 'pointer', border: '1px solid var(--color-border)' }}
                   >
-                    <strong>🎨 Comprar a medida</strong>
+                    <strong>Comprar a medida</strong>
                     <span>
                       Elegís vinilo, palancas, botones y adicionales antes de iniciar el pedido.
                     </span>
@@ -1045,7 +1045,7 @@ export function ProductDetailClient({
                 }}
               >
                 <div style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--color-cyan)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  🔌 Especificaciones Técnicas
+                  Especificaciones Técnicas
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 'var(--space-2) var(--space-4)', fontSize: '0.875rem' }}>
                   {productSpecs.accessory_specs.brand && (
@@ -1116,7 +1116,7 @@ export function ProductDetailClient({
                   className="badge badge-distributor"
                   style={{ marginTop: 'var(--space-2)', fontSize: '0.75rem' }}
                 >
-                  💼 Precio distribuidor
+                  Precio distribuidor
                 </span>
               )}
             </div>
@@ -1134,14 +1134,14 @@ export function ProductDetailClient({
                       color: 'var(--color-text)',
                     }}
                   >
-                    🎨 Personalizá tu arcade
+                    Personalizá tu arcade
                   </h3>
 
                   {/* Preset Selector / Modalidad de compra */}
                   {presets.length > 0 && (
                     <div className="customizer-section" style={{ background: 'var(--color-surface-2)', padding: 'var(--space-3)', borderRadius: 'var(--radius-md)', marginBottom: 'var(--space-4)' }}>
                       <span className="customizer-section-title" style={{ fontSize: '0.8125rem', fontWeight: 700, color: 'var(--color-cyan)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                        ⚡ Modalidad de Compra
+                        Modalidad de Compra
                       </span>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', marginTop: 'var(--space-2)' }}>
                         <button
@@ -1152,14 +1152,14 @@ export function ProductDetailClient({
                           style={{ textAlign: 'left', display: 'flex', justifyContent: 'space-between', width: '100%', padding: 'var(--space-2) var(--space-3)', border: selectedPresetId === null ? '1px solid var(--color-cyan)' : '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', background: selectedPresetId === null ? 'var(--color-cyan-dim)' : 'var(--color-surface)' }}
                         >
                           <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>
-                            🎨 Armar mi consola a medida
+                            Armar mi consola a medida
                           </div>
                           <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
                             24/48hs con vinilo en stock · 7 días a medida
                           </span>
                         </button>
 
-                        {presets.map((preset: any) => {
+                        {presets.map((preset: Row) => {
                           const isSelected = selectedPresetId === (preset.stock_id || preset.id)
                           const vinyl = supplies.find((s) => s.id === preset.vinyl_supply_id)
                           return (
@@ -1172,8 +1172,8 @@ export function ProductDetailClient({
                               style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', gap: 4, width: '100%', border: isSelected ? '1px solid var(--color-cyan)' : '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', padding: 'var(--space-3)', background: isSelected ? 'var(--color-cyan-dim)' : 'var(--color-surface)' }}
                             >
                               <div style={{ fontWeight: 600, display: 'flex', justifyContent: 'space-between', width: '100%', fontSize: '0.875rem' }}>
-                                <span>📦 {preset.name}</span>
-                                <span style={{ color: 'var(--color-cyan)', fontSize: '0.75rem', fontWeight: 700 }}>⚡ Stock Inmediato</span>
+                                <span>{preset.name}</span>
+                                <span style={{ color: 'var(--color-cyan)', fontSize: '0.75rem', fontWeight: 700 }}>Stock Inmediato</span>
                               </div>
                               <div style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                                 <span>Vinilo: {vinyl?.name || preset.vinyl_name || 'Fijo'}</span>
@@ -1214,7 +1214,7 @@ export function ProductDetailClient({
                         }}
                       >
                         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-                          <span style={{ fontSize: '1.25rem' }}>⚡</span>
+                          <Zap size={20} aria-hidden="true" />
                           <div>
                             <div style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--color-text)' }}>
                               Composición exacta del equipo armado en stock
@@ -1230,7 +1230,7 @@ export function ProductDetailClient({
                           className="btn btn-secondary btn-sm"
                           style={{ fontSize: '0.75rem', padding: '4px 10px' }}
                         >
-                          🎨 Cambiar a pedido a medida
+                          Cambiar a pedido a medida
                         </button>
                       </div>
                     )}
@@ -1238,7 +1238,7 @@ export function ProductDetailClient({
                     {/* 1. SECCIÓN TEMÁTICA / VINILO */}
                     <div className="customizer-section">
                       <span className="customizer-section-title">
-                        1. Temática y Vinilo Ploteado {isLocked && <small style={{ fontWeight: 600, color: 'var(--color-cyan)', marginLeft: 6 }}>🔒 (Fijo en stock)</small>}
+                        1. Temática y Vinilo Ploteado {isLocked && <small style={{ fontWeight: 600, color: 'var(--color-cyan)', marginLeft: 6 }}>(Fijo en stock)</small>}
                       </span>
                       
                       <div style={{ display: 'flex', gap: 'var(--space-2)', marginBottom: 'var(--space-3)' }}>
@@ -1252,7 +1252,7 @@ export function ProductDetailClient({
                           className={clsx('category-tab', { active: vinylSource === 'stock' })}
                           style={{ fontSize: '0.8125rem', cursor: isLocked ? 'default' : 'pointer' }}
                         >
-                          🎨 Vinilos en Stock Fábrica (24/48 hs)
+                          Vinilos en Stock Fábrica (24/48 hs)
                         </button>
                         <button
                           type="button"
@@ -1264,7 +1264,7 @@ export function ProductDetailClient({
                           className={clsx('category-tab', { active: vinylSource === 'print' || vinylSource === 'custom' })}
                           style={{ fontSize: '0.8125rem', cursor: isLocked ? 'default' : 'pointer' }}
                         >
-                          ✨ Diseño a Pedido / Personalizado (7 días)
+                          Diseño a Pedido / Personalizado (7 días)
                         </button>
                       </div>
 
@@ -1375,7 +1375,7 @@ export function ProductDetailClient({
                     <div className="customizer-section">
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-2)' }}>
                         <span className="customizer-section-title" style={{ margin: 0 }}>
-                          2. Controles por jugador {isLocked && <small style={{ fontWeight: 600, color: 'var(--color-cyan)', marginLeft: 6 }}>🔒 (Fijo en stock)</small>}
+                          2. Controles por jugador {isLocked && <small style={{ fontWeight: 600, color: 'var(--color-cyan)', marginLeft: 6 }}>(Fijo en stock)</small>}
                         </span>
                         {productSpecs.led_enabled && (
                           <div className="controls-type-grid">

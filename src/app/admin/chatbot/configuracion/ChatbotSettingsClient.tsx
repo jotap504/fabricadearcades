@@ -39,7 +39,7 @@ export function ChatbotSettingsClient({
     setSettings((current) => current.map((setting) => (setting.key === key ? { ...setting, value: nextValue } : setting)))
   }
 
-  function updateRoute(routeKey: string, field: keyof HandoffRouteItem, nextValue: any) {
+  function updateRoute<K extends keyof HandoffRouteItem>(routeKey: string, field: K, nextValue: HandoffRouteItem[K]) {
     setRoutes((current) =>
       current.map((r) => (r.route_key === routeKey ? { ...r, [field]: nextValue } : r))
     )

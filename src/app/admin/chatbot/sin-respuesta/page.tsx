@@ -1,3 +1,4 @@
+import { type Row } from '@/lib/rows'
 import { redirect } from 'next/navigation'
 import { createClient, getAuthUser } from '@/lib/supabase/server'
 import { UnansweredActions } from './UnansweredActions'
@@ -9,7 +10,7 @@ export default async function ChatbotSinRespuestaPage() {
   if (!user) redirect('/login?redirect=/admin/chatbot/sin-respuesta')
   if (profile?.role !== 'admin') redirect('/')
 
-  let data: any[] = []
+  let data: Row[] = []
   let databasePending = false
   try {
     const result = await supabase
@@ -32,7 +33,7 @@ export default async function ChatbotSinRespuestaPage() {
         <table className="data-table">
           <thead><tr><th>Pregunta</th><th>Cliente</th><th>Motivo</th><th>Estado</th><th>Fecha</th><th>Acciones</th></tr></thead>
           <tbody>
-            {data.map((row: any) => (
+            {data.map((row: Row) => (
               <tr key={row.id}>
                 <td><strong>{row.question}</strong>{row.human_answer && <div className="table-secondary">Respuesta humana: {row.human_answer}</div>}</td>
                 <td>{row.chatbot_conversations?.display_name ?? row.chatbot_conversations?.phone ?? '—'}</td>

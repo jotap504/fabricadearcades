@@ -1,7 +1,7 @@
 'use client'
 
 import { createClient } from '@/lib/supabase/client'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useToast } from '@/lib/stores/toast'
 import { Check, Loader2 } from 'lucide-react'
 
@@ -20,10 +20,13 @@ export function ProductPriceMarkupInputs({ id, initialBasePrice, initialMarkupPc
   const [isSaving, setIsSaving] = useState(false)
   const [savedSuccess, setSavedSuccess] = useState(false)
 
-  useEffect(() => {
+  // Re-sync local fields when the saved values change (state adjustment during render)
+  const [syncedFrom, setSyncedFrom] = useState({ initialBasePrice, initialMarkupPct })
+  if (syncedFrom.initialBasePrice !== initialBasePrice || syncedFrom.initialMarkupPct !== initialMarkupPct) {
+    setSyncedFrom({ initialBasePrice, initialMarkupPct })
     setBasePrice(initialBasePrice)
     setMarkupPct(initialMarkupPct)
-  }, [initialBasePrice, initialMarkupPct])
+  }
 
   const numBase = typeof basePrice === 'number' ? basePrice : parseFloat(basePrice) || 0
   const numMarkup = typeof markupPct === 'number' ? markupPct : parseFloat(markupPct) || 0

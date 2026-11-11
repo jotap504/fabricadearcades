@@ -1,18 +1,16 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useSyncExternalStore } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   ShoppingCart,
   Menu,
   X,
-  Bell,
   User,
   LogOut,
   Settings,
   Package,
-  Gamepad2,
   ChevronDown,
 } from 'lucide-react'
 import { useAuth } from '@/components/auth/AuthProvider'
@@ -23,7 +21,8 @@ import { ThemeToggle } from '@/components/ui/ThemeToggle'
 const NAV_LINKS = [
   { href: '/productos', label: 'Catálogo' },
   { href: '/productos?categoria=arcades', label: 'Arcades' },
-  { href: '/productos?categoria=accesorios', label: 'Accesorios' },
+  { href: '/productos?categoria=consolas', label: 'Consolas' },
+  { href: '/productos?categoria=fightsticks', label: 'Fightsticks' },
   { href: '/contacto', label: 'Contacto' },
 ]
 
@@ -34,16 +33,30 @@ export function Header() {
   const persistedItemCount = useCartStore((s) => s.itemCount())
   const [mobileOpen, setMobileOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
+  // false on the server and during hydration, true afterwards (no effect + setState needed)
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  )
 
   // The cart is persisted client-side (localStorage), so the server always
   // renders 0. Hold at 0 until after mount so the first client render still
   // matches the server, instead of causing a hydration mismatch.
   const itemCount = mounted ? persistedItemCount : 0
+
+  // Close menus on Escape (every menu link already closes its menu on click)
+  useEffect(() => {
+    if (!mobileOpen && !userMenuOpen) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setMobileOpen(false)
+        setUserMenuOpen(false)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [mobileOpen, userMenuOpen])
 
   const isAdmin = profile?.role === 'admin'
   const isFabricante = profile?.role === 'fabricante'
@@ -108,6 +121,8 @@ export function Header() {
                   className="btn btn-ghost btn-sm"
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
                   id="user-menu-btn"
+                  aria-haspopup="menu"
+                  aria-expanded={userMenuOpen}
                   style={{ gap: '6px' }}
                 >
                   {profile?.avatar_url ? (
@@ -186,7 +201,7 @@ export function Header() {
                           <User size={16} /> Mi cuenta
                         </Link>
                         <Link
-                          href="/mi-cuenta"
+                          href="/mi-cuenta/pedidos"
                           className="admin-nav-link"
                           onClick={() => setUserMenuOpen(false)}
                         >
@@ -233,7 +248,9 @@ export function Header() {
             <button
               className="mobile-menu-btn"
               onClick={() => setMobileOpen(!mobileOpen)}
-              aria-label="Menú"
+              aria-label={mobileOpen ? 'Cerrar menú' : 'Abrir menú'}
+              aria-expanded={mobileOpen}
+              aria-controls="mobile-drawer"
               id="mobile-menu-btn"
             >
               {mobileOpen ? <X size={20} /> : <Menu size={20} />}
@@ -247,7 +264,7 @@ export function Header() {
         className={clsx('drawer-overlay', { open: mobileOpen })}
         onClick={() => setMobileOpen(false)}
       />
-      <div className={clsx('drawer', { open: mobileOpen })}>
+      <div id="mobile-drawer" className={clsx('drawer', { open: mobileOpen })}>
         <div>
           <Link href="/" className="header-logo" onClick={() => setMobileOpen(false)} style={{ padding: 0, background: 'none', border: 'none', marginBottom: 'var(--space-6)' }}>
             <img src="/logo.png" alt="Fábrica de Arcades" className="logo-dark" style={{ height: 40, width: 'auto' }} />
@@ -328,7 +345,7 @@ export function Header() {
                 Ingresar
               </Link>
               <Link
-                href="/registro"
+                href="/registrarse"
                 className="btn btn-ghost"
                 onClick={() => setMobileOpen(false)}
               >

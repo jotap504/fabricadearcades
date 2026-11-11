@@ -1,38 +1,13 @@
-import { Mail, Phone, MapPin, MessageCircle, Clock } from 'lucide-react'
+import { Mail, MapPin, MessageCircle, Clock } from 'lucide-react'
+import { buildPageMetadata } from '@/lib/seo'
+import { InstagramIcon, TikTokIcon } from '@/components/ui/SocialIcons'
 
-const InstagramIcon = ({ size = 24, ...props }: any) => (
-  <svg
-    viewBox="0 0 24 24"
-    width={size}
-    height={size}
-    stroke="currentColor"
-    strokeWidth="2"
-    fill="none"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    {...props}
-  >
-    <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
-    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
-    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
-  </svg>
-)
-
-const TikTokIcon = ({ size = 24, ...props }: any) => (
-  <svg
-    viewBox="0 0 24 24"
-    width={size}
-    height={size}
-    stroke="currentColor"
-    strokeWidth="2"
-    fill="none"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    {...props}
-  >
-    <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"></path>
-  </svg>
-)
+export const metadata = buildPageMetadata({
+  title: 'Contacto',
+  description:
+    'Contactá a Fábrica de Arcades: WhatsApp +54 9 11 6404-5074, info@fabricadearcades.com.ar. Showroom y fábrica en Virgilio 2379, Devoto, CABA. Lunes a viernes de 9:00 a 18:00 hs.',
+  path: '/contacto',
+})
 
 export default function ContactPage() {
   return (

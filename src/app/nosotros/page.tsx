@@ -1,18 +1,17 @@
 import Link from 'next/link'
+import { buildPageMetadata } from '@/lib/seo'
 import { Sparkles, Award, HeartHandshake, ArrowRight } from 'lucide-react'
 
-export const metadata = {
-  title: 'Sobre Nosotros | Fábrica de Arcades',
+export const metadata = buildPageMetadata({
+  title: 'Sobre Nosotros',
   description: 'Conocé la historia y calidad artesanal detrás de Fábrica de Arcades.',
-}
+  path: '/nosotros',
+})
 
 export default function NosotrosPage() {
   return (
     <div className="container" style={{ padding: 'var(--space-12) var(--space-4)', maxWidth: '900px' }}>
       <div style={{ textAlign: 'center', marginBottom: 'var(--space-10)' }}>
-        <span className="badge badge-primary" style={{ marginBottom: 'var(--space-3)', display: 'inline-flex' }}>
-          🕹️ Pasión por el retro gaming
-        </span>
         <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '2.5rem', fontWeight: 800, marginBottom: 'var(--space-3)' }}>
           Sobre Nosotros
         </h1>

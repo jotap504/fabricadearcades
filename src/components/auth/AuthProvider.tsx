@@ -21,11 +21,21 @@ const AuthContext = createContext<AuthContextType>({
   signOut: async () => {},
 })
 
+// Without a configured Supabase project the app runs as a local dev admin.
+const IS_DEV_MODE = !(
+  process.env.NEXT_PUBLIC_SUPABASE_URL &&
+  !process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder')
+)
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
+  const [user, setUser] = useState<User | null>(
+    IS_DEV_MODE ? ({ id: 'dev-admin-id', email: 'admin@dev.local' } as User) : null
+  )
   const [session, setSession] = useState<Session | null>(null)
-  const [profile, setProfile] = useState<UserProfile | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [profile, setProfile] = useState<UserProfile | null>(
+    IS_DEV_MODE ? ({ id: 'dev-admin-id', role: 'admin', full_name: 'Admin Local (Dev)' } as UserProfile) : null
+  )
+  const [loading, setLoading] = useState(!IS_DEV_MODE)
 
   const supabase = createClient()
 
@@ -39,16 +49,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   useEffect(() => {
-    const isSupabaseConfigured =
-      process.env.NEXT_PUBLIC_SUPABASE_URL &&
-      !process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder')
-
-    if (!isSupabaseConfigured) {
-      setUser({ id: 'dev-admin-id', email: 'admin@dev.local' } as User)
-      setProfile({ id: 'dev-admin-id', role: 'admin', full_name: 'Admin Local (Dev)' } as UserProfile)
-      setLoading(false)
-      return
-    }
+    if (IS_DEV_MODE) return
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)

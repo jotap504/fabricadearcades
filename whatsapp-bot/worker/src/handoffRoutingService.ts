@@ -1,4 +1,4 @@
-import { sendWhatsAppText, sendWhatsAppMedia, sendWhatsAppBase64Media, getMediaBase64 } from './evolution.js'
+import { sendWhatsAppText, sendWhatsAppBase64Media, getMediaBase64 } from './evolution.js'
 import { supabase } from './supabase.js'
 import type { NormalizedMessage } from './types.js'
 

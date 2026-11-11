@@ -53,9 +53,12 @@ export function WhatsAppLinkClient() {
   }
 
   useEffect(() => {
-    refreshStatus()
+    const first = window.setTimeout(refreshStatus, 0)
     const id = window.setInterval(refreshStatus, 10000)
-    return () => window.clearInterval(id)
+    return () => {
+      window.clearTimeout(first)
+      window.clearInterval(id)
+    }
   }, [])
 
   const canAskQr = status.evolutionReachable

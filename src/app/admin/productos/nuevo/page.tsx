@@ -1,11 +1,12 @@
 'use client'
 
+import { type Row, getErrorMessage } from '@/lib/rows'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useToast } from '@/lib/stores/toast'
 import type { Category, ProductType } from '@/lib/types'
-import { Sparkles, Upload, X, Image as ImageIcon, Plus, Package } from 'lucide-react'
+import { Sparkles, Upload, X, Image as ImageIcon, Package } from 'lucide-react'
 
 export default function NewProductPage() {
   const router = useRouter()
@@ -35,11 +36,11 @@ export default function NewProductPage() {
   const [aiPrompt, setAiPrompt] = useState('')
   const [showAiModal, setShowAiModal] = useState(false)
 
-  const [allSupplies, setAllSupplies] = useState<any[]>([])
+  const [allSupplies, setAllSupplies] = useState<Row[]>([])
   const [categories, setCategories] = useState<Category[]>([])
-  const [families, setFamilies] = useState<any[]>([])
+  const [families, setFamilies] = useState<Row[]>([])
   const [selectedFamilies, setSelectedFamilies] = useState<string[]>([])
-  const [bom, setBom] = useState<any[]>([])
+  const [bom, setBom] = useState<Row[]>([])
   const [ledSurcharge, setLedSurcharge] = useState('0')
   const [ledEnabled, setLedEnabled] = useState(true)
   const [playersCount, setPlayersCount] = useState(2)
@@ -178,8 +179,8 @@ export default function NewProductPage() {
         setShowAiModal(false)
         setAiPrompt('')
       }
-    } catch (err: any) {
-      toast.error('Error generando imagen IA', err.message)
+    } catch (err) {
+      toast.error('Error generando imagen IA', getErrorMessage(err))
     } finally {
       setGeneratingAiImage(false)
     }
@@ -545,7 +546,7 @@ export default function NewProductPage() {
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 'var(--space-2)' }}>
-                  {families.map((fam: any) => {
+                  {families.map((fam: Row) => {
                     const isSelected = selectedFamilies.includes(fam.id)
                     return (
                       <label

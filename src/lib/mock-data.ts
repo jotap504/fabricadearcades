@@ -1,9 +1,15 @@
-export const mockCategories: any[] = [
+import type { Row } from './rows'
+import type { Category, Product, ProductVariant, StockItem, SupplyInventory } from './types'
+// Dev-only fixtures used when Supabase is not configured. They predate some domain-type fields,
+// so they are cast explicitly here rather than silently through `any`.
+const mock = <T>(rows: Row[]): T[] => rows as unknown as T[]
+
+export const mockCategories: Category[] = mock<Category>([
   { id: 'cat-1', name: 'Arcades', slug: 'arcades', description: null, is_active: true, sort_order: 1, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
   { id: 'cat-2', name: 'Accesorios', slug: 'accesorios', description: null, is_active: true, sort_order: 2, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-]
+])
 
-export const mockProducts: any[] = [
+export const mockProducts: Product[] = mock<Product>([
   {
     id: 'prod-1',
     name: 'Arcade Classic Vertical',
@@ -80,30 +86,30 @@ export const mockProducts: any[] = [
     updated_at: new Date().toISOString(),
     category: mockCategories[1],
   },
-]
+])
 
-export const mockStockItems: any[] = [
+export const mockStockItems: StockItem[] = mock<StockItem>([
   { id: 'stock-1', product_id: 'prod-1', variant_id: null, stock_type: 'immediate', quantity: 2, updated_at: new Date().toISOString(), created_at: new Date().toISOString() },
   { id: 'stock-2', product_id: 'prod-1', variant_id: null, stock_type: 'printed', quantity: 5, updated_at: new Date().toISOString(), created_at: new Date().toISOString() },
   { id: 'stock-3', product_id: 'prod-2', variant_id: null, stock_type: 'designed', quantity: 10, updated_at: new Date().toISOString(), created_at: new Date().toISOString() },
   { id: 'stock-4', product_id: 'prod-3', variant_id: null, stock_type: 'immediate', quantity: 0, updated_at: new Date().toISOString(), created_at: new Date().toISOString() },
   { id: 'stock-5', product_id: 'prod-3', variant_id: null, stock_type: 'printed', quantity: 2, updated_at: new Date().toISOString(), created_at: new Date().toISOString() },
   { id: 'stock-6', product_id: 'prod-4', variant_id: null, stock_type: 'immediate', quantity: 15, updated_at: new Date().toISOString(), created_at: new Date().toISOString() },
-]
+])
 
-export const mockVariants: any[] = [
+export const mockVariants: ProductVariant[] = mock<ProductVariant>([
   { id: 'var-1', product_id: 'prod-1', cabinet_type: 'Vertical', screen_size: '24"', is_active: true, price_modifier: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
   { id: 'var-2', product_id: 'prod-1', cabinet_type: 'Vertical', screen_size: '32"', is_active: true, price_modifier: 50000, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
   { id: 'var-3', product_id: 'prod-2', cabinet_type: 'Bartop', screen_size: '19"', is_active: true, price_modifier: 0, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-]
+])
 
-export const mockSupplies: any[] = [
+export const mockSupplies: SupplyInventory[] = mock<SupplyInventory>([
   { id: 'sup-1', name: 'Palanca Roja', supply_type: 'joystick', color_label: 'Rojo', color: '#ff0000', quantity: 50, low_stock_threshold: 10, is_active: true, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
   { id: 'sup-2', name: 'Palanca Azul', supply_type: 'joystick', color_label: 'Azul', color: '#0000ff', quantity: 30, low_stock_threshold: 10, is_active: true, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
   { id: 'sup-3', name: 'Botón Blanco', supply_type: 'button', color_label: 'Blanco', color: '#ffffff', quantity: 200, low_stock_threshold: 40, is_active: true, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
   { id: 'sup-4', name: 'Botón Negro', supply_type: 'button', color_label: 'Negro', color: '#000000', quantity: 150, low_stock_threshold: 40, is_active: true, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
   { id: 'sup-5', name: 'Kit T-Molding', supply_type: 'other', color_label: 'Cyan', color: '#00ffff', quantity: 20, low_stock_threshold: 5, is_active: true, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-]
+])
 
 // Assign stock summaries to mock products for the listing
 mockProducts.forEach(prod => {

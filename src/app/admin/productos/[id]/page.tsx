@@ -1,5 +1,6 @@
 'use client'
 
+import { type Row, getErrorMessage } from '@/lib/rows'
 import { useState, useEffect, useMemo } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -58,7 +59,7 @@ export default function EditProductPage() {
   const [variants, setVariants] = useState<ProductVariantRow[]>([])
   const [productMeta, setProductMeta] = useState<ProductMeta>({})
 
-  const [categories, setCategories] = useState<any[]>([])
+  const [categories, setCategories] = useState<Row[]>([])
   const [form, setForm] = useState({
     name: '',
     slug: '',
@@ -75,7 +76,7 @@ export default function EditProductPage() {
   })
 
   const [allSupplies, setAllSupplies] = useState<SupplyRow[]>([])
-  const [families, setFamilies] = useState<any[]>([])
+  const [families, setFamilies] = useState<Row[]>([])
   const [selectedFamilies, setSelectedFamilies] = useState<string[]>([])
   const [bom, setBom] = useState<unknown[]>([])
   const [selectedVinylIds, setSelectedVinylIds] = useState<string[]>([])
@@ -296,8 +297,8 @@ export default function EditProductPage() {
         setShowAiModal(false)
         setAiPrompt('')
       }
-    } catch (err: any) {
-      toast.error('Error generando imagen IA', err.message)
+    } catch (err) {
+      toast.error('Error generando imagen IA', getErrorMessage(err))
     } finally {
       setGeneratingAiImage(false)
     }
@@ -1058,7 +1059,7 @@ export default function EditProductPage() {
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 'var(--space-2)' }}>
-                  {families.map((fam: any) => {
+                  {families.map((fam: Row) => {
                     const isSelected = selectedFamilies.includes(fam.id)
                     return (
                       <label

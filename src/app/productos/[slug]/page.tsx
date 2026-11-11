@@ -2,6 +2,9 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { createAdminClient, createClient } from '@/lib/supabase/server'
 import { ProductDetailClient } from './ProductDetailClient'
+import { JsonLd } from '@/components/seo/JsonLd'
+import { buildPageMetadata, cleanDescription } from '@/lib/seo'
+import { SITE_NAME, SITE_URL, absoluteUrl } from '@/lib/site'
 import { mockProducts, mockVariants, mockStockItems, mockSupplies } from '@/lib/mock-data'
 import type { DeliveryConfig, Product, ProductVariant, StockItem, SupplyInventory } from '@/lib/types'
 
@@ -17,27 +20,39 @@ type ProductWithRuntimeSpecs = Product & { supply_families?: unknown }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params
-  
-  let product = null
+
+  let product: Pick<Product, 'name' | 'short_description' | 'description' | 'meta_title' | 'meta_description' | 'images'> | null = null
 
   if (isSupabaseConfigured) {
     const supabase = await createClient()
     const { data } = await supabase
       .from('products')
-      .select('name, short_description, meta_title, meta_description')
+      .select('name, short_description, description, meta_title, meta_description, images')
       .eq('slug', slug)
-      .single()
+      .eq('is_active', true)
+      .maybeSingle()
     product = data
   } else {
-    product = mockProducts.find(p => p.slug === slug)
+    product = mockProducts.find(p => p.slug === slug) ?? null
   }
 
-  if (!product) return { title: 'Producto no encontrado' }
+  if (!product) return { title: 'Producto no encontrado', robots: { index: false, follow: false } }
 
-  return {
-    title: product.meta_title ?? product.name,
-    description: product.meta_description ?? product.short_description ?? '',
-  }
+  // meta_description holds a JSON blob in this codebase; cleanDescription() ignores it.
+  const description =
+    cleanDescription(product.short_description) ??
+    cleanDescription(product.description) ??
+    `${product.name}: consola arcade fabricada en Argentina por Fábrica de Arcades. Entrega inmediata o a pedido, garantía de 1 año.`
+  const title = product.meta_title?.trim() || product.name
+  const image = product.images?.[0]
+
+  return buildPageMetadata({
+    title,
+    description,
+    path: `/productos/${slug}`,
+    image: image || undefined,
+    ogType: 'website',
+  })
 }
 
 export default async function ProductDetailPage({ params }: PageProps) {
@@ -109,7 +124,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
       accessories = acc ?? []
     }
   } else {
-    product = mockProducts.find(p => p.slug === slug)
+    product = mockProducts.find(p => p.slug === slug) ?? null
     if (product) {
       const mockProduct = product
       variants = mockVariants.filter(v => v.product_id === mockProduct.id)
@@ -124,14 +139,71 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
   if (!product) notFound()
 
+  // ---- Structured data (only facts present in the product record) ----
+  const hasReadyStock = stockItems.some((s) => s.stock_type === 'immediate' && s.quantity > 0)
+  const hasProductionStock = stockItems.some(
+    (s) => (s.stock_type === 'printed' || s.stock_type === 'designed') && s.quantity > 0
+  )
+  const availability = hasReadyStock
+    ? 'https://schema.org/InStock'
+    : product.requires_production || hasProductionStock
+      ? 'https://schema.org/PreOrder'
+      : 'https://schema.org/OutOfStock'
+  const retailPrice = Math.round(product.base_price * (1 + product.retail_markup_pct / 100))
+  const productUrl = absoluteUrl(`/productos/${slug}`)
+  const productImages = (product.images ?? []).filter(Boolean).map(absoluteUrl)
+  const productDescription =
+    cleanDescription(product.short_description, 300) ?? cleanDescription(product.description, 300)
+
+  const productJsonLd = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'Product',
+        '@id': `${productUrl}#product`,
+        name: product.name,
+        url: productUrl,
+        ...(productDescription ? { description: productDescription } : {}),
+        ...(productImages.length > 0 ? { image: productImages } : {}),
+        ...(product.category?.name ? { category: product.category.name } : {}),
+        brand: { '@type': 'Brand', name: SITE_NAME },
+        manufacturer: { '@id': `${SITE_URL}/#organization` },
+        ...(retailPrice > 0
+          ? {
+              offers: {
+                '@type': 'Offer',
+                url: productUrl,
+                priceCurrency: 'ARS',
+                price: retailPrice,
+                availability,
+                itemCondition: 'https://schema.org/NewCondition',
+                seller: { '@id': `${SITE_URL}/#organization` },
+              },
+            }
+          : {}),
+      },
+      {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Inicio', item: SITE_URL },
+          { '@type': 'ListItem', position: 2, name: 'Catálogo', item: absoluteUrl('/productos') },
+          { '@type': 'ListItem', position: 3, name: product.name, item: productUrl },
+        ],
+      },
+    ],
+  }
+
   return (
-    <ProductDetailClient
-      product={product}
-      variants={variants ?? []}
-      stockItems={stockItems ?? []}
-      supplies={supplies ?? []}
-      deliveryConfig={deliveryConfig ?? []}
-      accessories={accessories}
-    />
+    <>
+      <JsonLd data={productJsonLd} />
+      <ProductDetailClient
+        product={product}
+        variants={variants ?? []}
+        stockItems={stockItems ?? []}
+        supplies={supplies ?? []}
+        deliveryConfig={deliveryConfig ?? []}
+        accessories={accessories}
+      />
+    </>
   )
 }

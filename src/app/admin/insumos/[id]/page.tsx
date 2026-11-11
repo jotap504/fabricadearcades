@@ -1,3 +1,4 @@
+import { type Row } from '@/lib/rows'
 import { createClient, getAuthUser } from '@/lib/supabase/server'
 import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
@@ -35,14 +36,14 @@ export default async function EditInsumoPage({ params }: PageProps) {
     .eq('key', 'supply_families')
     .maybeSingle()
 
-  let families: any[] = []
+  let families: Row[] = []
   if (familiesConfig?.value) {
     try {
       families = typeof familiesConfig.value === 'string' ? JSON.parse(familiesConfig.value) : familiesConfig.value
     } catch {}
   }
 
-  const currentFamily = families.find((f: any) => (f.supply_ids || []).includes(id))
+  const currentFamily = families.find((f: Row) => (f.supply_ids || []).includes(id))
 
   async function updateInsumoAction(formData: FormData) {
     'use server'
@@ -82,8 +83,8 @@ export default async function EditInsumoPage({ params }: PageProps) {
     if (fConfig?.value) {
       try {
         const list = typeof fConfig.value === 'string' ? JSON.parse(fConfig.value) : fConfig.value
-        const updated = list.map((f: any) => {
-          let ids = (f.supply_ids || []).filter((sId: string) => sId !== id)
+        const updated = list.map((f: Row) => {
+          const ids = (f.supply_ids || []).filter((sId: string) => sId !== id)
           if (f.id === familyId) {
             ids.push(id)
           }
@@ -164,7 +165,7 @@ export default async function EditInsumoPage({ params }: PageProps) {
               defaultValue={currentFamily?.id || ''}
             >
               <option value="">-- Sin Familia / Ninguna --</option>
-              {families.map((f: any) => (
+              {families.map((f: Row) => (
                 <option key={f.id} value={f.id}>
                   {f.name}
                 </option>

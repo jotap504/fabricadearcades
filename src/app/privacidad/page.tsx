@@ -1,10 +1,12 @@
 import Link from 'next/link'
-import { ShieldCheck, ArrowLeft } from 'lucide-react'
+import { buildPageMetadata } from '@/lib/seo'
+import { ArrowLeft } from 'lucide-react'
 
-export const metadata = {
-  title: 'Política de Privacidad | Fábrica de Arcades',
+export const metadata = buildPageMetadata({
+  title: 'Política de Privacidad',
   description: 'Política de privacidad y protección de datos personales de Fábrica de Arcades.',
-}
+  path: '/privacidad',
+})
 
 export default function PrivacidadPage() {
   return (

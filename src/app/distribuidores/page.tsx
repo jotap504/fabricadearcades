@@ -1,18 +1,17 @@
 import Link from 'next/link'
-import { Building2, Percent, Headphones, ShieldCheck, ArrowRight } from 'lucide-react'
+import { buildPageMetadata } from '@/lib/seo'
+import { Building2, Percent, Headphones, ArrowRight } from 'lucide-react'
 
-export const metadata = {
-  title: 'Programa para Distribuidores y Revendedores | Fábrica de Arcades',
+export const metadata = buildPageMetadata({
+  title: 'Programa para Distribuidores y Revendedores',
   description: 'Unite a nuestra red comercial con precios mayoristas, atención directa y stock garantizado para reventa.',
-}
+  path: '/distribuidores',
+})
 
 export default function DistribuidoresPage() {
   return (
     <div className="container" style={{ padding: 'var(--space-12) var(--space-4)', maxWidth: '900px' }}>
       <div style={{ textAlign: 'center', marginBottom: 'var(--space-10)' }}>
-        <span className="badge badge-distributor" style={{ marginBottom: 'var(--space-3)', display: 'inline-flex' }}>
-          💼 Canal Mayorista
-        </span>
         <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '2.5rem', fontWeight: 800, marginBottom: 'var(--space-3)' }}>
           Distribuidores y Revendedores
         </h1>

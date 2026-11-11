@@ -1,23 +1,22 @@
 import Link from 'next/link'
+import { buildPageMetadata } from '@/lib/seo'
 import { ShieldCheck, Wrench, RefreshCw, CheckCircle2, ArrowRight } from 'lucide-react'
 
-export const metadata = {
-  title: 'Garantía y Servicio Técnico | Fábrica de Arcades',
+export const metadata = buildPageMetadata({
+  title: 'Garantía y Servicio Técnico',
   description: 'Conocé nuestra política de garantía oficial, soporte técnico y provisión de repuestos originales.',
-}
+  path: '/garantia',
+})
 
 export default function GarantiaPage() {
   return (
     <div className="container" style={{ padding: 'var(--space-12) var(--space-4)', maxWidth: '900px' }}>
       <div style={{ textAlign: 'center', marginBottom: 'var(--space-10)' }}>
-        <span className="badge badge-primary" style={{ marginBottom: 'var(--space-3)', display: 'inline-flex' }}>
-          🛡️ Compromiso de calidad
-        </span>
         <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '2.5rem', fontWeight: 800, marginBottom: 'var(--space-3)' }}>
           Garantía y Servicio Técnico
         </h1>
         <p style={{ color: 'var(--color-text-secondary)', fontSize: '1.125rem', maxWidth: 650, margin: '0 auto' }}>
-          Comprás directo al fabricante: respaldo total, repuestos y asistencia continua.
+          Todos los equipos de Fábrica de Arcades tienen 1 año de garantía oficial de fábrica. Comprás directo al fabricante: respaldo total, repuestos y asistencia continua.
         </p>
       </div>
 

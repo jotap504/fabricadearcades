@@ -1,5 +1,6 @@
 'use server'
 
+import { getErrorMessage } from '@/lib/rows'
 import { createClient } from '@/lib/supabase/server'
 import { Resend } from 'resend'
 import type { ArcadeCustomization, PaymentMethod, ShippingAddress } from '@/lib/types'
@@ -82,9 +83,9 @@ export async function createStoreOrder(input: CheckoutOrderInput): Promise<Creat
     }
 
     return { success: true, data: result }
-  } catch (err: any) {
+  } catch (err) {
     console.error('Unexpected error in createStoreOrder:', err)
-    return { success: false, error: err?.message || 'Error inesperado al crear el pedido' }
+    return { success: false, error: getErrorMessage(err, 'Error inesperado al crear el pedido') }
   }
 }
 
@@ -157,8 +158,8 @@ export async function createMercadoPagoCheckout(input: MercadoPagoCheckoutInput)
 
     const checkoutUrl = await pickCheckoutUrl(preference)
     return { success: true, checkoutUrl }
-  } catch (err: any) {
+  } catch (err) {
     console.error('Unexpected error in createMercadoPagoCheckout:', err)
-    return { success: false, error: err?.message || 'Error al conectar con MercadoPago' }
+    return { success: false, error: getErrorMessage(err, 'Error al conectar con MercadoPago') }
   }
 }

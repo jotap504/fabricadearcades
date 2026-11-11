@@ -1,10 +1,12 @@
 import Link from 'next/link'
-import { FileText, ArrowLeft } from 'lucide-react'
+import { buildPageMetadata } from '@/lib/seo'
+import { ArrowLeft } from 'lucide-react'
 
-export const metadata = {
-  title: 'Términos y Condiciones | Fábrica de Arcades',
+export const metadata = buildPageMetadata({
+  title: 'Términos y Condiciones',
   description: 'Términos y condiciones de compra, garantías y servicios de Fábrica de Arcades.',
-}
+  path: '/terminos',
+})
 
 export default function TerminosPage() {
   return (

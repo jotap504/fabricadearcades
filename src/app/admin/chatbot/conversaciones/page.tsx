@@ -1,3 +1,4 @@
+import type { ComponentProps } from 'react'
 import { redirect } from 'next/navigation'
 import { createClient, getAuthUser } from '@/lib/supabase/server'
 import { ConversationInbox } from './ConversationInbox'
@@ -9,7 +10,7 @@ export default async function ChatbotConversacionesPage() {
   if (!user) redirect('/login?redirect=/admin/chatbot/conversaciones')
   if (profile?.role !== 'admin') redirect('/')
 
-  let data: any[] = []
+  let data: ComponentProps<typeof ConversationInbox>['conversations'] = []
   let databasePending = false
 
   try {
@@ -33,7 +34,8 @@ export default async function ChatbotConversacionesPage() {
       .order('created_at', { referencedTable: 'chatbot_messages', ascending: true })
       .limit(100)
     if (result.error) throw result.error
-    data = result.data ?? []
+    // Untyped Supabase infers to-one joins as arrays; at runtime they are single objects.
+    data = (result.data ?? []) as unknown as typeof data
   } catch (error) {
     if (isMissingChatbotTableError(error)) databasePending = true
     else throw error

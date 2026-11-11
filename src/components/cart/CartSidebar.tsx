@@ -1,6 +1,7 @@
 'use client'
 
-import { X, Trash2, ShoppingBag, ArrowRight } from 'lucide-react'
+import { type Row } from '@/lib/rows'
+import { X, Trash2, ShoppingBag, ArrowRight, Gamepad2 } from 'lucide-react'
 import { useCartStore } from '@/lib/stores/cart'
 import { formatPrice, STOCK_BADGE_CONFIG } from '@/lib/types'
 import Link from 'next/link'
@@ -32,7 +33,7 @@ export function CartSidebar() {
       <aside className={clsx('cart-sidebar', { open: isOpen })}>
         <div className="cart-header">
           <h2 className="cart-title">
-            🛒 Carrito{' '}
+            <ShoppingBag size={20} aria-hidden="true" /> Carrito{' '}
             {items.length > 0 && (
               <span
                 style={{
@@ -115,12 +116,12 @@ export function CartSidebar() {
                 customLines.push('Controles LED')
               }
               if (item.customization.players && item.customization.players.length > 0) {
-                item.customization.players.forEach((p: any, idx: number) => {
+                item.customization.players.forEach((p: Row, idx: number) => {
                   customLines.push(`J${idx + 1}: ${p.joystick_color ? p.joystick_color + ' ' : ''}(${p.button_count} botones)`)
                 })
               }
               if (item.customization.addons && item.customization.addons.length > 0) {
-                item.customization.addons.forEach((addon: any) => {
+                item.customization.addons.forEach((addon: Row) => {
                   customLines.push(`+ ${addon.name}`)
                 })
               }
@@ -147,7 +148,7 @@ export function CartSidebar() {
                           background: 'var(--color-surface-2)',
                         }}
                       >
-                        🕹️
+                        <Gamepad2 size={32} aria-hidden="true" />
                       </div>
                     )}
                   </div>

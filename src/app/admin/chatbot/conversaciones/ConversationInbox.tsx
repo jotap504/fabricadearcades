@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useMemo, useRef, useState, useTransition } from 'react'
-import { Bot, Check, CheckCircle2, ChevronDown, ChevronRight, Edit2, MessageCircle, PauseCircle, RefreshCw, RotateCcw, Save, Search, Send, User, UserRound, X } from 'lucide-react'
+import { Bot, CheckCircle2, ChevronDown, ChevronRight, Edit2, MessageCircle, PauseCircle, RefreshCw, Save, Search, Send, User, UserRound, X } from 'lucide-react'
 import { sendChatbotConversationReply, setChatbotConversationMode, updateChatbotCustomerProfile } from '../actions'
 import { useToast } from '@/lib/stores/toast'
 
@@ -121,16 +121,24 @@ export function ConversationInbox({ conversations }: { conversations: InboxConve
 
   // Scroll to bottom ONLY inside the messages container when conversation changes or receives new messages
   useEffect(() => {
+    if (selected && messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight
+    }
+  }, [selected?.id, selected?.messages.length])
+
+  // Reset the customer edit form when the selection or its message count changes
+  // (state adjustment during render instead of an effect).
+  const selectionKey = selected ? `${selected.id}:${selected.messages.length}` : null
+  const [syncedKey, setSyncedKey] = useState<string | null>(null)
+  if (selectionKey !== syncedKey) {
+    setSyncedKey(selectionKey)
     if (selected) {
-      if (messagesContainerRef.current) {
-        messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight
-      }
       setEditName(selected.customer?.display_name ?? selected.display_name ?? '')
       setEditEmail(selected.customer?.email ?? '')
       setEditNotes(selected.customer?.notes ?? '')
       setIsEditingCustomer(false)
     }
-  }, [selected?.id, selected?.messages.length])
+  }
 
   function updateMode(mode: ConversationMode) {
     if (!selected) return

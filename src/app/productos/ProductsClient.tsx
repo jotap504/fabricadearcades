@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { type Row } from '@/lib/rows'
+import { useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
-import { Search, SlidersHorizontal, X, Gamepad2, Zap, LayoutGrid, Wrench } from 'lucide-react'
+import { Search, X, Gamepad2, Zap, LayoutGrid, Wrench } from 'lucide-react'
 import { ProductCard } from '@/components/products/ProductCard'
 import type { Product, Category } from '@/lib/types'
 
@@ -121,7 +122,7 @@ export function ProductsClient({
       <div className="container" style={{ marginTop: 'var(--space-6)' }}>
         {/* Category tabs */}
         <div className="category-tabs" style={{ marginBottom: 'var(--space-8)' }}>
-          {tabs.map((tab: any) => (
+          {tabs.map((tab: Row) => (
             <button
               key={tab.slug}
               className={`category-tab ${activeCategory === tab.slug ? 'active' : ''}`}
@@ -150,7 +151,7 @@ export function ProductsClient({
               color: 'var(--color-text-muted)',
             }}
           >
-            <div style={{ fontSize: '4rem', marginBottom: 'var(--space-4)' }}>🔍</div>
+            <Search size={64} aria-hidden="true" style={{ color: 'var(--color-text-muted)', marginBottom: 'var(--space-4)' }} />
             <h3 style={{ marginBottom: 'var(--space-2)', color: 'var(--color-text-secondary)' }}>
               No encontramos productos
             </h3>

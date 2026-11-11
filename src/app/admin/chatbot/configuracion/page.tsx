@@ -1,3 +1,4 @@
+import type { ComponentProps } from 'react'
 import { redirect } from 'next/navigation'
 import { createClient, getAuthUser } from '@/lib/supabase/server'
 import { ChatbotSettingsClient } from './ChatbotSettingsClient'
@@ -9,8 +10,8 @@ export default async function ChatbotConfiguracionPage() {
   if (!user) redirect('/login?redirect=/admin/chatbot/configuracion')
   if (profile?.role !== 'admin') redirect('/')
 
-  let data: any[] = []
-  let routesData: any[] = []
+  let data: ComponentProps<typeof ChatbotSettingsClient>['initialSettings'] = []
+  let routesData: ComponentProps<typeof ChatbotSettingsClient>['initialRoutes'] = []
   let databasePending = false
   try {
     const [settingsResult, routesResult] = await Promise.all([

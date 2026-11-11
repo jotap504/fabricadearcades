@@ -13,7 +13,7 @@ import {
   type Product,
   type StockSummary,
 } from '@/lib/types'
-import { ChevronLeft, ChevronRight, ShoppingCart } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ShoppingCart, Gamepad2, Wrench } from 'lucide-react'
 import { clsx } from 'clsx'
 
 interface ProductCardProps {
@@ -156,7 +156,7 @@ export function ProductCard({ product, stockSummary }: ProductCardProps) {
           <img src={mainImage} alt={product.name} loading="lazy" />
         ) : (
           <div className="product-card-image-placeholder">
-            {product.product_type === 'arcade' ? '🕹️' : '🔧'}
+            {product.product_type === 'arcade' ? <Gamepad2 size={40} aria-hidden="true" /> : <Wrench size={40} aria-hidden="true" />}
           </div>
         )}
         <div className="product-card-stock-badge">

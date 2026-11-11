@@ -1,6 +1,18 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Self-contained server bundle for the Docker/VPS deploy (Vercel ignores it).
+  output: 'standalone',
+  // The admin layout is a client component (cannot export metadata), so keep
+  // private areas out of search indexes via a response header as well.
+  async headers() {
+    return [
+      {
+        source: '/:path(admin|api|checkout|mi-cuenta|login|registrarse|registro-distribuidor|fabricante|auth)/:rest*',
+        headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }],
+      },
+    ]
+  },
   experimental: {
     serverActions: {
       bodySizeLimit: '5mb',

@@ -1,0 +1,21 @@
+# Deploy dir on the VPS: ~/fabrica-web  (source in ./src, runtime secrets in ./.env, never committed)
+services:
+  web:
+    build:
+      context: ./src
+      args:
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL}
+    container_name: fabrica-web
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "127.0.0.1:13000:3000"
+    mem_limit: 768m
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/robots.txt >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3

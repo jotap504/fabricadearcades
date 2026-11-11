@@ -20,7 +20,7 @@ export function Footer() {
             </p>
             <div style={{ display: 'flex', gap: 'var(--space-3)' }}>
               <a
-                href="https://instagram.com/Fabricadearcades"
+                href="https://instagram.com/todoarcade"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn btn-ghost btn-icon"
@@ -28,7 +28,7 @@ export function Footer() {
                 style={{ display: 'flex', alignItems: 'center', gap: 6, width: 'auto', padding: '6px 12px', fontSize: '0.8125rem' }}
               >
                 <InstagramIcon size={16} />
-                <span>@Fabricadearcades</span>
+                <span>@todoarcade</span>
               </a>
               <a
                 href="https://tiktok.com/@fabricadearcades"

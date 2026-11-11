@@ -15,7 +15,7 @@ export const SITE_CONTACT = {
   streetAddress: 'Virgilio 2379',
   addressLocality: 'Devoto, Ciudad Autónoma de Buenos Aires',
   addressCountry: 'AR',
-  instagram: 'https://instagram.com/Fabricadearcades',
+  instagram: 'https://instagram.com/todoarcade',
   tiktok: 'https://tiktok.com/@fabricadearcades',
 } as const
 

@@ -1,5 +1,5 @@
 import { Mail, MapPin, MessageCircle, Clock } from 'lucide-react'
-import { buildPageMetadata } from '@/lib/seo'
+import { buildPageMetadata } from '@/lib/seo'
 import { InstagramIcon, TikTokIcon } from '@/components/ui/SocialIcons'
 
 export const metadata = buildPageMetadata({
@@ -82,7 +82,7 @@ export default function ContactPage() {
 
             {/* Instagram */}
             <a
-              href="https://instagram.com/Fabricadearcades"
+              href="https://instagram.com/todoarcade"
               target="_blank"
               rel="noopener noreferrer"
               style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)', textDecoration: 'none', color: 'inherit' }}
@@ -92,7 +92,7 @@ export default function ContactPage() {
               </div>
               <div>
                 <div style={{ fontWeight: 600 }}>Instagram</div>
-                <div style={{ color: 'var(--color-cyan)', fontSize: '0.9375rem' }}>@Fabricadearcades</div>
+                <div style={{ color: 'var(--color-cyan)', fontSize: '0.9375rem' }}>@todoarcade</div>
               </div>
             </a>
 

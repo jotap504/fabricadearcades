@@ -4,7 +4,7 @@ import { Sparkles, Award, HeartHandshake, ArrowRight } from 'lucide-react'
 
 export const metadata = buildPageMetadata({
   title: 'Sobre Nosotros',
-  description: 'Conocé la historia y calidad artesanal detrás de Fábrica de Arcades.',
+  description: 'Conocé la historia y calidad artesanal detrás de TodoArcade.',
   path: '/nosotros',
 })
 
@@ -26,7 +26,7 @@ export default function NosotrosPage() {
             Nuestra Historia
           </h2>
           <p style={{ color: 'var(--color-text-secondary)', lineHeight: 1.8, marginBottom: 'var(--space-4)' }}>
-            En <strong>Fábrica de Arcades</strong> nacimos con una misión clara: devolver la magia y emoción de los fichines clásicos a los hogares, oficinas y espacios de entretenimiento de toda Argentina.
+            En <strong>TodoArcade</strong> nacimos con una misión clara: devolver la magia y emoción de los fichines clásicos a los hogares, oficinas y espacios de entretenimiento de toda Argentina.
           </p>
           <p style={{ color: 'var(--color-text-secondary)', lineHeight: 1.8 }}>
             Fabricamos muebles arcade, bartops, fightsticks y pedestales de primera línea, combinando estructuras de alta densidad, pantallas de alta definición y electrónica de respuesta inmediata.

@@ -232,7 +232,7 @@ async function createEmbedding(text: string) {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${apiKey}`,
       ...(provider === 'openrouter' && process.env.OPENROUTER_SITE_URL ? { 'HTTP-Referer': process.env.OPENROUTER_SITE_URL } : {}),
-      ...(provider === 'openrouter' ? { 'X-Title': process.env.OPENROUTER_APP_NAME ?? 'Fabrica de Arcades' } : {}),
+      ...(provider === 'openrouter' ? { 'X-Title': process.env.OPENROUTER_APP_NAME ?? 'TodoArcade' } : {}),
     },
     body: JSON.stringify({
       model,

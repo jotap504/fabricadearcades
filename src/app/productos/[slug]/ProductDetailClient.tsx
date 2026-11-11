@@ -877,7 +877,7 @@ export function ProductDetailClient({
                   },
                   {
                     q: '¿Cómo funciona la garantía de fábrica?',
-                    a: 'Todos los equipos de Fábrica de Arcades cuentan con 1 año de garantía oficial. Cubre cualquier falla en el mother, cableado, micro-switches de palancas/botones y monitor. Además, ofrecemos soporte técnico post-venta permanente.',
+                    a: 'Todos los equipos de TodoArcade cuentan con 1 año de garantía oficial. Cubre cualquier falla en el mother, cableado, micro-switches de palancas/botones y monitor. Además, ofrecemos soporte técnico post-venta permanente.',
                   },
                 ].map((item, index) => {
                   const isOpen = openFaq === index

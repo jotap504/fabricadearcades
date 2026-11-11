@@ -51,7 +51,7 @@ export default function RegisterPage() {
             Creá tu cuenta
           </h1>
           <p style={{ color: 'var(--color-text-secondary)' }}>
-            Únete a la comunidad de Fábrica de Arcades
+            Únete a la comunidad de TodoArcade
           </p>
         </div>
 

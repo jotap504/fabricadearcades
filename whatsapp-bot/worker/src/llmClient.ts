@@ -79,7 +79,7 @@ export async function askLlm(question: string, sources: KnowledgeSource[], histo
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${config.LLM_API_KEY}`,
-      'HTTP-Referer': config.OPENROUTER_SITE_URL ?? 'https://fabricadearcades.vercel.app',
+      'HTTP-Referer': config.OPENROUTER_SITE_URL ?? 'https://todoarcade.com.ar',
       'X-Title': config.OPENROUTER_APP_NAME,
     },
     body: JSON.stringify({
@@ -93,7 +93,7 @@ export async function askLlm(question: string, sources: KnowledgeSource[], histo
         {
           role: 'system',
           content: [
-            'Sos el asesor y vendedor virtual oficial de Fábrica de Arcades (fabricadearcades.vercel.app).',
+            'Sos el asesor y vendedor virtual oficial de TodoArcade (todoarcade.com.ar).',
             'Tu objetivo es atender a los clientes por WhatsApp de forma natural, amena, fluida, profesional y CONCISA (en español rioplatense).',
             'REGLA DE CONCISIÓN Y LONGITUD (MUY IMPORTANTE):',
             '- Escribí mensajes breves, directos y fáciles de leer en el celular. Evitá párrafos largos o listas interminables ("wall of text").',
@@ -106,7 +106,7 @@ export async function askLlm(question: string, sources: KnowledgeSource[], histo
             '- Si la conversación ya está en curso (el cliente ya saludó o viene haciendo repreguntas), NO repitas "Hola", "Buenas" ni "Qué tal" en cada mensaje. Respondé de forma directa y natural.',
             '- Solo saludá si es el primer contacto o si el cliente saluda explícitamente.',
             'Tenés acceso a los datos de la web, productos, precios actualizados, stock, vinilos y fotos en el CONTEXTO.',
-            'Cuando hables de un producto, podés compartir su precio y el link exacto (ej: https://fabricadearcades.vercel.app/productos/...) para que el cliente pueda entrar a ver fotos y personalizarlo.',
+            'Cuando hables de un producto, podés compartir su precio y el link exacto (ej: https://todoarcade.com.ar/productos/...) para que el cliente pueda entrar a ver fotos y personalizarlo.',
             'REGLA DE FOTOS / IMÁGENES (MUY IMPORTANTE):',
             '- NO envíes fotos de entrada ni automáticamente al mencionar un producto.',
             '- Cuando hables o recomiendes un modelo, describilo brevemente, dale su precio/link y preguntale al cliente de forma amable: "¿Querés que te envíe unas fotos?" o "¿Te gustaría ver fotos del producto?".',

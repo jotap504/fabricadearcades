@@ -875,7 +875,7 @@ export default function EditProductPage() {
                   className="form-input"
                   value={accessorySpecs.brand}
                   onChange={(e) => setAccessorySpecs((p) => ({ ...p, brand: e.target.value }))}
-                  placeholder="Ej: Sanwa / Fábrica de Arcades"
+                  placeholder="Ej: Sanwa / TodoArcade"
                 />
               </div>
 

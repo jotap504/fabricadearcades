@@ -15,7 +15,7 @@ const envSchema = z.object({
   LLM_FALLBACK_MODEL: z.string().default('deepseek/deepseek-chat-v3.1'),
   LLM_TEMPERATURE: z.coerce.number().default(0.1),
   OPENROUTER_SITE_URL: z.string().url().optional(),
-  OPENROUTER_APP_NAME: z.string().default('Fabrica de Arcades WhatsApp Bot'),
+  OPENROUTER_APP_NAME: z.string().default('TodoArcade WhatsApp Bot'),
   EMBEDDING_PROVIDER: z.enum(['openrouter', 'openai']).default('openrouter'),
   EMBEDDING_BASE_URL: z.string().url().default('https://openrouter.ai/api/v1'),
   EMBEDDING_API_KEY: z.string().optional(),

@@ -42,7 +42,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const description =
     cleanDescription(product.short_description) ??
     cleanDescription(product.description) ??
-    `${product.name}: consola arcade fabricada en Argentina por Fábrica de Arcades. Entrega inmediata o a pedido, garantía de 1 año.`
+    `${product.name}: consola arcade fabricada en Argentina por TodoArcade. Entrega inmediata o a pedido, garantía de 1 año.`
   const title = product.meta_title?.trim() || product.name
   const image = product.images?.[0]
 

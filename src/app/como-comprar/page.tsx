@@ -66,7 +66,7 @@ export default function ComoComprarPage() {
           Cómo Comprar
         </h1>
         <p style={{ color: 'var(--color-text-secondary)', fontSize: '1.125rem', maxWidth: 650, margin: '0 auto' }}>
-          Comprar tu arcade en Fábrica de Arcades es fácil, rápido y seguro.
+          Comprar tu arcade en TodoArcade es fácil, rápido y seguro.
         </p>
       </div>
 

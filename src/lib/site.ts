@@ -4,7 +4,7 @@
 const rawSiteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://todoarcade.com.ar'
 
 export const SITE_URL = rawSiteUrl.replace(/\/+$/, '')
-export const SITE_NAME = 'Fábrica de Arcades'
+export const SITE_NAME = 'TodoArcade'
 export const SITE_LOCALE = 'es_AR'
 export const SITE_DEFAULT_OG_IMAGE = '/og-default.jpg'
 export const SITE_LOGO = '/logo.png'

@@ -202,7 +202,7 @@ async function retrieveCatalogKnowledge(text: string): Promise<KnowledgeSource[]
         stockInfo,
         `Descripción: ${p.short_description || p.description || ''}`,
         vinylSummary,
-        `Link oficial: https://fabricadearcades.vercel.app/productos/${p.slug}`,
+        `Link oficial: https://todoarcade.com.ar/productos/${p.slug}`,
         `Imágenes oficiales disponibles para enviar: ${imageUrls.slice(0, 8).join(', ')}`,
       ].filter(Boolean).join('\n')
 

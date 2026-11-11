@@ -41,8 +41,8 @@ export async function POST(req: NextRequest) {
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://fabricadearcades.com',
-        'X-Title': 'Fabrica de Arcades Image Generator',
+        'HTTP-Referer': 'https://todoarcade.com.ar',
+        'X-Title': 'TodoArcade Image Generator',
       },
       body: JSON.stringify({
         model: 'black-forest-labs/flux-1-schnell',

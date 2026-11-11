@@ -69,7 +69,8 @@ export function AdminSidebar({ onClose }: { onClose?: () => void }) {
     <aside className="admin-sidebar">
       <div className="admin-sidebar-brand">
         <div className="admin-sidebar-brand-row">
-          <Image className="admin-sidebar-logo" src="/logo.png" alt="Fábrica de Arcades" width={120} height={32} />
+          <Image className="admin-sidebar-logo" src="/logo.png" alt="TodoArcade" width={108} height={36} />
+          <Image className="admin-sidebar-logo-mark" src="/logo-badge.png" alt="" aria-hidden="true" width={34} height={34} />
           <ThemeToggle />
         </div>
       </div>

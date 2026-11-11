@@ -5,7 +5,7 @@ import { InstagramIcon, TikTokIcon } from '@/components/ui/SocialIcons'
 export const metadata = buildPageMetadata({
   title: 'Contacto',
   description:
-    'Contactá a Fábrica de Arcades: WhatsApp +54 9 11 6404-5074, info@fabricadearcades.com.ar. Showroom y fábrica en Virgilio 2379, Devoto, CABA. Lunes a viernes de 9:00 a 18:00 hs.',
+    'Contactá a TodoArcade: WhatsApp +54 9 11 6404-5074, info@fabricadearcades.com.ar. Showroom y fábrica en Virgilio 2379, Devoto, CABA. Lunes a viernes de 9:00 a 18:00 hs.',
   path: '/contacto',
 })
 

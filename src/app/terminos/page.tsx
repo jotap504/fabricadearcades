@@ -4,7 +4,7 @@ import { ArrowLeft } from 'lucide-react'
 
 export const metadata = buildPageMetadata({
   title: 'Términos y Condiciones',
-  description: 'Términos y condiciones de compra, garantías y servicios de Fábrica de Arcades.',
+  description: 'Términos y condiciones de compra, garantías y servicios de TodoArcade.',
   path: '/terminos',
 })
 
@@ -29,7 +29,7 @@ export default function TerminosPage() {
             1. Ámbito de aplicación
           </h2>
           <p style={{ color: 'var(--color-text-secondary)', lineHeight: 1.7, fontSize: '0.9375rem' }}>
-            Las presentes condiciones regulan la compra y contratación de productos comercializados por <strong>Fábrica de Arcades</strong> a través de su sitio web oficial. Al confirmar un pedido, el usuario declara conocer y aceptar estos términos.
+            Las presentes condiciones regulan la compra y contratación de productos comercializados por <strong>TodoArcade</strong> a través de su sitio web oficial. Al confirmar un pedido, el usuario declara conocer y aceptar estos términos.
           </p>
         </section>
 

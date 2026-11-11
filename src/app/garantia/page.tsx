@@ -16,7 +16,7 @@ export default function GarantiaPage() {
           Garantía y Servicio Técnico
         </h1>
         <p style={{ color: 'var(--color-text-secondary)', fontSize: '1.125rem', maxWidth: 650, margin: '0 auto' }}>
-          Todos los equipos de Fábrica de Arcades tienen 1 año de garantía oficial de fábrica. Comprás directo al fabricante: respaldo total, repuestos y asistencia continua.
+          Todos los equipos de TodoArcade tienen 1 año de garantía oficial de fábrica. Comprás directo al fabricante: respaldo total, repuestos y asistencia continua.
         </p>
       </div>
 

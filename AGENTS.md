@@ -8,9 +8,9 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 <!-- END:nextjs-agent-rules -->
 
-# Fábrica de Arcades — guía persistente para agentes IA
+# TodoArcade — guía persistente para agentes IA
 
-Este repositorio contiene la web comercial, el panel administrativo, la lógica de pedidos/stock/producción y la integración del chatbot de WhatsApp de Fábrica de Arcades.
+Este repositorio contiene la web comercial, el panel administrativo, la lógica de pedidos/stock/producción y la integración del chatbot de WhatsApp de TodoArcade.
 
 Usar este archivo como punto de partida antes de modificar el proyecto. Si una IA futura no conoce el historial de conversación, debe poder entender el producto desde acá.
 

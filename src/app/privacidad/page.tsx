@@ -4,7 +4,7 @@ import { ArrowLeft } from 'lucide-react'
 
 export const metadata = buildPageMetadata({
   title: 'Política de Privacidad',
-  description: 'Política de privacidad y protección de datos personales de Fábrica de Arcades.',
+  description: 'Política de privacidad y protección de datos personales de TodoArcade.',
   path: '/privacidad',
 })
 
@@ -29,7 +29,7 @@ export default function PrivacidadPage() {
             1. Información que recopilamos
           </h2>
           <p style={{ color: 'var(--color-text-secondary)', lineHeight: 1.7, fontSize: '0.9375rem' }}>
-            En Fábrica de Arcades recopilamos datos personales indispensables para la gestión y entrega de pedidos (nombre, correo electrónico, teléfono, domicilio de entrega) y datos necesarios para la gestión de cuentas de clientes y distribuidores mayoristas.
+            En TodoArcade recopilamos datos personales indispensables para la gestión y entrega de pedidos (nombre, correo electrónico, teléfono, domicilio de entrega) y datos necesarios para la gestión de cuentas de clientes y distribuidores mayoristas.
           </p>
         </section>
 
@@ -47,7 +47,7 @@ export default function PrivacidadPage() {
             3. Seguridad y pagos
           </h2>
           <p style={{ color: 'var(--color-text-secondary)', lineHeight: 1.7, fontSize: '0.9375rem' }}>
-            Los pagos con tarjeta de crédito, débito o dinero en cuenta se procesan a través de plataformas seguras y certificadas como <strong>MercadoPago</strong>. Fábrica de Arcades no almacena números de tarjeta ni datos bancarios sensibles en sus servidores.
+            Los pagos con tarjeta de crédito, débito o dinero en cuenta se procesan a través de plataformas seguras y certificadas como <strong>MercadoPago</strong>. TodoArcade no almacena números de tarjeta ni datos bancarios sensibles en sus servidores.
           </p>
         </section>
 

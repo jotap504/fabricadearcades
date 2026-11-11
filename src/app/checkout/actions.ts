@@ -125,7 +125,7 @@ export async function createMercadoPagoCheckout(input: MercadoPagoCheckoutInput)
     } else if (!appUrl && process.env.VERCEL_URL) {
       appUrl = `https://${process.env.VERCEL_URL}`
     } else if (!appUrl) {
-      appUrl = 'https://fabricadearcades.vercel.app'
+      appUrl = 'https://todoarcade.com.ar'
     }
     
     // Ensure no trailing slash
@@ -137,7 +137,7 @@ export async function createMercadoPagoCheckout(input: MercadoPagoCheckoutInput)
     const preference = await createPreference({
       items: [
         {
-          title: `Pedido ${input.orderNumber} — Fábrica de Arcades`,
+          title: `Pedido ${input.orderNumber} — TodoArcade`,
           description: description.slice(0, 250),
           quantity: 1,
           unit_price: input.total,

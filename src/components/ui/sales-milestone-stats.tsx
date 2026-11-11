@@ -250,7 +250,7 @@ export function SalesMilestoneStats() {
       <div className="container">
         <div className="section-header" style={{ marginBottom: 'var(--space-8)' }}>
           <h2 className="section-title" style={{ fontSize: '1.5rem' }}>
-            Fábrica de Arcades en números
+            TodoArcade en números
           </h2>
         </div>
 

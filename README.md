@@ -1,4 +1,4 @@
-# Fábrica de Arcades
+# TodoArcade
 
 Tienda y sistema operativo para vender equipos arcade, administrar insumos, fabricar stock terminado y seguir pedidos a medida.
 

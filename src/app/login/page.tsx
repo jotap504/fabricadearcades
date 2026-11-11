@@ -78,7 +78,7 @@ function LoginForm() {
       >
         <div style={{ textAlign: 'center', marginBottom: 'var(--space-8)' }}>
           <div style={{ margin: '0 auto var(--space-4)' }}>
-            <img src="/logo.png" alt="Fábrica de Arcades" style={{ height: 80, width: 'auto' }} />
+            <img src="/logo.png" alt="TodoArcade" width={192} height={64} style={{ height: 64, width: 'auto' }} />
           </div>
           <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9375rem' }}>
             Ingresá a tu cuenta

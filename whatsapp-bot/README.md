@@ -1,4 +1,4 @@
-# WhatsApp Bot — Fábrica de Arcades
+# WhatsApp Bot — TodoArcade
 
 Este módulo agrega el chatbot de WhatsApp sin mover la web de Vercel ni reemplazar Supabase Cloud.
 

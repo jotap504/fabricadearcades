@@ -19,8 +19,8 @@ import {
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: 'Fábrica de Arcades | Consolas Arcade Personalizadas en Argentina',
-    template: '%s | Fábrica de Arcades',
+    default: 'TodoArcade | Consolas Arcade Personalizadas en Argentina',
+    template: '%s | TodoArcade',
   },
   description:
     'Fabricamos consolas arcade personalizadas en Argentina. Elegí tu gabinete, colores y temática. Stock disponible, envío a todo el país.',
@@ -46,14 +46,14 @@ export const metadata: Metadata = {
     locale: SITE_LOCALE,
     siteName: SITE_NAME,
     url: '/',
-    title: 'Fábrica de Arcades | Consolas Arcade Personalizadas en Argentina',
+    title: 'TodoArcade | Consolas Arcade Personalizadas en Argentina',
     description:
       'Fabricamos consolas arcade personalizadas en Argentina. Elegí tu gabinete, colores y temática. Stock disponible, envío a todo el país.',
-    images: [{ url: SITE_DEFAULT_OG_IMAGE, alt: 'Consolas arcade fabricadas por Fábrica de Arcades' }],
+    images: [{ url: SITE_DEFAULT_OG_IMAGE, alt: 'Consolas arcade fabricadas por TodoArcade' }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Fábrica de Arcades | Consolas Arcade Personalizadas en Argentina',
+    title: 'TodoArcade | Consolas Arcade Personalizadas en Argentina',
     description:
       'Fabricamos consolas arcade personalizadas en Argentina. Elegí tu gabinete, colores y temática.',
     images: [SITE_DEFAULT_OG_IMAGE],

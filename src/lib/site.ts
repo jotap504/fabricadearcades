@@ -10,16 +10,19 @@ export const SITE_DEFAULT_OG_IMAGE = '/og-default.jpg'
 export const SITE_LOGO = '/logo.png'
 
 export const SITE_CONTACT = {
-  email: 'info@fabricadearcades.com.ar',
+  email: 'info@todoarcade.com.ar',
   telephone: '+5491164045074',
   streetAddress: 'Virgilio 2379',
   addressLocality: 'Devoto, Ciudad Autónoma de Buenos Aires',
   addressCountry: 'AR',
   instagram: 'https://instagram.com/todoarcade',
-  tiktok: 'https://tiktok.com/@fabricadearcades',
+  tiktok: 'https://tiktok.com/@todoarcade',
 } as const
 
 export function absoluteUrl(path: string): string {
   if (/^https?:\/\//i.test(path)) return path
-  return `${SITE_URL}${path.startsWith('/') ? path : `/${path}`}`
+  const normalized = path.startsWith('/') ? path : `/${path}`
+  // Paths stored in the DB can hold raw spaces ("/vinilos/consola 78/x.jpg"); encode them
+  // unless the value is already percent-encoded.
+  return `${SITE_URL}${normalized.includes('%') ? normalized : encodeURI(normalized)}`
 }

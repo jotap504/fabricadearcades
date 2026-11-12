@@ -161,6 +161,7 @@ export function ImageAccordionHero({
               fontFamily: 'var(--font-display)',
               letterSpacing: '-0.02em',
               marginBottom: 'var(--space-4)',
+              textWrap: 'balance',
             }}
           >
             {title}

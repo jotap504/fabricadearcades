@@ -5,7 +5,7 @@ import { InstagramIcon, TikTokIcon } from '@/components/ui/SocialIcons'
 export const metadata = buildPageMetadata({
   title: 'Contacto',
   description:
-    'Contactá a TodoArcade: WhatsApp +54 9 11 6404-5074, info@fabricadearcades.com.ar. Showroom y fábrica en Virgilio 2379, Devoto, CABA. Lunes a viernes de 9:00 a 18:00 hs.',
+    'Contactá a TodoArcade: WhatsApp +54 9 11 6404-5074, info@todoarcade.com.ar. Showroom y fábrica en Virgilio 2379, Devoto, CABA. Lunes a viernes de 9:00 a 18:00 hs.',
   path: '/contacto',
 })
 
@@ -46,7 +46,7 @@ export default function ContactPage() {
 
             {/* Email */}
             <a
-              href="mailto:info@fabricadearcades.com.ar"
+              href="mailto:info@todoarcade.com.ar"
               style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)', textDecoration: 'none', color: 'inherit' }}
             >
               <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(6,182,212,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-cyan)' }}>
@@ -54,7 +54,7 @@ export default function ContactPage() {
               </div>
               <div>
                 <div style={{ fontWeight: 600 }}>Correo Electrónico</div>
-                <div style={{ color: 'var(--color-cyan)', fontSize: '0.9375rem' }}>info@fabricadearcades.com.ar</div>
+                <div style={{ color: 'var(--color-cyan)', fontSize: '0.9375rem' }}>info@todoarcade.com.ar</div>
               </div>
             </a>
 
@@ -98,7 +98,7 @@ export default function ContactPage() {
 
             {/* TikTok */}
             <a
-              href="https://tiktok.com/@fabricadearcades"
+              href="https://tiktok.com/@todoarcade"
               target="_blank"
               rel="noopener noreferrer"
               style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)', textDecoration: 'none', color: 'inherit' }}
@@ -108,7 +108,7 @@ export default function ContactPage() {
               </div>
               <div>
                 <div style={{ fontWeight: 600 }}>TikTok</div>
-                <div style={{ color: 'var(--color-cyan)', fontSize: '0.9375rem' }}>@fabricadearcades</div>
+                <div style={{ color: 'var(--color-cyan)', fontSize: '0.9375rem' }}>@todoarcade</div>
               </div>
             </a>
           </div>

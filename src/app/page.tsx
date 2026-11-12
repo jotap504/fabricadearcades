@@ -207,12 +207,7 @@ export default async function HomePage() {
     <>
       {/* HERO */}
       <ImageAccordionHero
-        title={
-          <>
-            Consolas arcade
-            <br />a tu medida
-          </>
-        }
+        title="Consolas arcade a tu medida"
         description="Equipos multijuegos premium fabricados en Argentina. Elegí tu gabinete, vinilos de diseño, colores de palancas y botones. Envío express."
         ctaText="Ver Catálogo"
         items={accordionItems}

@@ -56,7 +56,7 @@ export default function PrivacidadPage() {
             4. Derechos del usuario
           </h2>
           <p style={{ color: 'var(--color-text-secondary)', lineHeight: 1.7, fontSize: '0.9375rem' }}>
-            El titular de los datos personales tiene la facultad de ejercer el derecho de acceso, rectificación y supresión de los mismos conforme a la normativa vigente de Protección de Datos Personales (Ley 25.326). Para solicitar modificaciones, contactate a <strong>info@fabricadearcades.com.ar</strong>.
+            El titular de los datos personales tiene la facultad de ejercer el derecho de acceso, rectificación y supresión de los mismos conforme a la normativa vigente de Protección de Datos Personales (Ley 25.326). Para solicitar modificaciones, contactate a <strong>info@todoarcade.com.ar</strong>.
           </p>
         </section>
       </div>

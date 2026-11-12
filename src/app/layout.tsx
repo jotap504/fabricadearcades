@@ -154,8 +154,13 @@ export default function RootLayout({
       <body>
         <JsonLd data={siteJsonLd} />
         <AuthProvider>
+          <a href="#contenido" className="skip-link">
+            Saltar al contenido
+          </a>
           <Header />
-          <main>{children}</main>
+          <main id="contenido" tabIndex={-1}>
+            {children}
+          </main>
           <Footer />
           <CartSidebar />
           <ToastContainer />

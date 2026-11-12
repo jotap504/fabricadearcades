@@ -151,7 +151,9 @@ export default async function ProductDetailPage({ params }: PageProps) {
       : 'https://schema.org/OutOfStock'
   const retailPrice = Math.round(product.base_price * (1 + product.retail_markup_pct / 100))
   const productUrl = absoluteUrl(`/productos/${slug}`)
-  const productImages = (product.images ?? []).filter(Boolean).map(absoluteUrl)
+  const productImages = (product.images ?? [])
+    .filter((src) => Boolean(src) && !src.startsWith('data:'))
+    .map(absoluteUrl)
   const productDescription =
     cleanDescription(product.short_description, 300) ?? cleanDescription(product.description, 300)
 

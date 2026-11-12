@@ -1438,7 +1438,39 @@ h1, h2, h3, h4, h5, h6 {
   }
 }
 
+/* Keyboard access: skip link + a visible focus ring on every interactive element */
+.skip-link {
+  position: fixed;
+  top: var(--space-2);
+  left: var(--space-2);
+  z-index: 1000;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md, 8px);
+  background: var(--color-cyan);
+  color: #fff;
+  font-weight: 700;
+  transform: translateY(-200%);
+  transition: transform 160ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+main:focus {
+  outline: none;
+}
+
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-cyan);
+  outline-offset: 2px;
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .skip-link {
+    transition: none;
+  }
+
   .console-logo-marquee-track {
     animation: none;
     flex-wrap: wrap;

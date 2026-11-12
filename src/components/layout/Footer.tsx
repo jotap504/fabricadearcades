@@ -31,7 +31,7 @@ export function Footer() {
                 <span>@todoarcade</span>
               </a>
               <a
-                href="https://tiktok.com/@fabricadearcades"
+                href="https://tiktok.com/@todoarcade"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn btn-ghost btn-icon"
@@ -94,7 +94,7 @@ export function Footer() {
               style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}
             >
               <a
-                href="mailto:info@fabricadearcades.com.ar"
+                href="mailto:info@todoarcade.com.ar"
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -105,7 +105,7 @@ export function Footer() {
                 }}
               >
                 <Mail size={16} style={{ color: 'var(--color-cyan)', flexShrink: 0 }} />
-                info@fabricadearcades.com.ar
+                info@todoarcade.com.ar
               </a>
               <a
                 href="https://wa.me/5491164045074"

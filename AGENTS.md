@@ -341,7 +341,8 @@ Regla máxima:
 
 Rutas de derivación configuradas:
 
-- MercadoLibre / publicaciones externas: `5491153078610`.
+- Número del bot (recibe y responde mensajes): `5491153078610`. No usarlo como destino de derivación.
+- MercadoLibre / publicaciones externas: `5491131295019`.
 - Arcades / juegos / consolas: `5491164045074` (activa para derivación automática y respuesta directa).
 
 ### Respuestas desde teléfonos responsables
@@ -398,7 +399,7 @@ Principio:
 - Empezar en modo seguro: importar publicaciones/preguntas, vincular con productos internos y sugerir respuestas antes de publicar automáticamente.
 - No responder ni publicar automáticamente en MercadoLibre información no autorizada por conocimiento interno.
 - Cuidar restricciones de MercadoLibre sobre datos de contacto, links externos, títulos, descripciones, stock y moderaciones.
-- Responsable humano previsto para MercadoLibre: `5491153078610`.
+- Responsable humano previsto para MercadoLibre: `5491131295019`.
 
 ## Supabase y migraciones
 

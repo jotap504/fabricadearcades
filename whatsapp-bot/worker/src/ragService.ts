@@ -9,6 +9,8 @@ const STOPWORDS = new Set([
   'te', 'tenes', 'tenés', 'tienen', 'un', 'una', 'y',
 ])
 
+const CATALOG_MIN_SIMILARITY = 0.3
+
 function normalizeText(value: string) {
   return value
     .toLocaleLowerCase('es')
@@ -257,7 +259,14 @@ export async function retrieveKnowledge(text: string, topK: number, threshold: n
     ['precio', 'precios', 'cuanto', 'sale', 'cuesta', 'modelo', 'modelos', 'catalogo', 'arcade', 'consola', 'bartop', 'stock', 'comprar', 'entrega', 'wonderboy', 'retrotime', 'plus'].includes(t)
   )
 
-  const allSources = [...knowledgeSources, ...catalogSources]
+  // Catalog items only count as knowledge when the question is about the catalog or
+  // actually matches a product. Otherwise every message would carry 30 unrelated
+  // products as "sources" and the no-knowledge clarify/handoff path would never run.
+  const relevantCatalog = isCatalogQuery
+    ? catalogSources
+    : catalogSources.filter((source) => source.similarity >= CATALOG_MIN_SIMILARITY)
+
+  const allSources = [...knowledgeSources, ...relevantCatalog]
 
   if (isCatalogQuery || knowledgeSources.length === 0) {
     return allSources

@@ -72,25 +72,32 @@ export async function processMessage(message: NormalizedMessage) {
     getRecentMessages(conversation.id, 6)
   ])
 
-  if (sources.length === 0) {
+  const handoff = async (reason: string, status: string) => {
+    await createHandoff(conversation.id, savedMessage.id, message.content, reason)
+    await forwardHandoffToResponsible(conversation, message.content, reason)
+    await sendWhatsAppText(message.phone, settings.handoffMessage)
+    return { status }
+  }
+
+  // No authorized knowledge: ask once, then hand off. Never let the LLM improvise.
+  const clarifyOnceOrHandoff = async (reason: string, clarifiedStatus: string, handoffStatus: string) => {
     const clarificationCount = await countClarificationMessages(conversation.id)
     if (clarificationCount < 1) {
       const clarification = '¿Me contás un poco más sobre qué producto o tema querés consultar? Así te puedo responder mejor.'
       const externalId = await sendWhatsAppText(message.phone, clarification)
       await saveBotMessage(conversation.id, message.phone, clarification, externalId, 'rules:clarification', 0.45)
-      return { status: 'clarified_no_sources' }
+      return { status: clarifiedStatus }
     }
+    return handoff(reason, handoffStatus)
+  }
 
-    const reason = 'Sin conocimiento relevante suficiente'
-    await createHandoff(conversation.id, savedMessage.id, message.content, reason)
-    await forwardHandoffToResponsible(conversation, message.content, reason)
-    await sendWhatsAppText(message.phone, settings.handoffMessage)
-    return { status: 'handoff_no_sources' }
+  if (sources.length === 0) {
+    return clarifyOnceOrHandoff('Sin conocimiento relevante suficiente', 'clarified_no_sources', 'handoff_no_sources')
   }
 
   const answer = await askLlm(message.content, sources, history)
   const allowedSourceIds = new Set(sources.map((source) => source.id))
-  const sourceIdsAreValid = answer.knowledge_ids.length > 0 && answer.knowledge_ids.every((id) => allowedSourceIds.has(id) || id.startsWith('prod_'))
+  const sourceIdsAreValid = answer.knowledge_ids.length > 0 && answer.knowledge_ids.every((id) => allowedSourceIds.has(id))
 
   if (answer.action === 'CLARIFY') {
     const clarificationCount = await countClarificationMessages(conversation.id)
@@ -99,20 +106,17 @@ export async function processMessage(message: NormalizedMessage) {
       await saveBotMessage(conversation.id, message.phone, answer.answer, externalId, 'llm:clarification', answer.confidence)
       return { status: 'clarified_llm' }
     }
+    return handoff(answer.reason || 'Límite de repreguntas alcanzado', 'handoff_clarify_limit')
   }
 
-  // Use a sensible confidence threshold (0.5 or setting) so it doesn't drop answers
-  const minConfidence = Math.min(settings.confidenceThreshold || 0.75, 0.45)
+  // HANDOFF always hands off: its text is never sent as if it were an answer.
+  if (answer.action === 'HANDOFF' || answer.confidence < settings.confidenceThreshold) {
+    return handoff(answer.reason || 'Respuesta insuficiente', 'handoff_llm')
+  }
 
-  // If the model gave an answer with text, prioritize answering rather than handing off
-  const hasUsefulAnswer = Boolean(answer.answer && answer.answer.trim().length > 5)
-
-  if ((answer.action === 'HANDOFF' && !hasUsefulAnswer) || answer.confidence < minConfidence) {
-    const reason = answer.reason || 'Respuesta insuficiente'
-    await createHandoff(conversation.id, savedMessage.id, message.content, reason)
-    await forwardHandoffToResponsible(conversation, message.content, reason)
-    await sendWhatsAppText(message.phone, settings.handoffMessage)
-    return { status: 'handoff_llm' }
+  // An answer that cites no authorized source (or cites IDs it was not given) is not sent.
+  if (!sourceIdsAreValid) {
+    return clarifyOnceOrHandoff('Respuesta sin fuente autorizada', 'clarified_unsupported_answer', 'handoff_unsupported_answer')
   }
 
   // Send up to 3 images if LLM selected media_urls
@@ -141,11 +145,16 @@ function configModel() {
 
 async function saveAnswerSources(messageId: string, knowledgeIds: string[], sources: Array<{ id: string; similarity: number }>) {
   const byId = new Map(sources.map((source) => [source.id, source.similarity]))
-  const rows = knowledgeIds.map((id) => ({
-    message_id: messageId,
-    knowledge_item_id: id,
-    similarity: byId.get(id) ?? 0,
-  }))
+  // Catalog sources use synthetic "prod_<uuid>" ids; knowledge_item_id is a uuid FK,
+  // so one of them in the batch made the whole insert fail and no source was recorded.
+  const rows = knowledgeIds
+    .filter((id) => !id.startsWith('prod_'))
+    .map((id) => ({
+      message_id: messageId,
+      knowledge_item_id: id,
+      similarity: byId.get(id) ?? 0,
+    }))
+  if (rows.length === 0) return
   const { supabase } = await import('./supabase.js')
   await supabase.from('chatbot_answer_sources').insert(rows)
 }

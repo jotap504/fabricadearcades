@@ -40,7 +40,7 @@ values
   (
     'mercadolibre',
     'MercadoLibre',
-    '5491153078610',
+    '5491131295019',
     array['mercadolibre', 'mercado libre', 'meli', 'publicacion', 'publicación', 'envio full', 'envío full', 'pausada', 'oferta ml'],
     100
   ),

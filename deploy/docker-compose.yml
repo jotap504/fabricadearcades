@@ -14,8 +14,18 @@ services:
     ports:
       - "127.0.0.1:13000:3000"
     mem_limit: 768m
+    # whatsapp_bot: lets the admin panel reach Evolution API and the bot worker
+    # (EVOLUTION_API_URL=http://fabrica-evolution-api:8080, WHATSAPP_BOT_WORKER_URL=http://fabrica-whatsapp-bot-worker:3001)
+    networks:
+      - default
+      - whatsapp_bot
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/robots.txt >/dev/null || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 3
+
+networks:
+  whatsapp_bot:
+    name: fabrica_whatsapp_bot
+    external: true

@@ -1,7 +1,7 @@
 import { createClient, getAuthUser } from '@/lib/supabase/server'
 import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
-import { formatPrice, type OrderItem, type PlayerCustomization } from '@/lib/types'
+import { formatPrice, type OrderItem, type PlayerCustomization, type ShippingAddress } from '@/lib/types'
 import { ArrowLeft, Save } from 'lucide-react'
 import { revalidatePath } from 'next/cache'
 
@@ -21,6 +21,48 @@ const PAYMENT_LABELS: Record<string, string> = {
   card: 'Tarjeta',
   pending: 'A definir',
   current_account: 'Cuenta corriente',
+  mercadopago: 'MercadoPago',
+}
+
+const SHIPPING_MODE_LABELS: Record<string, string> = {
+  local_moto_flete: 'CABA/GBA: moto o flete local',
+  transporte_correo: 'Interior: transporte/correo',
+  coordinar: 'A coordinar',
+}
+
+const SHIPPING_PROVIDER_LABELS: Record<string, string> = {
+  pedidosya_moto: 'PedidosYa Envíos / moto',
+  moova: 'Moova',
+  local_messenger: 'Mensajería local',
+  correo_transporte: 'Correo / transporte',
+  transport_company: 'Empresa de transporte',
+  manual: 'Manual',
+}
+
+const SHIPPING_SERVICE_LABELS: Record<string, string> = {
+  same_day: 'Mismo día',
+  next_day: 'Día siguiente',
+  standard: 'Estándar',
+  cargo: 'Carga / expreso',
+  manual: 'Manual',
+}
+
+function getShippingMeta(address: ShippingAddress) {
+  return {
+    mode: address.shipping_mode ? SHIPPING_MODE_LABELS[address.shipping_mode] ?? address.shipping_mode : 'Retiro / sin envío',
+    provider: address.shipping_provider_preference
+      ? SHIPPING_PROVIDER_LABELS[address.shipping_provider_preference] ?? address.shipping_provider_preference
+      : 'A definir',
+    service: address.shipping_service_level
+      ? SHIPPING_SERVICE_LABELS[address.shipping_service_level] ?? address.shipping_service_level
+      : 'A definir',
+    payment:
+      address.shipping_payment === 'quoted'
+        ? 'Cotizar antes de confirmar'
+        : address.shipping_payment === 'destination'
+          ? 'Pago en destino'
+          : 'Sin cargo / no aplica',
+  }
 }
 
 function getOrderItemMode(item: OrderItem) {
@@ -188,8 +230,31 @@ export default async function OrderDetailPage({ params }: PageProps) {
           {/* Envio */}
           {order.shipping_address && (
             <div className="card card-body">
-              <h3 style={{ fontSize: '1.0625rem', fontWeight: 700, marginBottom: 'var(--space-4)' }}>Dirección de Envío</h3>
+              <h3 style={{ fontSize: '1.0625rem', fontWeight: 700, marginBottom: 'var(--space-4)' }}>Entrega / Envío</h3>
               <div style={{ fontSize: '0.9375rem', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+                {(() => {
+                  const shippingMeta = getShippingMeta(order.shipping_address)
+                  return (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 'var(--space-3)', marginBottom: 'var(--space-2)' }}>
+                      <div>
+                        <span style={{ color: 'var(--color-text-muted)', fontSize: '0.8125rem', display: 'block' }}>Modalidad</span>
+                        <strong>{shippingMeta.mode}</strong>
+                      </div>
+                      <div>
+                        <span style={{ color: 'var(--color-text-muted)', fontSize: '0.8125rem', display: 'block' }}>Proveedor sugerido</span>
+                        <strong>{shippingMeta.provider}</strong>
+                      </div>
+                      <div>
+                        <span style={{ color: 'var(--color-text-muted)', fontSize: '0.8125rem', display: 'block' }}>Servicio</span>
+                        <strong>{shippingMeta.service}</strong>
+                      </div>
+                      <div>
+                        <span style={{ color: 'var(--color-text-muted)', fontSize: '0.8125rem', display: 'block' }}>Costo de envío</span>
+                        <strong>{shippingMeta.payment}</strong>
+                      </div>
+                    </div>
+                  )
+                })()}
                 <div>
                   <span style={{ color: 'var(--color-text-muted)', fontSize: '0.8125rem', display: 'block' }}>Calle</span>
                   <strong>{order.shipping_address.street}</strong>

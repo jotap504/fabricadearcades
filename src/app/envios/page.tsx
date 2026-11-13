@@ -1,23 +1,22 @@
 import Link from 'next/link'
-import { Truck, MapPin, PackageCheck, Clock, ShieldCheck, ArrowRight } from 'lucide-react'
+import { buildPageMetadata } from '@/lib/seo'
+import { Truck, MapPin, PackageCheck, ShieldCheck, ArrowRight } from 'lucide-react'
 
-export const metadata = {
-  title: 'Envíos y Entregas | Fábrica de Arcades',
+export const metadata = buildPageMetadata({
+  title: 'Envíos y Entregas',
   description: 'Información sobre envíos a todo el país, retiros en fábrica y embalaje protector.',
-}
+  path: '/envios',
+})
 
 export default function EnviosPage() {
   return (
     <div className="container" style={{ padding: 'var(--space-12) var(--space-4)', maxWidth: '900px' }}>
       <div style={{ textAlign: 'center', marginBottom: 'var(--space-10)' }}>
-        <span className="badge badge-primary" style={{ marginBottom: 'var(--space-3)', display: 'inline-flex' }}>
-          🚚 Cobertura nacional
-        </span>
         <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '2.5rem', fontWeight: 800, marginBottom: 'var(--space-3)' }}>
           Envíos y Entregas
         </h1>
         <p style={{ color: 'var(--color-text-secondary)', fontSize: '1.125rem', maxWidth: 650, margin: '0 auto' }}>
-          Llegamos a cada rincón de Argentina con embalaje de máxima protección.
+          Retiro sin costo en Devoto (CABA) o envío a todo el país con embalaje de máxima protección. El envío lo abona siempre el cliente en destino.
         </p>
       </div>
 
@@ -31,8 +30,8 @@ export default function EnviosPage() {
           <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.9375rem', lineHeight: 1.6, marginBottom: 'var(--space-4)' }}>
             Sin costo de envío. Podés retirar tu máquina por nuestras instalaciones en <strong>Devoto, CABA</strong> coordinando previamente día y franja horaria.
           </p>
-          <span className="badge" style={{ background: 'var(--color-surface-2)', color: 'var(--color-text)' }}>
-            📍 Virgilio 2379, Devoto, CABA
+          <span className="badge" style={{ background: 'var(--color-surface-2)', color: 'var(--color-text)', gap: 6 }}>
+            <MapPin size={14} aria-hidden="true" /> Virgilio 2379, Devoto, CABA
           </span>
         </div>
 
@@ -43,10 +42,10 @@ export default function EnviosPage() {
           </div>
           <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: 'var(--space-2)' }}>CABA y Gran Buenos Aires</h2>
           <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.9375rem', lineHeight: 1.6, marginBottom: 'var(--space-4)' }}>
-            Para entregas dentro de un radio de 50 km de fábrica coordinamos envío directo mediante moto mensajería (accesorios/fightsticks) o flete dedicado (arcades y bartops).
+            Para CABA y Gran Buenos Aires el pedido queda preparado para cotizar moto mensajería en bultos chicos o flete dedicado cuando el equipo sea grande.
           </p>
           <span className="badge badge-warning">
-            💳 Se abona al chofer en destino
+            Cotización local antes de despachar
           </span>
         </div>
 
@@ -57,10 +56,10 @@ export default function EnviosPage() {
           </div>
           <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: 'var(--space-2)' }}>Interior del País</h2>
           <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.9375rem', lineHeight: 1.6, marginBottom: 'var(--space-4)' }}>
-            Despachamos por expresos de confianza, empresas de transporte de carga o correo postal con número de seguimiento online.
+            Para el interior del país se clasifica como transporte, expreso o correo. El pedido conserva CP, localidad y notas para elegir la mejor opción operativa.
           </p>
           <span className="badge badge-success">
-            📦 Embalaje reforzado sin cargo adicional
+            Pago en destino cuando corresponda
           </span>
         </div>
       </div>

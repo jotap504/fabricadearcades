@@ -177,7 +177,11 @@ export interface Order {
 export interface ShippingAddress {
   delivery_method?: 'pickup' | 'shipping'
   shipping_mode?: 'local_moto_flete' | 'transporte_correo' | 'coordinar' | null
-  shipping_payment?: 'destination' | null
+  shipping_zone?: 'caba_gba' | 'interior' | null
+  shipping_provider_preference?: 'pedidosya_moto' | 'moova' | 'local_messenger' | 'correo_transporte' | 'transport_company' | 'manual' | null
+  shipping_service_level?: 'same_day' | 'next_day' | 'standard' | 'cargo' | 'manual' | null
+  shipping_payment?: 'destination' | 'quoted' | null
+  shipping_cost_status?: 'to_quote' | 'destination' | 'included' | null
   street: string
   city: string
   province: string

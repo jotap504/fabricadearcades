@@ -1,6 +1,8 @@
 'use client'
 
+import { getErrorMessage } from '@/lib/rows'
 import { useEffect, useMemo, useState } from 'react'
+import type React from 'react'
 import { useCartStore } from '@/lib/stores/cart'
 import { useAuth } from '@/components/auth/AuthProvider'
 import { useToast } from '@/lib/stores/toast'
@@ -13,11 +15,47 @@ import {
   type PaymentMethod,
   type ShippingAddress,
 } from '@/lib/types'
-import { ArrowLeft, CreditCard, Banknote, Building2, Check, MapPin, Truck, Wallet } from 'lucide-react'
+import { ArrowLeft, ShoppingBag, CreditCard, Banknote, Bike, Building2, Check, Gamepad2, MapPin, PackageCheck, Truck, Wallet } from 'lucide-react'
 import Link from 'next/link'
 
 type Step = 'cart-review' | 'shipping' | 'payment' | 'confirm'
 type DeliveryMethod = 'pickup' | 'shipping'
+type ShippingZone = 'caba_gba' | 'interior'
+
+const SHIPPING_ZONE_OPTIONS: Array<{
+  id: ShippingZone
+  icon: React.ReactNode
+  title: string
+  desc: string
+  mode: NonNullable<ShippingAddress['shipping_mode']>
+  provider: NonNullable<ShippingAddress['shipping_provider_preference']>
+  service: NonNullable<ShippingAddress['shipping_service_level']>
+  payment: NonNullable<ShippingAddress['shipping_payment']>
+  costStatus: NonNullable<ShippingAddress['shipping_cost_status']>
+}> = [
+  {
+    id: 'caba_gba',
+    icon: <Bike size={22} />,
+    title: 'CABA / Gran Buenos Aires',
+    desc: 'Moto mensajería para bultos chicos y flete local para equipos grandes.',
+    mode: 'local_moto_flete',
+    provider: 'pedidosya_moto',
+    service: 'same_day',
+    payment: 'quoted',
+    costStatus: 'to_quote',
+  },
+  {
+    id: 'interior',
+    icon: <PackageCheck size={22} />,
+    title: 'Interior del país',
+    desc: 'Transporte de carga, expreso o correo según tamaño y localidad.',
+    mode: 'transporte_correo',
+    provider: 'correo_transporte',
+    service: 'cargo',
+    payment: 'destination',
+    costStatus: 'destination',
+  },
+]
 
 export default function CheckoutPage() {
   const { user, profile } = useAuth()
@@ -31,7 +69,11 @@ export default function CheckoutPage() {
   const [shipping, setShipping] = useState<ShippingAddress>({
     delivery_method: 'pickup',
     shipping_mode: null,
+    shipping_zone: null,
+    shipping_provider_preference: null,
+    shipping_service_level: null,
     shipping_payment: null,
+    shipping_cost_status: null,
     street: '',
     city: '',
     province: '',
@@ -39,6 +81,7 @@ export default function CheckoutPage() {
     notes: '',
   })
   const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>('pickup')
+  const [shippingZone, setShippingZone] = useState<ShippingZone>('caba_gba')
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('transfer')
   const [paymentRules, setPaymentRules] = useState({
     transfer_discount_pct: 5,
@@ -147,13 +190,18 @@ export default function CheckoutPage() {
 
     setLoading(true)
 
+    const selectedShippingZone = SHIPPING_ZONE_OPTIONS.find((option) => option.id === shippingZone) ?? SHIPPING_ZONE_OPTIONS[0]
     try {
       const shippingForOrder: ShippingAddress =
         deliveryMethod === 'pickup'
           ? {
               delivery_method: 'pickup',
               shipping_mode: null,
+              shipping_zone: null,
+              shipping_provider_preference: null,
+              shipping_service_level: null,
               shipping_payment: null,
+              shipping_cost_status: null,
               street: 'Retira el cliente en fábrica/showroom',
               city: 'CABA',
               province: 'CABA',
@@ -163,12 +211,16 @@ export default function CheckoutPage() {
           : {
               ...shipping,
               delivery_method: 'shipping',
-              shipping_mode: 'coordinar',
-              shipping_payment: 'destination',
+              shipping_mode: selectedShippingZone.mode,
+              shipping_zone: selectedShippingZone.id,
+              shipping_provider_preference: selectedShippingZone.provider,
+              shipping_service_level: selectedShippingZone.service,
+              shipping_payment: selectedShippingZone.payment,
+              shipping_cost_status: selectedShippingZone.costStatus,
               notes: [
-                'Envío pago en destino.',
-                'Dentro de 50 km de la fábrica: moto/flete.',
-                'Interior del país: transporte o correo.',
+                selectedShippingZone.id === 'caba_gba'
+                  ? 'Zona local CABA/GBA: cotizar moto mensajería o flete según bulto.'
+                  : 'Interior del país: coordinar transporte/correo con pago en destino.',
                 shipping.notes,
               ].filter(Boolean).join(' '),
             }
@@ -222,9 +274,9 @@ export default function CheckoutPage() {
       setCreatedOrder(result)
       setStep('confirm')
       clearCart()
-    } catch (err: any) {
+    } catch (err) {
       console.error(err)
-      toast.error('Error al procesar el pedido', err?.message || 'Intentá nuevamente o contactanos')
+      toast.error('Error al procesar el pedido', getErrorMessage(err, 'Intentá nuevamente o contactanos'))
     } finally {
       setLoading(false)
     }
@@ -244,7 +296,7 @@ export default function CheckoutPage() {
           padding: 'var(--space-8)',
         }}
       >
-        <div style={{ fontSize: '4rem' }}>🛒</div>
+        <ShoppingBag size={64} aria-hidden="true" style={{ color: 'var(--color-text-muted)' }} />
         <h2>Tu carrito está vacío</h2>
         <Link href="/productos" className="btn btn-primary" id="checkout-empty-catalog-btn">
           Ir al catálogo
@@ -434,7 +486,7 @@ export default function CheckoutPage() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
                   {items.map((item) => (
                     <div key={item.id} className="card card-body checkout-item-card">
-                      <div className="checkout-item-icon">🕹️</div>
+                      <div className="checkout-item-icon"><Gamepad2 size={24} aria-hidden="true" /></div>
                       <div style={{ flex: 1, minWidth: 200 }}>
                         <div style={{ fontWeight: 700, marginBottom: 2 }}>
                           {item.product.name}
@@ -573,11 +625,16 @@ export default function CheckoutPage() {
                         className={`delivery-method-card ${deliveryMethod === option.id ? 'selected' : ''}`}
                         onClick={() => {
                           setDeliveryMethod(option.id)
+                          const selectedZone = SHIPPING_ZONE_OPTIONS.find((zone) => zone.id === shippingZone) ?? SHIPPING_ZONE_OPTIONS[0]
                           setShipping((prev) => ({
                             ...prev,
                             delivery_method: option.id,
-                            shipping_mode: option.id === 'shipping' ? 'coordinar' : null,
-                            shipping_payment: option.id === 'shipping' ? 'destination' : null,
+                            shipping_mode: option.id === 'shipping' ? selectedZone.mode : null,
+                            shipping_zone: option.id === 'shipping' ? selectedZone.id : null,
+                            shipping_provider_preference: option.id === 'shipping' ? selectedZone.provider : null,
+                            shipping_service_level: option.id === 'shipping' ? selectedZone.service : null,
+                            shipping_payment: option.id === 'shipping' ? selectedZone.payment : null,
+                            shipping_cost_status: option.id === 'shipping' ? selectedZone.costStatus : null,
                           }))
                         }}
                         aria-pressed={deliveryMethod === option.id}
@@ -599,10 +656,38 @@ export default function CheckoutPage() {
                   {deliveryMethod === 'shipping' && (
                     <>
                       <div className="checkout-delivery-note">
-                        <strong>Envío pago en destino</strong>
+                        <strong>Sistema de envíos preparado por zona</strong>
                         <span>
-                          Si estás a menos de 50 km de la fábrica lo coordinamos por moto/flete. Para interior del país, por transporte o correo.
+                          CABA/GBA queda clasificado para moto o flete local. Interior queda clasificado para transporte, expreso o correo.
                         </span>
+                      </div>
+
+                      <div className="delivery-method-grid">
+                        {SHIPPING_ZONE_OPTIONS.map((option) => (
+                          <button
+                            key={option.id}
+                            type="button"
+                            className={`delivery-method-card ${shippingZone === option.id ? 'selected' : ''}`}
+                            onClick={() => {
+                              setShippingZone(option.id)
+                              setShipping((prev) => ({
+                                ...prev,
+                                province: option.id === 'caba_gba' && !prev.province ? 'CABA' : prev.province,
+                                shipping_mode: option.mode,
+                                shipping_zone: option.id,
+                                shipping_provider_preference: option.provider,
+                                shipping_service_level: option.service,
+                                shipping_payment: option.payment,
+                                shipping_cost_status: option.costStatus,
+                              }))
+                            }}
+                            aria-pressed={shippingZone === option.id}
+                          >
+                            <span>{option.icon}</span>
+                            <strong>{option.title}</strong>
+                            <small>{option.desc}</small>
+                          </button>
+                        ))}
                       </div>
 
                       <div className="form-group">
@@ -689,6 +774,22 @@ export default function CheckoutPage() {
                           </select>
                         </div>
                       </div>
+                      <div className="form-group">
+                        <label className="form-label" htmlFor="shipping-zip">
+                          Código postal *
+                        </label>
+                        <input
+                          id="shipping-zip"
+                          className="form-input"
+                          value={shipping.zip}
+                          onChange={(e) =>
+                            setShipping((prev) => ({ ...prev, zip: e.target.value }))
+                          }
+                          placeholder={shippingZone === 'caba_gba' ? 'Ej. 1419' : 'Ej. 5000'}
+                          inputMode="numeric"
+                          required={deliveryMethod === 'shipping'}
+                        />
+                      </div>
                     </>
                   )}
 
@@ -735,7 +836,7 @@ export default function CheckoutPage() {
                     className="btn btn-primary btn-lg"
                     onClick={() => setStep('payment')}
                     disabled={
-                      (deliveryMethod === 'shipping' && (!shipping.street || !shipping.city || !shipping.province)) ||
+                      (deliveryMethod === 'shipping' && (!shipping.street || !shipping.city || !shipping.province || !shipping.zip)) ||
                       (!user && (!guestName || !guestEmail))
                     }
                     id="checkout-next-payment-btn"

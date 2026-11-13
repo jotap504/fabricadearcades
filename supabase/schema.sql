@@ -167,7 +167,14 @@ insert into public.delivery_config (key, value, label) values
   ('designed_business_days', '7', 'Días hábiles para stock diseñado'),
   ('cash_discount_pct', '0', '% descuento por pago en efectivo'),
   ('transfer_discount_pct', '5', '% descuento por transferencia'),
-  ('card_surcharge_pct', '7', '% recargo por tarjeta de crédito');
+  ('card_surcharge_pct', '7', '% recargo por tarjeta de crédito'),
+  ('local_shipping_area_label', 'CABA y Gran Buenos Aires', 'Zona local para moto/flete'),
+  ('local_shipping_max_distance_km', '50', 'Radio local máximo desde fábrica (km)'),
+  ('local_shipping_preferred_provider', 'pedidosya_moto', 'Proveedor local preferido'),
+  ('local_shipping_fallback_provider', 'moova', 'Proveedor local alternativo'),
+  ('interior_shipping_area_label', 'Interior del país', 'Zona interior para transporte/correo'),
+  ('interior_shipping_preferred_provider', 'correo_transporte', 'Proveedor interior preferido'),
+  ('interior_shipping_payment_default', 'destination', 'Forma de pago por defecto para interior');
 
 -- ============================================================
 -- ORDERS
@@ -193,7 +200,7 @@ create table public.orders (
       'cancelled'              -- cancelado
     )),
   -- Pago
-  payment_method text check (payment_method in ('cash', 'transfer', 'card', 'pending', 'current_account')),
+  payment_method text check (payment_method in ('cash', 'transfer', 'card', 'pending', 'current_account', 'mercadopago')),
   payment_status text not null default 'pending' check (payment_status in ('pending', 'paid', 'refunded')),
   payment_reference text,   -- número de transferencia, comprobante, etc.
   -- Precios

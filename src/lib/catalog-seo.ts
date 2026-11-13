@@ -43,7 +43,7 @@ const CATEGORY_SEO: Record<string, { title: string; lead: string }> = {
   },
   't-molding': {
     title: 'T-Molding (Tapacanto en T) para Arcade',
-    lead: 'T-molding o tapacanto en T negro de 16 mm y 18,5 mm para terminar los cantos de muebles arcade.',
+    lead: 'T-molding o tapacanto en T negro de 16,5 mm y 18,5 mm para terminar los cantos de muebles arcade.',
   },
   insumos: {
     title: 'Insumos y Accesorios para Arcade',

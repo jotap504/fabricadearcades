@@ -18,7 +18,7 @@ const PAGE_PATH = '/t-molding'
 const CATEGORY_SLUG = 't-molding'
 const PAGE_TITLE = 'T-Molding (Tapacanto en T) para Arcade: Medidas y Cómo Colocarlo'
 const PAGE_DESCRIPTION =
-  'T-molding o tapacanto en T negro de 16 mm y 18,5 mm para muebles arcade. Guía paso a paso para hacer la ranura con fresa en T y colocarlo. Envíos a todo el país.'
+  'T-molding o tapacanto en T negro de 16,5 mm y 18,5 mm para muebles arcade. Guía paso a paso para hacer la ranura con fresa en T y colocarlo. Envíos a todo el país.'
 
 export const metadata = buildPageMetadata({
   title: PAGE_TITLE,
@@ -26,27 +26,29 @@ export const metadata = buildPageMetadata({
   path: PAGE_PATH,
 })
 
-const WHATSAPP_URL = `https://wa.me/${SITE_CONTACT.telephone.replace('+', '')}?text=${encodeURIComponent(
+const CUTTER_DIAGRAM = '/t-molding/fresa-en-t-medidas.png'
+
+const WHATSAPP_URL =`https://wa.me/${SITE_CONTACT.telephone.replace('+', '')}?text=${encodeURIComponent(
   'Hola, quiero consultar por T-molding (tapacanto en T).'
 )}`
 
 const SIZES = [
-  { width: '16 mm', board: 'Tableros de 15 o 16 mm de espesor', color: 'Negro' },
-  { width: '18,5 mm', board: 'Tableros de 18 mm de espesor', color: 'Negro' },
+  { width: '16,5 mm', board: 'Tableros de 15 o 16 mm de espesor', color: 'Negro', diagram: '/t-molding/perfil-t-molding-16-5mm.png' },
+  { width: '18,5 mm', board: 'Tableros de 18 mm de espesor', color: 'Negro', diagram: '/t-molding/perfil-t-molding-18-5mm.png' },
 ]
 
 const STEPS: Array<{ name: string; text: string }> = [
   {
     name: 'Elegí la medida según el espesor del tablero',
-    text: 'El T-molding tiene que cubrir todo el canto. Usá el de 16 mm para tableros de 15 o 16 mm y el de 18,5 mm para tableros de 18 mm.',
+    text: 'El T-molding tiene que cubrir todo el canto. Usá el de 16,5 mm para tableros de 15 o 16 mm y el de 18,5 mm para tableros de 18 mm.',
   },
   {
     name: 'Prepará la fresadora con la fresa en T',
-    text: 'La ranura se hace con una fresadora (router) y una fresa en T, también llamada fresa de ranurar o de disco. El rodamiento de la fresa apoya contra el canto y mantiene la profundidad constante en todo el recorrido.',
+    text: 'La ranura se hace con una fresadora (router) y una fresa en T, también llamada fresa de ranurar o de disco. Usamos una de 31 mm de diámetro, con 3,17 mm (1/8") de espesor de corte y vástago de 6,35 mm (1/4"). El rodamiento apoya contra el canto y deja la ranura a 9,52 mm de profundidad en todo el recorrido.',
   },
   {
     name: 'Centrá la ranura y probá en un recorte',
-    text: 'Regulá la altura de la fresa para que el corte quede en el centro del espesor del tablero. Antes de trabajar sobre el mueble, hacé una pasada de prueba en un recorte del mismo material y verificá que el T-molding entre firme, a presión, y que sobresalga parejo de los dos lados.',
+    text: 'Regulá la altura de la fresa para que el corte quede en el centro del espesor del tablero. La espiga del T-molding mide 7 mm de largo, así que en la ranura de 9,52 mm entra completa y queda lugar en el fondo. Antes de trabajar sobre el mueble, hacé una pasada de prueba en un recorte del mismo material y verificá que el T-molding entre firme, a presión, y que sobresalga parejo de los dos lados.',
   },
   {
     name: 'Fresá todo el contorno',
@@ -81,7 +83,11 @@ const FAQ: Array<{ q: string; a: string }> = [
   },
   {
     q: '¿Qué medida de T-molding necesito?',
-    a: 'Depende del espesor del tablero: 16 mm para tableros de 15 o 16 mm, y 18,5 mm para tableros de 18 mm. Los dos los tenemos en color negro.',
+    a: 'Depende del espesor del tablero: 16,5 mm para tableros de 15 o 16 mm, y 18,5 mm para tableros de 18 mm. Los dos los tenemos en color negro.',
+  },
+  {
+    q: '¿Qué fresa se usa para la ranura del T-molding?',
+    a: 'Una fresa en T (fresa de ranurar con rodamiento) de 3,17 mm (1/8") de espesor de corte. La que usamos tiene 31 mm de diámetro y vástago de 6,35 mm (1/4"), y deja una ranura de 9,52 mm de profundidad, suficiente para la espiga de 7 mm del T-molding.',
   },
   {
     q: '¿Se puede colocar sin fresadora?',
@@ -160,14 +166,14 @@ export default async function TMoldingPage() {
         name: 'Cómo hacer la ranura y colocar T-molding (tapacanto en T)',
         description: PAGE_DESCRIPTION,
         inLanguage: 'es-AR',
-        ...(cutterPhoto ? { image: absoluteUrl(cutterPhoto) } : {}),
+        image: absoluteUrl(cutterPhoto ?? CUTTER_DIAGRAM),
         tool: [
           { '@type': 'HowToTool', name: 'Fresadora (router)' },
           { '@type': 'HowToTool', name: 'Fresa en T (fresa de ranurar con rodamiento)' },
           { '@type': 'HowToTool', name: 'Martillo de goma' },
           { '@type': 'HowToTool', name: 'Cutter' },
         ],
-        supply: [{ '@type': 'HowToSupply', name: 'T-molding (tapacanto en T) de 16 mm o 18,5 mm' }],
+        supply: [{ '@type': 'HowToSupply', name: 'T-molding (tapacanto en T) de 16,5 mm o 18,5 mm' }],
         step: STEPS.map((step, index) => ({
           '@type': 'HowToStep',
           position: index + 1,
@@ -205,7 +211,7 @@ export default async function TMoldingPage() {
         </h1>
         <p style={{ ...bodyText, fontSize: '1.125rem', maxWidth: 700 }}>
           El T-molding, o tapacanto en T, es el perfil plástico que protege los cantos de un mueble arcade y le da su
-          terminación clásica. Lo tenemos en negro, en 16 mm y 18,5 mm de ancho. Acá te contamos qué medida elegir y
+          terminación clásica. Lo tenemos en negro, en 16,5 mm y 18,5 mm de ancho. Acá te contamos qué medida elegir y
           cómo hacer la ranura para colocarlo.
         </p>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)', marginTop: 'var(--space-6)' }}>
@@ -228,7 +234,18 @@ export default async function TMoldingPage() {
                 <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--color-text)' }}>T-Molding {size.width}</h3>
               </div>
               <p style={{ ...bodyText, fontSize: '0.9375rem' }}>{size.board}.</p>
-              <p style={{ ...bodyText, fontSize: '0.9375rem' }}>Color: {size.color}.</p>
+              <p style={{ ...bodyText, fontSize: '0.9375rem' }}>Color: {size.color}. Espiga de 7 mm de largo y 3 mm de ancho.</p>
+              {/* The diagram has its own white background, so it reads the same in light and dark mode. */}
+              <a href={size.diagram} target="_blank" rel="noopener noreferrer" style={{ display: 'block', marginTop: 'var(--space-4)' }}>
+                <Image
+                  src={size.diagram}
+                  alt={`Perfil y medidas del T-molding (tapacanto en T) de ${size.width}: ancho ${size.width}, espiga de 7 mm de largo y 3 mm de ancho`}
+                  width={1600}
+                  height={1200}
+                  sizes="(max-width: 640px) 100vw, 400px"
+                  style={{ width: '100%', height: 'auto', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)' }}
+                />
+              </a>
             </div>
           ))}
         </div>
@@ -272,6 +289,22 @@ export default async function TMoldingPage() {
           logra con una fresadora y una fresa en T.
         </p>
 
+        <figure style={{ margin: '0 0 var(--space-6)' }}>
+          <a href={CUTTER_DIAGRAM} target="_blank" rel="noopener noreferrer" style={{ display: 'block' }}>
+            <Image
+              src={CUTTER_DIAGRAM}
+              alt='Medidas de la fresa en T para T-molding: 31 mm de diámetro, 3,17 mm (1/8") de espesor de corte, 9,52 mm de profundidad de ranura y vástago de 6,35 mm (1/4")'
+              width={1600}
+              height={1200}
+              sizes="(max-width: 900px) 100vw, 868px"
+              style={{ width: '100%', height: 'auto', borderRadius: 'var(--radius-lg)', border: '1px solid var(--color-border)' }}
+            />
+          </a>
+          <figcaption style={{ ...bodyText, fontSize: '0.875rem', marginTop: 'var(--space-2)' }}>
+            Fresa en T: el disco corta una ranura de 3,17 mm de ancho y el rodamiento la limita a 9,52 mm de profundidad.
+          </figcaption>
+        </figure>
+
         {cutterPhoto && (
           <figure style={{ margin: '0 0 var(--space-6)' }}>
             <div style={{ position: 'relative', width: '100%', aspectRatio: '4 / 3', borderRadius: 'var(--radius-lg)', overflow: 'hidden', background: 'var(--color-surface-2)', border: '1px solid var(--color-border)' }}>
@@ -284,7 +317,7 @@ export default async function TMoldingPage() {
               />
             </div>
             <figcaption style={{ ...bodyText, fontSize: '0.875rem', marginTop: 'var(--space-2)' }}>
-              Fresa en T: el disco corta la ranura y el rodamiento apoya contra el canto para mantener la profundidad.
+              La fresa en T que usamos en el taller.
             </figcaption>
           </figure>
         )}

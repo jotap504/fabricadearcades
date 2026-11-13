@@ -100,7 +100,7 @@ export async function GET() {
 ## Páginas principales
 - [Inicio](${SITE_URL}/): resumen de la tienda, productos destacados y cómo funciona la compra
 - [Catálogo de productos](${SITE_URL}/productos): arcades, consolas, fightsticks, bartops, pedestales y accesorios, con precios en pesos argentinos (ARS)
-- [T-Molding (tapacanto en T)](${SITE_URL}/t-molding): medidas disponibles (16 mm y 18,5 mm, negro) y guía paso a paso para hacer la ranura con fresa en T y colocarlo
+- [T-Molding (tapacanto en T)](${SITE_URL}/t-molding): medidas disponibles (16,5 mm y 18,5 mm, negro) y guía paso a paso para hacer la ranura con fresa en T y colocarlo
 - [Cómo comprar](${SITE_URL}/como-comprar): pasos de compra, formas de pago y plazos de fabricación
 - [Envíos y entregas](${SITE_URL}/envios): retiro en fábrica y envíos a todo el país
 - [Garantía y servicio técnico](${SITE_URL}/garantia): cobertura de la garantía, soporte y repuestos

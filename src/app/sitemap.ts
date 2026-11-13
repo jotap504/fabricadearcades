@@ -17,6 +17,7 @@ const STATIC_PAGES: Array<{
 }> = [
   { path: '/', priority: 1, changeFrequency: 'weekly' },
   { path: '/productos', priority: 0.9, changeFrequency: 'daily' },
+  { path: '/t-molding', priority: 0.8, changeFrequency: 'monthly' },
   { path: '/como-comprar', priority: 0.7, changeFrequency: 'monthly' },
   { path: '/envios', priority: 0.7, changeFrequency: 'monthly' },
   { path: '/garantia', priority: 0.7, changeFrequency: 'monthly' },

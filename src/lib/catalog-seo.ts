@@ -41,6 +41,10 @@ const CATEGORY_SEO: Record<string, { title: string; lead: string }> = {
     title: 'Pedestales Arcade',
     lead: 'Pedestales arcade fabricados en Argentina por TodoArcade.',
   },
+  't-molding': {
+    title: 'T-Molding (Tapacanto en T) para Arcade',
+    lead: 'T-molding o tapacanto en T negro de 16 mm y 18,5 mm para terminar los cantos de muebles arcade.',
+  },
   insumos: {
     title: 'Insumos y Accesorios para Arcade',
     lead: 'Insumos y accesorios para arcade de TodoArcade.',

@@ -62,6 +62,9 @@ export function Footer() {
             <Link href="/productos?categoria=pedestales" className="footer-link">
               Pedestales
             </Link>
+            <Link href="/t-molding" className="footer-link">
+              T-Molding
+            </Link>
             <Link href="/productos?categoria=insumos" className="footer-link">
               Insumos
             </Link>

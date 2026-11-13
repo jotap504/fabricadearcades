@@ -26,6 +26,7 @@ import {
 import { clsx } from 'clsx'
 import Link from 'next/link'
 import { ConsoleLogoRows } from '@/components/products/ConsoleLogoRows'
+import { PRODUCT_FAQ } from '@/lib/product-faq'
 
 interface Props {
   product: Product
@@ -862,24 +863,7 @@ export function ProductDetailClient({
                 Preguntas Frecuentes
               </h2>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-                {[
-                  {
-                    q: '¿Viene listo para usar con juegos cargados?',
-                    a: 'Sí, todos nuestros equipos se entregan configurados con un sistema multijuegos listo para usar (Plug & Play). Incluye miles de títulos clásicos retro de arcade, consolas y portátiles organizados por categorías con sus respectivas carátulas y videos.',
-                  },
-                  {
-                    q: '¿Puedo conectar el equipo a internet o añadir más juegos?',
-                    a: 'Pueden agregarse juegos. También podés conectar periféricos compatibles por USB según el modelo.',
-                  },
-                  {
-                    q: '¿Tienen local o showroom para probar las máquinas?',
-                    a: '¡Por supuesto! Podés visitarnos en nuestro showroom ubicado en Virgilio 2379, Devoto, Capital Federal. Escribinos para coordinar una cita y probar la calidad de fabricación, botones y pantallas.',
-                  },
-                  {
-                    q: '¿Cómo funciona la garantía de fábrica?',
-                    a: 'Todos los equipos de TodoArcade cuentan con 1 año de garantía oficial. Cubre cualquier falla en el mother, cableado, micro-switches de palancas/botones y monitor. Además, ofrecemos soporte técnico post-venta permanente.',
-                  },
-                ].map((item, index) => {
+                {PRODUCT_FAQ.map((item, index) => {
                   const isOpen = openFaq === index
                   return (
                     <div

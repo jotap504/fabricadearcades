@@ -4,15 +4,54 @@ import { ProductsClient } from './ProductsClient'
 import type { Product, Category } from '@/lib/types'
 import { mockProducts, mockCategories } from '@/lib/mock-data'
 import { buildPageMetadata } from '@/lib/seo'
-
-export const metadata: Metadata = buildPageMetadata({
-  title: 'Catálogo de Arcades',
-  description: 'Explorá nuestro catálogo completo de arcades, bartops, pedestales y accesorios personalizados.',
-  path: '/productos',
-})
+import { JsonLd } from '@/components/seo/JsonLd'
+import { SITE_URL, absoluteUrl } from '@/lib/site'
+import { createPublicClient } from '@/lib/supabase/public'
+import {
+  CATALOG_SEO,
+  IMMEDIATE_CANONICAL_SLUG,
+  IMMEDIATE_SEO,
+  IMMEDIATE_SLUGS,
+  categoryPath,
+  categorySeo,
+} from '@/lib/catalog-seo'
 
 interface PageProps {
   searchParams: Promise<{ categoria?: string; buscar?: string; tipo?: string }>
+}
+
+/**
+ * Each category view is its own indexable page (self-canonical). Search results and
+ * the internal "tipo" filter are thin/duplicate, so they stay out of the index.
+ */
+export async function generateMetadata({ searchParams }: PageProps): Promise<Metadata> {
+  const params = await searchParams
+  const catalog = buildPageMetadata({ ...CATALOG_SEO, path: '/productos' })
+  const notIndexed: Metadata = { ...catalog, robots: { index: false, follow: true } }
+
+  if (params.buscar || params.tipo) return notIndexed
+
+  const slug = params.categoria
+  if (!slug || slug === 'todos') return catalog
+
+  if (IMMEDIATE_SLUGS.includes(slug)) {
+    return buildPageMetadata({
+      title: IMMEDIATE_SEO.title,
+      description: IMMEDIATE_SEO.description,
+      path: categoryPath(IMMEDIATE_CANONICAL_SLUG),
+    })
+  }
+
+  const supabase = createPublicClient()
+  const category = supabase
+    ? (await supabase.from('categories').select('name, slug').eq('slug', slug).eq('is_active', true).maybeSingle()).data
+    : mockCategories.find((c) => c.slug === slug) ?? null
+
+  // Unknown category slug: render the catalog but don't index the made-up URL.
+  if (!category) return notIndexed
+
+  const seo = categorySeo(category.slug, category.name)
+  return buildPageMetadata({ title: seo.title, description: seo.description, path: categoryPath(category.slug) })
 }
 
 const isSupabaseConfigured =
@@ -193,12 +232,69 @@ export default async function ProductsPage({ searchParams }: PageProps) {
   }
   products = sortByAvailability(products)
 
+  // ---- Heading + structured data for the current view ----
+  const activeSlug = params.categoria && params.categoria !== 'todos' ? params.categoria : null
+  const activeCategory = activeSlug
+    ? categoriesWithProducts.find((c: Category) => c.slug === activeSlug) ?? null
+    : null
+  const isImmediateView = Boolean(activeSlug && IMMEDIATE_SLUGS.includes(activeSlug))
+  const heading = isImmediateView
+    ? IMMEDIATE_SEO.heading
+    : activeCategory
+      ? categorySeo(activeCategory.slug, activeCategory.name).heading
+      : 'Catálogo'
+  const viewPath = isImmediateView
+    ? categoryPath(IMMEDIATE_CANONICAL_SLUG)
+    : activeCategory
+      ? categoryPath(activeCategory.slug)
+      : '/productos'
+  const viewUrl = absoluteUrl(viewPath)
+  const isIndexableView = !params.buscar && !params.tipo && (!activeSlug || isImmediateView || activeCategory)
+
+  const catalogJsonLd = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'CollectionPage',
+        '@id': `${viewUrl}#collection`,
+        url: viewUrl,
+        name: heading === 'Catálogo' ? CATALOG_SEO.title : heading,
+        inLanguage: 'es-AR',
+        isPartOf: { '@id': `${SITE_URL}/#website` },
+        mainEntity: {
+          '@type': 'ItemList',
+          numberOfItems: products.length,
+          itemListElement: products.map((p: Product, index: number) => ({
+            '@type': 'ListItem',
+            position: index + 1,
+            name: p.name,
+            url: absoluteUrl(`/productos/${p.slug}`),
+          })),
+        },
+      },
+      {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Inicio', item: SITE_URL },
+          { '@type': 'ListItem', position: 2, name: 'Catálogo', item: absoluteUrl('/productos') },
+          ...(viewPath !== '/productos'
+            ? [{ '@type': 'ListItem', position: 3, name: heading, item: viewUrl }]
+            : []),
+        ],
+      },
+    ],
+  }
+
   return (
-    <ProductsClient
-      products={products}
-      categories={categoriesWithProducts}
-      activeCategory={params.categoria ?? 'todos'}
-      searchQuery={params.buscar ?? ''}
-    />
+    <>
+      {isIndexableView && <JsonLd data={catalogJsonLd} />}
+      <ProductsClient
+        products={products}
+        categories={categoriesWithProducts}
+        activeCategory={params.categoria ?? 'todos'}
+        searchQuery={params.buscar ?? ''}
+        heading={heading}
+      />
+    </>
   )
 }

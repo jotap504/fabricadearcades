@@ -12,6 +12,8 @@ interface ProductsClientProps {
   categories: Category[]
   activeCategory: string
   searchQuery: string
+  /** Page H1: the active category name, or "Catálogo" for the full list. */
+  heading?: string
 }
 
 const getCategoryIcon = (slug: string) => {
@@ -30,6 +32,7 @@ export function ProductsClient({
   categories,
   activeCategory,
   searchQuery,
+  heading = 'Catálogo',
 }: ProductsClientProps) {
   const router = useRouter()
   const pathname = usePathname()
@@ -69,7 +72,7 @@ export function ProductsClient({
               marginBottom: 'var(--space-2)',
             }}
           >
-            <span className="text-gradient-cyan">Catálogo</span>
+            <span className="text-gradient-cyan">{heading}</span>
           </h1>
           <p style={{ color: 'var(--color-text-secondary)', marginBottom: 'var(--space-6)' }}>
             {products.length} producto{products.length !== 1 ? 's' : ''} disponibles

@@ -116,6 +116,9 @@ const siteJsonLd = {
         },
       ],
       areaServed: { '@type': 'Country', name: 'Argentina' },
+      currenciesAccepted: 'ARS',
+      paymentAccepted: 'MercadoPago, tarjeta de crédito, tarjeta de débito, transferencia bancaria, efectivo',
+      hasMap: SITE_CONTACT.mapUrl,
       parentOrganization: { '@id': `${SITE_URL}/#organization` },
       sameAs: [SITE_CONTACT.instagram, SITE_CONTACT.tiktok],
     },
@@ -126,6 +129,15 @@ const siteJsonLd = {
       name: SITE_NAME,
       inLanguage: 'es-AR',
       publisher: { '@id': `${SITE_URL}/#organization` },
+      // The catalog search is a real, crawlable URL (/productos?buscar=...).
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: {
+          '@type': 'EntryPoint',
+          urlTemplate: `${SITE_URL}/productos?buscar={search_term_string}`,
+        },
+        'query-input': 'required name=search_term_string',
+      },
     },
   ],
 }
@@ -138,7 +150,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="es" suppressHydrationWarning>
+    <html lang="es-AR" suppressHydrationWarning>
       <head>
         <script
           dangerouslySetInnerHTML={{

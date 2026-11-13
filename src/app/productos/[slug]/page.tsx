@@ -5,6 +5,7 @@ import { ProductDetailClient } from './ProductDetailClient'
 import { JsonLd } from '@/components/seo/JsonLd'
 import { buildPageMetadata, cleanDescription } from '@/lib/seo'
 import { SITE_NAME, SITE_URL, absoluteUrl } from '@/lib/site'
+import { PRODUCT_FAQ } from '@/lib/product-faq'
 import { mockProducts, mockVariants, mockStockItems, mockSupplies } from '@/lib/mock-data'
 import type { DeliveryConfig, Product, ProductVariant, StockItem, SupplyInventory } from '@/lib/types'
 
@@ -168,6 +169,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
         ...(productDescription ? { description: productDescription } : {}),
         ...(productImages.length > 0 ? { image: productImages } : {}),
         ...(product.category?.name ? { category: product.category.name } : {}),
+        sku: product.slug,
         brand: { '@type': 'Brand', name: SITE_NAME },
         manufacturer: { '@id': `${SITE_URL}/#organization` },
         ...(retailPrice > 0
@@ -191,6 +193,16 @@ export default async function ProductDetailPage({ params }: PageProps) {
           { '@type': 'ListItem', position: 2, name: 'Catálogo', item: absoluteUrl('/productos') },
           { '@type': 'ListItem', position: 3, name: product.name, item: productUrl },
         ],
+      },
+      // Mirrors the "Preguntas Frecuentes" accordion rendered on the page.
+      {
+        '@type': 'FAQPage',
+        '@id': `${productUrl}#faq`,
+        mainEntity: PRODUCT_FAQ.map((item) => ({
+          '@type': 'Question',
+          name: item.q,
+          acceptedAnswer: { '@type': 'Answer', text: item.a },
+        })),
       },
     ],
   }

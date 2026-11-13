@@ -1,6 +1,7 @@
 import type { MetadataRoute } from 'next'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
-import { SITE_URL } from '@/lib/site'
+import { SITE_URL, absoluteUrl } from '@/lib/site'
+import { categoryPath } from '@/lib/catalog-seo'
 import { mockProducts } from '@/lib/mock-data'
 
 export const revalidate = 3600
@@ -46,7 +47,7 @@ async function getProductEntries(): Promise<MetadataRoute.Sitemap> {
     )
     const { data, error } = await supabase
       .from('products')
-      .select('slug, updated_at')
+      .select('slug, updated_at, images, category:categories(slug, is_active)')
       .eq('is_active', true)
       .order('sort_order', { ascending: true })
 
@@ -55,14 +56,46 @@ async function getProductEntries(): Promise<MetadataRoute.Sitemap> {
       return []
     }
 
-    return data
-      .filter((p): p is { slug: string; updated_at: string | null } => Boolean(p.slug))
-      .map((p) => ({
-        url: `${SITE_URL}/productos/${encodeURIComponent(p.slug)}`,
-        lastModified: p.updated_at ? new Date(p.updated_at) : undefined,
-        changeFrequency: 'weekly' as const,
-        priority: 0.8,
-      }))
+    type CategoryRef = { slug: string | null; is_active: boolean | null }
+    type ProductRow = {
+      slug: string | null
+      updated_at: string | null
+      images: string[] | null
+      category: CategoryRef | CategoryRef[] | null
+    }
+    const rows = (data as unknown as ProductRow[]).filter((p) => Boolean(p.slug))
+
+    // Category views (/productos?categoria=<slug>) are indexable pages. Only list the
+    // ones that have active products; lastModified = newest product in the category.
+    const categoryLastModified = new Map<string, Date | undefined>()
+    for (const p of rows) {
+      const category = Array.isArray(p.category) ? p.category[0] : p.category
+      if (!category?.slug || !category.is_active) continue
+      const updated = p.updated_at ? new Date(p.updated_at) : undefined
+      const current = categoryLastModified.get(category.slug)
+      if (!categoryLastModified.has(category.slug) || (updated && (!current || updated > current))) {
+        categoryLastModified.set(category.slug, updated)
+      }
+    }
+    const categoryEntries: MetadataRoute.Sitemap = [...categoryLastModified].map(([slug, lastModified]) => ({
+      url: `${SITE_URL}${categoryPath(slug)}`,
+      lastModified,
+      changeFrequency: 'weekly' as const,
+      priority: 0.7,
+    }))
+
+    const productEntries: MetadataRoute.Sitemap = rows.map((p) => ({
+      url: `${SITE_URL}/productos/${encodeURIComponent(p.slug!)}`,
+      lastModified: p.updated_at ? new Date(p.updated_at) : undefined,
+      changeFrequency: 'weekly' as const,
+      priority: 0.8,
+      images: (p.images ?? [])
+        .filter((src) => Boolean(src) && !src.startsWith('data:'))
+        .slice(0, 5)
+        .map(absoluteUrl),
+    }))
+
+    return [...categoryEntries, ...productEntries]
   } catch (err) {
     console.error('[sitemap] unexpected error:', err)
     return []

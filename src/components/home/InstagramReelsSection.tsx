@@ -70,7 +70,7 @@ export function InstagramReelsSection() {
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--space-2)', marginBottom: 'var(--space-2)' }}>
             <span className="badge" style={{ background: 'linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)', color: 'white', fontWeight: 700, padding: '4px 10px' }}>
               <InstagramIcon size={14} style={{ marginRight: '4px', verticalAlign: 'middle' }} />
-              @todoarcade
+              @todoarcade.ar
             </span>
           </div>
           <h2 className="section-title">
@@ -201,7 +201,7 @@ export function InstagramReelsSection() {
           }}
         >
           <a
-            href="https://instagram.com/todoarcade"
+            href="https://instagram.com/todoarcade.ar"
             target="_blank"
             rel="noopener noreferrer"
             className="btn btn-secondary"
@@ -213,7 +213,7 @@ export function InstagramReelsSection() {
             }}
           >
             <InstagramIcon size={18} />
-            Seguinos en @todoarcade para más videos diarios
+            Seguinos en @todoarcade.ar para más videos diarios
           </a>
         </div>
       </div>

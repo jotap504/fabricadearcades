@@ -82,7 +82,7 @@ export default function ContactPage() {
 
             {/* Instagram */}
             <a
-              href="https://instagram.com/todoarcade"
+              href="https://instagram.com/todoarcade.ar"
               target="_blank"
               rel="noopener noreferrer"
               style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)', textDecoration: 'none', color: 'inherit' }}
@@ -92,7 +92,7 @@ export default function ContactPage() {
               </div>
               <div>
                 <div style={{ fontWeight: 600 }}>Instagram</div>
-                <div style={{ color: 'var(--color-cyan)', fontSize: '0.9375rem' }}>@todoarcade</div>
+                <div style={{ color: 'var(--color-cyan)', fontSize: '0.9375rem' }}>@todoarcade.ar</div>
               </div>
             </a>
 

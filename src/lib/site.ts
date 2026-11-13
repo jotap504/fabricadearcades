@@ -16,7 +16,7 @@ export const SITE_CONTACT = {
   addressLocality: 'Devoto, Ciudad Autónoma de Buenos Aires',
   addressCountry: 'AR',
   mapUrl: 'https://www.google.com/maps/search/?api=1&query=Virgilio+2379+Devoto+CABA',
-  instagram: 'https://instagram.com/todoarcade',
+  instagram: 'https://instagram.com/todoarcade.ar',
   tiktok: 'https://tiktok.com/@todoarcade',
 } as const
 

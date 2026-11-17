@@ -4,7 +4,7 @@ import { type Row } from '@/lib/rows'
 import { useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
-import { Search, X, Gamepad2, Zap, LayoutGrid, Wrench, Usb, ArrowRight } from 'lucide-react'
+import { Search, X, Gamepad2, Zap, LayoutGrid, Wrench, Usb, ArrowRight, Download } from 'lucide-react'
 import { ProductCard } from '@/components/products/ProductCard'
 import type { Product, Category } from '@/lib/types'
 
@@ -78,11 +78,22 @@ export function ProductsClient({
             <p style={{ color: 'var(--color-text-secondary)', margin: 0 }}>
               ¿Ya tenés tu fightstick? Probá cada botón, la palanca y los puertos USB.
             </p>
-            <Link href="/tester-fightstick" className="btn btn-primary" id="fightstick-tester-btn">
-              <Usb size={18} aria-hidden="true" />
-              Tester de comandos
-              <ArrowRight size={18} aria-hidden="true" />
-            </Link>
+            <div style={{ display: 'flex', gap: 'var(--space-3)', flexWrap: 'wrap' }}>
+              <Link href="/tester-fightstick" className="btn btn-primary" id="fightstick-tester-btn">
+                <Usb size={18} aria-hidden="true" />
+                Tester de comandos
+                <ArrowRight size={18} aria-hidden="true" />
+              </Link>
+              <a
+                href="/manuales/manual-fightstick-gp2040-ce.pdf"
+                download
+                className="btn btn-ghost"
+                id="fightstick-manual-btn"
+              >
+                <Download size={18} aria-hidden="true" />
+                Descargar manual (PDF)
+              </a>
+            </div>
           </div>
         </div>
       )}

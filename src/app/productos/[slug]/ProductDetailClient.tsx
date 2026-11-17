@@ -4,7 +4,7 @@ import { type Row } from '@/lib/rows'
 import { useState, useMemo, useEffect } from 'react'
 import type { CSSProperties } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { ShoppingCart, ChevronLeft, ChevronRight, Play, Check, Gamepad2, Zap, Usb, ArrowRight } from 'lucide-react'
+import { ShoppingCart, ChevronLeft, ChevronRight, Play, Check, Gamepad2, Zap, Usb, ArrowRight, Download } from 'lucide-react'
 import { useAuth } from '@/components/auth/AuthProvider'
 import { useCartStore } from '@/lib/stores/cart'
 import { useToast } from '@/lib/stores/toast'
@@ -952,16 +952,29 @@ export function ProductDetailClient({
               )}
 
               {(product.category as Row | null)?.slug === 'fightsticks' && (
-                <Link
-                  href="/tester-fightstick"
-                  className="btn btn-ghost"
-                  id="product-fightstick-tester-btn"
-                  style={{ marginBottom: 'var(--space-4)' }}
+                <div
+                  style={{
+                    display: 'flex',
+                    gap: 'var(--space-3)',
+                    flexWrap: 'wrap',
+                    marginBottom: 'var(--space-4)',
+                  }}
                 >
-                  <Usb size={18} aria-hidden="true" />
-                  Probá tu fightstick con el tester
-                  <ArrowRight size={18} aria-hidden="true" />
-                </Link>
+                  <Link href="/tester-fightstick" className="btn btn-ghost" id="product-fightstick-tester-btn">
+                    <Usb size={18} aria-hidden="true" />
+                    Probá tu fightstick con el tester
+                    <ArrowRight size={18} aria-hidden="true" />
+                  </Link>
+                  <a
+                    href="/manuales/manual-fightstick-gp2040-ce.pdf"
+                    download
+                    className="btn btn-ghost"
+                    id="product-fightstick-manual-btn"
+                  >
+                    <Download size={18} aria-hidden="true" />
+                    Descargar manual (PDF)
+                  </a>
+                </div>
               )}
 
               {/* Stock badge */}

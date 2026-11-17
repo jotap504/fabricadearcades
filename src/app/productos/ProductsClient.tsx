@@ -3,7 +3,8 @@
 import { type Row } from '@/lib/rows'
 import { useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
-import { Search, X, Gamepad2, Zap, LayoutGrid, Wrench } from 'lucide-react'
+import Link from 'next/link'
+import { Search, X, Gamepad2, Zap, LayoutGrid, Wrench, Usb, ArrowRight } from 'lucide-react'
 import { ProductCard } from '@/components/products/ProductCard'
 import type { Product, Category } from '@/lib/types'
 
@@ -56,6 +57,35 @@ export function ProductsClient({
 
   return (
     <div style={{ minHeight: '100vh', paddingBottom: 'var(--space-16)' }}>
+      {activeCategory === 'fightsticks' && (
+        <div
+          style={{
+            background: 'var(--color-bg-2)',
+            borderBottom: '1px solid var(--color-border)',
+            padding: 'var(--space-4) 0',
+          }}
+        >
+          <div
+            className="container"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 'var(--space-4)',
+              flexWrap: 'wrap',
+            }}
+          >
+            <p style={{ color: 'var(--color-text-secondary)', margin: 0 }}>
+              ¿Ya tenés tu fightstick? Probá cada botón, la palanca y los puertos USB.
+            </p>
+            <Link href="/tester-fightstick" className="btn btn-primary" id="fightstick-tester-btn">
+              <Usb size={18} aria-hidden="true" />
+              Tester de comandos
+              <ArrowRight size={18} aria-hidden="true" />
+            </Link>
+          </div>
+        </div>
+      )}
       {/* Page header */}
       <div
         style={{

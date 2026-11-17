@@ -9,7 +9,7 @@ import { TesterFrame } from './TesterFrame'
 const PAGE_PATH = '/tester-fightstick'
 const PAGE_TITLE = 'Tester de Comandos para Fightstick (GP2040-CE)'
 const PAGE_DESCRIPTION =
-  'Probá en el navegador los botones, la palanca digital y analógica de tu fightstick. Asigná cada puerto USB a Player 1 o Player 2 y mapeá los pines GPIO de tu placa GP2040-CE.'
+  'Probá en el navegador los botones y la palanca de tu fightstick. Detectá el modo USB de cada mando (XInput, Switch, PS3, PS4, HID), asigná cada puerto a Player 1 o 2 y mapeá los pines GPIO de tu placa GP2040-CE.'
 
 export const metadata = buildPageMetadata({
   title: PAGE_TITLE,
@@ -21,6 +21,7 @@ const STEPS = [
   'Conectá tu fightstick por USB. Cada stick es un puerto USB distinto.',
   'En el panel del jugador que quieras probar, tocá CONECTAR y presioná cualquier botón de ese stick: queda asignado a ese puerto hasta que lo desconectes o lo desenchufes.',
   'Repetí con el segundo stick en el panel de Player 2.',
+  'La card "Modo USB detectado" te dice en qué modo está configurado cada mando (XInput, Nintendo Switch, PS3, PS4, PS5, HID / DInput y otros), con su VID/PID, nombre, mapeo y cantidad de botones y ejes.',
   'Movés la palanca y apretás los botones, y el tablero te muestra en vivo qué entrada llega y en qué modo (digital o analógico) está cada jugador.',
   'Abrí "Pines GPIO" para cargar el número de pin de cada botón de tu placa. Los valores se guardan en tu navegador.',
 ]

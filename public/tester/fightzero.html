@@ -127,6 +127,15 @@
   .pins{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:8px;}
   .pins label{display:flex;align-items:center;justify-content:space-between;gap:8px;background:#111;border:1px solid var(--border);border-radius:10px;padding:5px 8px 5px 10px;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;}
   .pins input{width:48px;font:inherit;font-family:'Courier New',monospace;font-size:12px;color:var(--text);background:var(--key);border:1px solid var(--border);border-radius:6px;padding:4px 6px;text-align:center;}
+
+  /* MODO USB DETECTADO: una card por mando, a partir del VID/PID que informa el navegador */
+  .mdata{display:grid;grid-template-columns:auto 1fr;gap:8px 16px;font-size:12px;align-items:baseline;}
+  .mdata dt{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
+  .mdata dd{font-family:'Courier New',monospace;color:var(--text);word-break:break-word;}
+  .mbadge{font-size:13px;font-weight:700;padding:5px 12px;border-radius:20px;border:1px solid var(--border);color:var(--muted);white-space:nowrap;}
+  .mbadge.on{border-color:var(--green);color:var(--green);}
+  .mbadge.warn{border-color:var(--amber);color:var(--amber);}
+  .mnota{font-size:11px;color:var(--muted);margin-top:10px;line-height:1.5;min-height:16px;}
 </style>
 </head>
 <body>
@@ -165,6 +174,15 @@
       </div>
     </div>
     <div class="note">Cada stick es un USB distinto. Tocá CONECTAR en el panel del jugador y presioná un botón de ese stick: queda asignado a ese jugador hasta que lo desconectes o lo desenchufes.</div>
+  </div>
+
+  <div class="card">
+    <h2>Modo USB detectado · cada mando</h2>
+    <div class="boards">
+      <div class="panel" id="mdc1"></div>
+      <div class="panel" id="mdc2"></div>
+    </div>
+    <div class="note">El modo se deduce del VID/PID que el mando informa al navegador: GP2040-CE usa uno distinto en cada modo de entrada. Si el stick tiene un VID/PID personalizado, aparece como "No identificado".</div>
   </div>
 
   <div class="card">
@@ -386,6 +404,80 @@
     log('rx',key+(on?'_ON':'_OFF'));
   }
 
+  /* VID:PID que presenta GP2040-CE en cada modo de entrada (headers/drivers/*Descriptors.h del firmware) */
+  var MODOS={
+    '045e:028e':{modo:'XInput',fam:'PC (Windows), Xbox 360'},
+    '045e:0289':{modo:'Xbox Original',fam:'Xbox clásica'},
+    '0e6f:02a4':{modo:'Xbox One',fam:'Xbox One / Series'},
+    '045e:02ea':{modo:'Xbox One',fam:'Xbox One / Series'},
+    '045e:02d1':{modo:'Xbox One',fam:'Xbox One / Series'},
+    '045e:02dd':{modo:'Xbox One',fam:'Xbox One / Series'},
+    '0f0d:0092':{modo:'Nintendo Switch',fam:'Switch (HORI Pokken)'},
+    '057e:2009':{modo:'Switch Pro',fam:'Switch (Pro Controller)'},
+    '057e:2069':{modo:'Switch 2 Pro',fam:'Switch 2 (Pro Controller)'},
+    '054c:0268':{modo:'PS3',fam:'PlayStation 3'},
+    '1532:0401':{modo:'PS4',fam:'PlayStation 4'},
+    '054c:09cc':{modo:'PS4',fam:'PlayStation 4'},
+    '054c:05c4':{modo:'PS4',fam:'PlayStation 4'},
+    '2b81:0101':{modo:'PS5',fam:'PlayStation 5'},
+    '054c:0ce6':{modo:'PS5 (DualSense)',fam:'PlayStation 5'},
+    '10c4:82c0':{modo:'HID / DInput',fam:'PC genérico (DInput)',nota:'Este mismo VID/PID lo usa también el modo PS3 alternativo.'},
+    '2e8a:10c6':{modo:'SInput',fam:'PC (SInput)'},
+    'cafe:0001':{modo:'Teclado',fam:'Teclado USB'},
+    '0ca3:0027':{modo:'Astro City Mini',fam:'Mini consola Sega'},
+    '0ca3:0024':{modo:'Mega Drive Mini',fam:'Mini consola Sega'},
+    '0ae4:0702':{modo:'Egret II Mini',fam:'Mini consola'},
+    '20bc:5500':{modo:'Neo Geo Mini',fam:'Mini consola SNK'},
+    '0f0d:0138':{modo:'PC Engine Mini',fam:'Mini consola'},
+    '054c:0cda':{modo:'PS Classic',fam:'PlayStation Classic'}
+  };
+  var modoDet=[null,null],modoKey=['',''];
+  var MD_FILAS=[['vp','VID:PID'],['nombre','Nombre informado'],['fam','Compatible con'],['map','Mapeo'],['bot','Botones / ejes'],['idx','Índice USB']];
+  [1,2].forEach(function(n){
+    var h='<div class="phead"><h3>Player '+n+'</h3><span class="mbadge" id="md'+n+'-modo">—</span></div><dl class="mdata">';
+    MD_FILAS.forEach(function(f){h+='<dt>'+f[1]+'</dt><dd id="md'+n+'-'+f[0]+'">—</dd>';});
+    $('mdc'+n).innerHTML=h+'</dl><div class="mnota" id="md'+n+'-nota">Sin mando asignado.</div>';
+  });
+
+  function detectar(pad){
+    var id=pad.id||'',vid='',pid='';
+    var m=/vendor:\s*([0-9a-f]{4})\s*product:\s*([0-9a-f]{4})/i.exec(id)||/^([0-9a-f]{4})-([0-9a-f]{4})-/i.exec(id);
+    if(m){vid=m[1].toLowerCase();pid=m[2].toLowerCase();}
+    var nombre=id.replace(/^[0-9a-f]{4}-[0-9a-f]{4}-/i,'').replace(/\s*\(.*\)\s*$/,'')||id;
+    var base={vid:vid,pid:pid,nombre:nombre};
+    var hit=vid?MODOS[vid+':'+pid]:null;
+    if(hit)return Object.assign(base,{modo:hit.modo,fam:hit.fam,nota:hit.nota||'Identificado por VID/PID.',exacto:true});
+    if(/xinput|x-box 360|xbox 360/i.test(id))return Object.assign(base,{modo:'XInput',fam:'PC (Windows), Xbox 360',nota:'Windows no informa el VID/PID de los mandos XInput: el modo se deduce del nombre.',exacto:false});
+    return Object.assign(base,{modo:'No identificado',fam:'—',nota:'El VID/PID no corresponde a ningún modo de GP2040-CE. Puede ser un VID/PID personalizado o un mando de otro fabricante.',exacto:false});
+  }
+
+  function renderModoUsb(k,pad){
+    var n=k+1,key=pad?pad.index+'|'+pad.id:'';
+    if(modoKey[k]===key)return modoDet[k];
+    modoKey[k]=key;
+    var d=pad?detectar(pad):null;
+    modoDet[k]=d;
+    function put(f,v){$('md'+n+'-'+f).textContent=v;}
+    var b=$('md'+n+'-modo');
+    if(!d){
+      b.textContent='—';b.className='mbadge';
+      ['vp','nombre','fam','map','bot','idx'].forEach(function(f){put(f,'—');});
+      put('nota','Sin mando asignado.');
+      return null;
+    }
+    b.textContent=d.modo;
+    b.className='mbadge '+(d.exacto?'on':'warn');
+    put('vp',d.vid?(d.vid+':'+d.pid):'no informado');
+    put('nombre',d.nombre);
+    put('fam',d.fam);
+    put('map',pad.mapping==='standard'?'estándar':(pad.mapping||'sin mapeo estándar'));
+    put('bot',pad.buttons.length+' botones / '+pad.axes.length+' ejes');
+    put('idx',String(pad.index));
+    put('nota',d.nota);
+    log('sys','Player '+n+' · modo USB: '+d.modo+(d.vid?' ('+d.vid+':'+d.pid+')':''));
+    return d;
+  }
+
   function frame(){
     var raw=(navigator.getGamepads?navigator.getGamepads():[])||[];
     var list=[],i;for(i=0;i<raw.length;i++){list[i]=raw[i]||null;}
@@ -437,7 +529,8 @@
       var mc=$('m'+n);
       mc.textContent=conn[k]?(modoAna[k]?'ANALÓGICO':'DIGITAL'):'—';
       mc.className='mchip'+(conn[k]?(modoAna[k]?' ana':' dig'):'')+(uiModo[k]?' hold':'');
-      modoUsb.push('P'+n+': '+(pad?(pad.mapping==='standard'?'XInput':'DInput / genérico'):'sin mando'));
+      var det=renderModoUsb(k,pad);
+      modoUsb.push('P'+n+': '+(det?det.modo:'sin mando'));
     }
     var mu=modoUsb.join(' · ');
     if(mu!==lastModoUsb){lastModoUsb=mu;$('modoUsb').textContent=mu;}

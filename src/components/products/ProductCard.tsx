@@ -152,7 +152,7 @@ export function ProductCard({ product, stockSummary }: ProductCardProps) {
   return (
     <article className="product-card" id={`product-card-${product.slug}`}>
       {/* Image */}
-      <Link href={productHref} className="product-card-image" aria-label={`Ver ${product.name}`}>
+      <Link href={productHref} className="product-card-image">
         {mainImage ? (
           <Image
             src={mainImage}

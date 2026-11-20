@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next'
+import { Outfit } from 'next/font/google'
 import './globals.css'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
@@ -15,6 +16,13 @@ import {
   SITE_DEFAULT_OG_IMAGE,
   absoluteUrl,
 } from '@/lib/site'
+
+// Self-hosted variable font (served from our own origin, no render-blocking Google Fonts request).
+const outfit = Outfit({
+  subsets: ['latin', 'latin-ext'],
+  display: 'swap',
+  variable: '--font-outfit',
+})
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -150,7 +158,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="es-AR" suppressHydrationWarning>
+    <html lang="es-AR" className={outfit.variable} suppressHydrationWarning>
       <head>
         <script
           dangerouslySetInnerHTML={{

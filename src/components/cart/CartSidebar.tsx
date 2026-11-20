@@ -30,7 +30,7 @@ export function CartSidebar() {
       />
 
       {/* Sidebar */}
-      <aside className={clsx('cart-sidebar', { open: isOpen })}>
+      <aside className={clsx('cart-sidebar', { open: isOpen })} inert={!isOpen}>
         <div className="cart-header">
           <h2 className="cart-title">
             <ShoppingBag size={20} aria-hidden="true" /> Carrito{' '}

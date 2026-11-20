@@ -1,5 +1,6 @@
 import { ExternalLink } from 'lucide-react'
 import { InstagramIcon } from '@/components/ui/SocialIcons'
+import { LazyInstagramFrame } from '@/components/home/LazyInstagramFrame'
 
 interface InstagramReel {
   id: string
@@ -115,22 +116,11 @@ export function InstagramReelsSection() {
                     overflow: 'hidden',
                   }}
                 >
-                  <iframe
-                    src={`${reel.embedUrl}?utm_source=ig_embed&amp;utm_campaign=loading`}
+                  <LazyInstagramFrame
+                    src={`${reel.embedUrl}?utm_source=ig_embed&utm_campaign=loading`}
                     title={reel.title}
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                    scrolling="no"
-                    style={{
-                      width: '100%',
-                      height: '520px',
-                      marginTop: '-50px',
-                      border: 'none',
-                      display: 'block',
-                      overflow: 'hidden',
-                    }}
                   />
-                  
+
                   {/* Subtle click overlay link fallback */}
                   <a
                     href={reel.reelUrl}

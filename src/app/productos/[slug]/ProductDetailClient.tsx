@@ -698,6 +698,7 @@ export function ProductDetailClient({
                       onClick={() =>
                         setActiveImage((prev) => (prev - 1 + images.length) % images.length)
                       }
+                      aria-label="Imagen anterior"
                       style={{
                         position: 'absolute',
                         left: 'var(--space-3)',
@@ -721,6 +722,7 @@ export function ProductDetailClient({
                       onClick={() =>
                         setActiveImage((prev) => (prev + 1) % images.length)
                       }
+                      aria-label="Imagen siguiente"
                       style={{
                         position: 'absolute',
                         right: 'var(--space-3)',
@@ -1146,7 +1148,7 @@ export function ProductDetailClient({
               const isLocked = selectedPresetId !== null
               return (
                 <div className="customizer">
-                  <h3
+                  <h2
                     style={{
                       fontSize: '0.9375rem',
                       fontWeight: 700,
@@ -1155,7 +1157,7 @@ export function ProductDetailClient({
                     }}
                   >
                     Personalizá tu arcade
-                  </h3>
+                  </h2>
 
                   {/* Preset Selector / Modalidad de compra */}
                   {presets.length > 0 && (

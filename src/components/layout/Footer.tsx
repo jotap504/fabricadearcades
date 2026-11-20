@@ -25,7 +25,7 @@ export function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn btn-ghost btn-icon"
-                aria-label="Instagram"
+                aria-label="Instagram @todoarcade.ar"
                 style={{ display: 'flex', alignItems: 'center', gap: 6, width: 'auto', padding: '6px 12px', fontSize: '0.8125rem' }}
               >
                 <InstagramIcon size={16} />
@@ -36,7 +36,7 @@ export function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn btn-ghost btn-icon"
-                aria-label="TikTok"
+                aria-label="TikTok @todoarcade"
                 style={{ display: 'flex', alignItems: 'center', gap: 6, width: 'auto', padding: '6px 12px', fontSize: '0.8125rem' }}
               >
                 <TikTokIcon size={14} />

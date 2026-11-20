@@ -3,8 +3,6 @@
    Mobile-first, dark gaming aesthetic with neon accents
    ============================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Orbitron:wght@400;700;900&display=swap');
-
 /* ============================================================
    CSS CUSTOM PROPERTIES (Design Tokens)
    ============================================================ */
@@ -54,8 +52,9 @@
   --image-stage-shadow: 0 14px 34px rgba(0, 0, 0, 0.35);
 
   /* Typography - Clean Sans-Serif */
-  --font-body: 'Outfit', system-ui, sans-serif;
-  --font-display: 'Outfit', system-ui, sans-serif;
+  /* --font-outfit is injected by next/font in layout.tsx (self-hosted, no render-blocking @import) */
+  --font-body: var(--font-outfit), 'Outfit', system-ui, sans-serif;
+  --font-display: var(--font-outfit), 'Outfit', system-ui, sans-serif;
 
   /* Spacing */
   --space-1: 0.25rem;
@@ -106,27 +105,28 @@
   --color-border: rgba(15, 23, 42, 0.1);
   --color-border-hover: rgba(15, 23, 42, 0.2);
 
-  --color-cyan: #059669;
-  --color-cyan-dim: rgba(5, 150, 105, 0.1);
+  /* Emerald 700: >= 4.5:1 on every light surface (was #059669 at 3.3-3.8:1) */
+  --color-cyan: #047857;
+  --color-cyan-dim: rgba(4, 120, 87, 0.1);
   --color-magenta: #312e81;
   --color-magenta-dim: rgba(49, 46, 129, 0.1);
   --color-purple: #4f46e5;
   --color-purple-dim: rgba(79, 70, 229, 0.1);
   --color-amber: #b45309;
   --color-amber-dim: rgba(180, 83, 9, 0.1);
-  --color-green: #059669;
-  --color-green-dim: rgba(5, 150, 105, 0.12);
+  --color-green: #047857;
+  --color-green-dim: rgba(4, 120, 87, 0.12);
   --color-red: #dc2626;
   --color-red-dim: rgba(220, 38, 38, 0.1);
 
-  --color-primary: #059669;
-  --color-primary-dim: rgba(5, 150, 105, 0.1);
+  --color-primary: #047857;
+  --color-primary-dim: rgba(4, 120, 87, 0.1);
   --color-secondary: #111827;
   --color-secondary-dim: rgba(17, 24, 39, 0.08);
 
   --color-text: #111827;
   --color-text-secondary: #475569;
-  --color-text-muted: #64748b;
+  --color-text-muted: #5b6b80;
   --color-text-inverse: #ffffff;
 
   --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.08);

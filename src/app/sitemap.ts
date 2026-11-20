@@ -25,6 +25,7 @@ const STATIC_PAGES: Array<{
   { path: '/nosotros', priority: 0.6, changeFrequency: 'monthly' },
   { path: '/contacto', priority: 0.6, changeFrequency: 'monthly' },
   { path: '/distribuidores', priority: 0.6, changeFrequency: 'monthly' },
+  { path: '/devoluciones', priority: 0.4, changeFrequency: 'yearly' },
   { path: '/privacidad', priority: 0.2, changeFrequency: 'yearly' },
   { path: '/terminos', priority: 0.2, changeFrequency: 'yearly' },
 ]

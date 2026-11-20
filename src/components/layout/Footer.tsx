@@ -86,6 +86,9 @@ export function Footer() {
             <Link href="/garantia" className="footer-link">
               Garantía
             </Link>
+            <Link href="/devoluciones" className="footer-link">
+              Botón de arrepentimiento
+            </Link>
             <Link href="/distribuidores" className="footer-link">
               Distribuidores
             </Link>

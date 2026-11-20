@@ -108,6 +108,7 @@ export async function GET() {
 - [Distribuidores y revendedores](${SITE_URL}/distribuidores): programa con precios mayoristas
 - [Nosotros](${SITE_URL}/nosotros): quiénes somos
 - [Contacto](${SITE_URL}/contacto): medios de contacto y ubicación
+- [Devoluciones y botón de arrepentimiento](${SITE_URL}/devoluciones): derecho de arrepentimiento de 10 días corridos, cómo ejercerlo, reintegro y condiciones para productos de entrega inmediata y a medida
 - [Términos y condiciones](${SITE_URL}/terminos)
 - [Política de privacidad](${SITE_URL}/privacidad)
 

@@ -24,6 +24,7 @@ import {
   getProductPlayers,
 } from '@/lib/types'
 import { clsx } from 'clsx'
+import Image from 'next/image'
 import Link from 'next/link'
 import { ConsoleLogoRows } from '@/components/products/ConsoleLogoRows'
 import { PRODUCT_FAQ } from '@/lib/product-faq'
@@ -672,9 +673,14 @@ export function ProductDetailClient({
                 }}
               >
                 {images[activeImage] ? (
-                  <img
+                  <Image
                     src={images[activeImage]}
                     alt={product.name}
+                    width={1200}
+                    height={900}
+                    sizes="(max-width: 900px) 100vw, 50vw"
+                    quality={75}
+                    fetchPriority={activeImage === 0 ? 'high' : 'auto'}
                     style={{
                       width: '100%',
                       height: '100%',
@@ -764,9 +770,13 @@ export function ProductDetailClient({
                         padding: 3,
                       }}
                     >
-                      <img
+                      <Image
                         src={img}
                         alt={`${product.name} - imagen ${i + 1}`}
+                        width={128}
+                        height={96}
+                        sizes="64px"
+                        quality={70}
                         style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: 2 }}
                       />
                     </button>
@@ -1311,7 +1321,14 @@ export function ProductDetailClient({
                                 </label>
                                 <div className="vinyl-picker-preview">
                                   {selectedVinyl?.image_url ? (
-                                    <img src={selectedVinyl.image_url} alt={selectedVinyl.name} />
+                                    <Image
+                                      src={selectedVinyl.image_url}
+                                      alt={selectedVinyl.name}
+                                      width={800}
+                                      height={600}
+                                      sizes="(max-width: 900px) 90vw, 45vw"
+                                      quality={70}
+                                    />
                                   ) : (
                                     <div className="vinyl-picker-empty">Elegí un vinilo para verlo en grande</div>
                                   )}
@@ -1371,7 +1388,14 @@ export function ProductDetailClient({
                                   100% personalizado: te pedimos la imagen luego de iniciar el pedido.
                                 </div>
                               ) : selectedVinyl?.image_url ? (
-                                <img src={selectedVinyl.image_url} alt={selectedVinyl.name} />
+                                <Image
+                                  src={selectedVinyl.image_url}
+                                  alt={selectedVinyl.name}
+                                  width={800}
+                                  height={600}
+                                  sizes="(max-width: 900px) 90vw, 45vw"
+                                  quality={70}
+                                />
                               ) : (
                                 <div className="vinyl-picker-empty">Elegí un vinilo para verlo en grande</div>
                               )}

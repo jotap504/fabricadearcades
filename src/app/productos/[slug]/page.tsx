@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { createAdminClient, createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/server'
+import { unstable_cache } from 'next/cache'
+import { createPublicClient } from '@/lib/supabase/public'
 import { ProductDetailClient } from './ProductDetailClient'
 import { JsonLd } from '@/components/seo/JsonLd'
 import { buildPageMetadata, cleanDescription } from '@/lib/seo'
@@ -13,29 +15,85 @@ interface PageProps {
   params: Promise<{ slug: string }>
 }
 
-const isSupabaseConfigured =
-  process.env.NEXT_PUBLIC_SUPABASE_URL &&
-  !process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder')
-
 type ProductWithRuntimeSpecs = Product & { supply_families?: unknown }
+
+
+type ProductPageData = {
+  product: ProductWithRuntimeSpecs
+  variants: ProductVariant[]
+  stockItems: StockItem[]
+  supplies: SupplyInventory[]
+  deliveryConfig: DeliveryConfig[]
+  accessories: Product[]
+}
+
+async function fetchProductData(slug: string): Promise<ProductPageData | null> {
+  const supabase = createPublicClient()
+
+  if (!supabase) {
+    const product: ProductWithRuntimeSpecs | undefined = mockProducts.find((p) => p.slug === slug)
+    if (!product) return null
+    return {
+      product,
+      variants: mockVariants.filter((v) => v.product_id === product.id),
+      stockItems: mockStockItems.filter((s) => s.product_id === product.id),
+      supplies: mockSupplies,
+      deliveryConfig: [
+        { key: 'printed_business_hours', value: '24', label: null, updated_at: '' },
+        { key: 'designed_business_days', value: '7', label: null, updated_at: '' },
+      ],
+      accessories: [],
+    }
+  }
+
+  const { data: product } = await supabase
+    .from('products')
+    .select('*, category:categories(*)')
+    .eq('slug', slug)
+    .eq('is_active', true)
+    .maybeSingle()
+  if (!product) return null
+
+  const supplyClient = await createAdminClient()
+  const [variants, stock, supplies, delivery, familiesConfig, accessories] = await Promise.all([
+    supabase.from('product_variants').select('*').eq('product_id', product.id).eq('is_active', true).order('sort_order'),
+    supabase.from('stock_items').select('*').eq('product_id', product.id),
+    supplyClient.from('supply_inventory').select('*').eq('is_active', true).order('supply_type'),
+    supabase.from('delivery_config').select('*'),
+    supabase.from('pricing_config').select('*').eq('key', 'supply_families').maybeSingle(),
+    supabase.from('products').select('*').eq('product_type', 'accessory').eq('is_active', true),
+  ])
+
+  const result: ProductWithRuntimeSpecs = product
+  const familiesValue = familiesConfig.data?.value
+  if (familiesValue) {
+    try {
+      result.supply_families = typeof familiesValue === 'string' ? JSON.parse(familiesValue) : familiesValue
+    } catch {}
+  }
+
+  return {
+    product: result,
+    variants: variants.data ?? [],
+    stockItems: stock.data ?? [],
+    supplies: supplies.data ?? [],
+    deliveryConfig: delivery.data ?? [],
+    accessories: accessories.data ?? [],
+  }
+}
+
+// Public, cookie-less product data cached for 2 minutes, so the page and its metadata
+// share one set of Supabase queries instead of repeating ~9 sequential round-trips per visit.
+const loadProductData = unstable_cache(fetchProductData, ['product-detail'], { revalidate: 120, tags: ['catalog'] })
+
+export const revalidate = 120
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params
 
-  let product: Pick<Product, 'name' | 'short_description' | 'description' | 'meta_title' | 'meta_description' | 'images'> | null = null
-
-  if (isSupabaseConfigured) {
-    const supabase = await createClient()
-    const { data } = await supabase
-      .from('products')
-      .select('name, short_description, description, meta_title, meta_description, images')
-      .eq('slug', slug)
-      .eq('is_active', true)
-      .maybeSingle()
-    product = data
-  } else {
-    product = mockProducts.find(p => p.slug === slug) ?? null
-  }
+  const data = await loadProductData(slug)
+  const product: Pick<Product, 'name' | 'short_description' | 'description' | 'meta_title' | 'meta_description' | 'images'> | null =
+    data?.product ?? null
 
   if (!product) return { title: 'Producto no encontrado', robots: { index: false, follow: false } }
 
@@ -59,84 +117,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function ProductDetailPage({ params }: PageProps) {
   const { slug } = await params
   
-  let product: ProductWithRuntimeSpecs | null = null
-  let variants: ProductVariant[] = []
-  let stockItems: StockItem[] = []
-  let supplies: SupplyInventory[] = []
-  let deliveryConfig: DeliveryConfig[] = []
-  let accessories: Product[] = []
-
-  if (isSupabaseConfigured) {
-    const supabase = await createClient()
-    const { data: p } = await supabase
-      .from('products')
-      .select('*, category:categories(*)')
-      .eq('slug', slug)
-      .eq('is_active', true)
-      .single()
-    
-    product = p
-
-    if (p) {
-      const { data: v } = await supabase
-        .from('product_variants')
-        .select('*')
-        .eq('product_id', p.id)
-        .eq('is_active', true)
-        .order('sort_order')
-      variants = v ?? []
-
-      const { data: s } = await supabase
-        .from('stock_items')
-        .select('*')
-        .eq('product_id', p.id)
-      stockItems = s ?? []
-
-      const supplyClient = await createAdminClient()
-      const { data: sup } = await supplyClient
-        .from('supply_inventory')
-        .select('*')
-        .eq('is_active', true)
-        .order('supply_type')
-      supplies = sup ?? []
-
-      const { data: d } = await supabase.from('delivery_config').select('*')
-      deliveryConfig = d ?? []
-
-      const { data: fConfig } = await supabase
-        .from('pricing_config')
-        .select('*')
-        .eq('key', 'supply_families')
-        .single()
-      
-      if (fConfig?.value) {
-        try {
-          if (product) {
-            product.supply_families = typeof fConfig.value === 'string' ? JSON.parse(fConfig.value) : fConfig.value
-          }
-        } catch {}
-      }
-
-      const { data: acc } = await supabase
-        .from('products')
-        .select('*')
-        .eq('product_type', 'accessory')
-        .eq('is_active', true)
-      accessories = acc ?? []
-    }
-  } else {
-    product = mockProducts.find(p => p.slug === slug) ?? null
-    if (product) {
-      const mockProduct = product
-      variants = mockVariants.filter(v => v.product_id === mockProduct.id)
-      stockItems = mockStockItems.filter(s => s.product_id === mockProduct.id)
-      supplies = mockSupplies
-      deliveryConfig = [
-        { key: 'printed_business_hours', value: '24', label: null, updated_at: '' },
-        { key: 'designed_business_days', value: '7', label: null, updated_at: '' }
-      ]
-    }
-  }
+  const data = await loadProductData(slug)
+  if (!data) notFound()
+  const { product, variants, stockItems, supplies, deliveryConfig, accessories } = data
 
   if (!product) notFound()
 

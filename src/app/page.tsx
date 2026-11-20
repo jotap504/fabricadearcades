@@ -1,9 +1,12 @@
 import { type Row } from '@/lib/rows'
+import Image from 'next/image'
 import Link from 'next/link'
 import fs from 'node:fs'
 import path from 'node:path'
 import { ArrowRight, Zap, Clock, Palette, Shield } from 'lucide-react'
-import { createAdminClient, createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/server'
+import { createPublicClient } from '@/lib/supabase/public'
+import { unstable_cache } from 'next/cache'
 import { ProductCard } from '@/components/products/ProductCard'
 import type { Product } from '@/lib/types'
 import { mockProducts, mockCategories } from '@/lib/mock-data'
@@ -24,10 +27,6 @@ const HERO_IMAGES = [
   "/hero-arcade-4.jpg",
   "/hero-arcade-5.jpg"
 ]
-
-const isSupabaseConfigured =
-  process.env.NEXT_PUBLIC_SUPABASE_URL &&
-  !process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder')
 
 function getConsoleLogos() {
   const logosDir = path.join(process.cwd(), 'public', 'logos')
@@ -91,10 +90,8 @@ function withStockSummary(product: ProductWithStockRows): Product {
   }
 }
 
-export default async function HomePage() {
-  const supabase = isSupabaseConfigured ? await createClient() : null
-  const consoleLogos = getConsoleLogos()
-
+async function fetchHomeData() {
+  const supabase = createPublicClient()
 
   // Fetch featured products
   const { data: products } = supabase
@@ -202,6 +199,20 @@ export default async function HomePage() {
     imageUrl: categoryImageById.get(cat.id) || HERO_IMAGES[index % HERO_IMAGES.length],
     href: `/productos?categoria=${cat.slug}`,
   }))
+
+  return { featuredProducts, accordionItems }
+}
+
+// Public, cookie-less data cached for 2 minutes. The page is rendered per request (it is not
+// prerendered at build time: the Docker build has no Supabase service key) but no longer waits
+// on several Supabase round-trips for every visit.
+const loadHomeData = unstable_cache(fetchHomeData, ['home-data'], { revalidate: 120, tags: ['catalog'] })
+
+export const dynamic = 'force-dynamic'
+
+export default async function HomePage() {
+  const consoleLogos = getConsoleLogos()
+  const { featuredProducts, accordionItems } = await loadHomeData()
 
   return (
     <>
@@ -323,7 +334,15 @@ export default async function HomePage() {
                   <div className="console-logo-marquee-track">
                     {[...consoleLogos, ...consoleLogos].map((logo, index) => (
                       <div className="console-logo-pill" key={`${logo.src}-${index}`}>
-                        <img src={logo.src} alt={logo.name} loading="lazy" />
+                        <Image
+                          src={logo.src}
+                          alt={logo.name}
+                          width={105}
+                          height={40}
+                          sizes="105px"
+                          quality={70}
+                          style={{ width: 'auto', height: 'auto' }}
+                        />
                       </div>
                     ))}
                   </div>

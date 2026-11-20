@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 
 export interface ImageAccordionItem {
@@ -50,16 +51,14 @@ function AccordionSlide({ item, isActive, onActivate }: AccordionSlideProps) {
         border: '1px solid var(--color-border)',
       }}
     >
-      <img
+      <Image
         src={item.imageUrl}
         alt={item.title}
-        style={{
-          position: 'absolute',
-          inset: 0,
-          width: '100%',
-          height: '100%',
-          objectFit: 'cover',
-        }}
+        fill
+        sizes="(max-width: 900px) 46vw, 400px"
+        quality={70}
+        fetchPriority={isActive ? 'high' : 'auto'}
+        style={{ objectFit: 'cover' }}
       />
       <div
         style={{

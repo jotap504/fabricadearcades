@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
-import { createAdminClient, createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/server'
+import { unstable_cache } from 'next/cache'
 import { ProductsClient } from './ProductsClient'
 import type { Product, Category } from '@/lib/types'
 import { mockProducts, mockCategories } from '@/lib/mock-data'
@@ -53,10 +54,6 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
   const seo = categorySeo(category.slug, category.name)
   return buildPageMetadata({ title: seo.title, description: seo.description, path: categoryPath(category.slug) })
 }
-
-const isSupabaseConfigured =
-  process.env.NEXT_PUBLIC_SUPABASE_URL &&
-  !process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder')
 
 type ProductStockRow = Product & {
   stock_items?: Array<{
@@ -116,92 +113,93 @@ function sortByAvailability(products: Product[]) {
   return [...products].sort((a, b) => rank(a) - rank(b) || a.sort_order - b.sort_order || a.name.localeCompare(b.name, 'es'))
 }
 
+async function fetchCatalog(tipo: string | undefined): Promise<{ products: Product[]; categories: Category[] }> {
+  const supabase = createPublicClient()
+
+  if (!supabase) {
+    const mock = tipo ? mockProducts.filter((p) => p.product_type === tipo) : mockProducts
+    return { products: mock, categories: mockCategories }
+  }
+
+  let query = supabase
+    .from('products')
+    .select('*, category:categories(*), stock_items(id, stock_type, quantity, vinyl_supply_id, configuration)')
+    .eq('is_active', true)
+    .order('sort_order', { ascending: true })
+    .order('created_at', { ascending: false })
+
+  if (tipo) {
+    query = query.eq('product_type', tipo)
+  }
+
+  const [{ data: p }, { data: c }] = await Promise.all([
+    query,
+    supabase.from('categories').select('*').eq('is_active', true).order('sort_order'),
+  ])
+
+  const productsWithVinyls = (p ?? []) as ProductStockRow[]
+  const vinylIds = Array.from(new Set(productsWithVinyls.flatMap((product) => {
+    const stockVinylIds = (product.stock_items ?? [])
+      .filter((item) => item.quantity > 0 && (item.vinyl_supply_id || item.configuration?.vinyl_supply_id))
+      .map((item) => (item.vinyl_supply_id || item.configuration?.vinyl_supply_id) as string)
+    try {
+      const meta = JSON.parse(product.meta_description || '{}')
+      const catalogVinylIds = Array.isArray(meta.vinyl_supply_ids) ? meta.vinyl_supply_ids : []
+      return [...stockVinylIds, ...catalogVinylIds]
+    } catch {
+      return stockVinylIds
+    }
+  })))
+  const vinylClient = await createAdminClient()
+  const { data: vinyls } = vinylIds.length > 0
+    ? await vinylClient
+        .from('supply_inventory')
+        .select('id, name, image_url, color_label')
+        .in('id', vinylIds)
+        .eq('supply_type', 'vinyl')
+        .eq('is_active', true)
+    : { data: [] }
+  const vinylById = new Map<string, VinylOptionRow>(
+    ((vinyls ?? []) as VinylOptionRow[]).map((vinyl) => [vinyl.id, vinyl])
+  )
+
+  const products = productsWithVinyls.map((product) => {
+    try {
+      const meta = JSON.parse(product.meta_description || '{}')
+      const immediateVinylIds = (product.stock_items ?? [])
+        .filter((item) => item.stock_type === 'immediate' && item.quantity > 0 && (item.vinyl_supply_id || item.configuration?.vinyl_supply_id))
+        .map((item) => (item.vinyl_supply_id || item.configuration?.vinyl_supply_id) as string)
+      const catalogVinylIds = Array.isArray(meta.vinyl_supply_ids)
+        ? meta.vinyl_supply_ids
+        : []
+      const coverVinylId = catalogVinylIds.find((id: string) => {
+        const vinyl = vinylById.get(id)
+        return vinyl?.image_url && product.images?.[0] === vinyl.image_url
+      })
+      const orderedVinylIds = Array.from(
+        new Set([
+          ...immediateVinylIds,
+          ...(immediateVinylIds.length === 0 && coverVinylId ? [coverVinylId] : []),
+          ...catalogVinylIds,
+        ])
+      )
+      const productVinyls = pickVinylOptions(orderedVinylIds, vinylById)
+      return applyStockSummary({ ...product, vinyl_options: productVinyls })
+    } catch {
+      return applyStockSummary({ ...product, vinyl_options: [] })
+    }
+  }) as Product[]
+
+  return { products, categories: (c ?? []) as Category[] }
+}
+
+// Public, cookie-less catalog data cached for 2 minutes. The page itself stays dynamic
+// (it reads searchParams) but no longer waits on several Supabase round-trips per visit.
+const loadCatalog = unstable_cache(fetchCatalog, ['catalog-data'], { revalidate: 120, tags: ['catalog'] })
+
 export default async function ProductsPage({ searchParams }: PageProps) {
   const params = await searchParams
-  const supabase = isSupabaseConfigured ? await createClient() : null
-
-  let allProducts: Product[] = []
-  let categories: Category[] = []
-
-  if (supabase) {
-    let query = supabase
-      .from('products')
-      .select('*, category:categories(*), stock_items(id, stock_type, quantity, vinyl_supply_id, configuration)')
-      .eq('is_active', true)
-      .order('sort_order', { ascending: true })
-      .order('created_at', { ascending: false })
-
-    if (params.tipo) {
-      query = query.eq('product_type', params.tipo)
-    }
-
-    const { data: p } = await query
-    const { data: c } = await supabase
-      .from('categories')
-      .select('*')
-      .eq('is_active', true)
-      .order('sort_order')
-
-    const productsWithVinyls = (p ?? []) as ProductStockRow[]
-    const vinylIds = Array.from(new Set(productsWithVinyls.flatMap((product) => {
-      const stockVinylIds = (product.stock_items ?? [])
-        .filter((item) => item.quantity > 0 && (item.vinyl_supply_id || item.configuration?.vinyl_supply_id))
-        .map((item) => (item.vinyl_supply_id || item.configuration?.vinyl_supply_id) as string)
-      try {
-        const meta = JSON.parse(product.meta_description || '{}')
-        const catalogVinylIds = Array.isArray(meta.vinyl_supply_ids) ? meta.vinyl_supply_ids : []
-        return [...stockVinylIds, ...catalogVinylIds]
-      } catch {
-        return stockVinylIds
-      }
-    })))
-    const vinylClient = await createAdminClient()
-    const { data: vinyls } = vinylIds.length > 0
-      ? await vinylClient
-          .from('supply_inventory')
-          .select('id, name, image_url, color_label')
-          .in('id', vinylIds)
-          .eq('supply_type', 'vinyl')
-          .eq('is_active', true)
-      : { data: [] }
-    const vinylById = new Map<string, VinylOptionRow>(
-      ((vinyls ?? []) as VinylOptionRow[]).map((vinyl) => [vinyl.id, vinyl])
-    )
-
-    allProducts = productsWithVinyls.map((product) => {
-      try {
-        const meta = JSON.parse(product.meta_description || '{}')
-        const immediateVinylIds = (product.stock_items ?? [])
-          .filter((item) => item.stock_type === 'immediate' && item.quantity > 0 && (item.vinyl_supply_id || item.configuration?.vinyl_supply_id))
-          .map((item) => (item.vinyl_supply_id || item.configuration?.vinyl_supply_id) as string)
-        const catalogVinylIds = Array.isArray(meta.vinyl_supply_ids)
-          ? meta.vinyl_supply_ids
-          : []
-        const coverVinylId = catalogVinylIds.find((id: string) => {
-          const vinyl = vinylById.get(id)
-          return vinyl?.image_url && product.images?.[0] === vinyl.image_url
-        })
-        const orderedVinylIds = Array.from(
-          new Set([
-            ...immediateVinylIds,
-            ...(immediateVinylIds.length === 0 && coverVinylId ? [coverVinylId] : []),
-            ...catalogVinylIds,
-          ])
-        )
-        const productVinyls = pickVinylOptions(orderedVinylIds, vinylById)
-        return applyStockSummary({ ...product, vinyl_options: productVinyls })
-      } catch {
-        return applyStockSummary({ ...product, vinyl_options: [] })
-      }
-    }) as Product[]
-    categories = c ?? []
-  } else {
-    allProducts = mockProducts
-    categories = mockCategories
-    if (params.tipo) {
-      allProducts = allProducts.filter(p => p.product_type === params.tipo)
-    }
-  }
+  const { products: allProducts, categories } = await loadCatalog(params.tipo)
 
   // Hide categories with no active products (empty tabs lead to a dead-end page)
   const categoriesWithProducts = (categories ?? []).filter((c: Category) =>

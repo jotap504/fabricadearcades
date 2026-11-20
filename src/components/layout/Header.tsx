@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useSyncExternalStore } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
@@ -68,7 +69,7 @@ export function Header() {
         <div className="header-inner">
           {/* Logo */}
           <Link href="/" className="header-logo" style={{ padding: 0, background: 'none', border: 'none' }}>
-            <img src="/logo.png" alt="TodoArcade" width={156} height={52} className="site-logo-header" />
+            <Image src="/logo.png" alt="TodoArcade" width={156} height={52} sizes="156px" quality={75} className="site-logo-header" />
           </Link>
 
           {/* Desktop Nav */}
@@ -267,7 +268,7 @@ export function Header() {
       <div id="mobile-drawer" className={clsx('drawer', { open: mobileOpen })}>
         <div>
           <Link href="/" className="header-logo" onClick={() => setMobileOpen(false)} style={{ padding: 0, background: 'none', border: 'none', marginBottom: 'var(--space-6)' }}>
-            <img src="/logo.png" alt="TodoArcade" width={156} height={52} className="site-logo-header" />
+            <Image src="/logo.png" alt="TodoArcade" width={156} height={52} sizes="156px" quality={75} className="site-logo-header" />
           </Link>
           <nav style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}>
             {NAV_LINKS.map((link) => (

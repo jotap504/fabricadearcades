@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
 import { useAuth } from '@/components/auth/AuthProvider'
@@ -153,7 +154,14 @@ export function ProductCard({ product, stockSummary }: ProductCardProps) {
       {/* Image */}
       <Link href={productHref} className="product-card-image" aria-label={`Ver ${product.name}`}>
         {mainImage ? (
-          <img src={mainImage} alt={product.name} loading="lazy" />
+          <Image
+            src={mainImage}
+            alt={product.name}
+            width={640}
+            height={512}
+            sizes="(max-width: 640px) 90vw, (max-width: 1100px) 45vw, 320px"
+            quality={70}
+          />
         ) : (
           <div className="product-card-image-placeholder">
             {product.product_type === 'arcade' ? <Gamepad2 size={40} aria-hidden="true" /> : <Wrench size={40} aria-hidden="true" />}

@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import Link from 'next/link'
 import { Mail, Phone, MapPin } from 'lucide-react'
 import { InstagramIcon, TikTokIcon } from '@/components/ui/SocialIcons'
@@ -12,7 +13,7 @@ export function Footer() {
           {/* Brand */}
           <div style={{ marginBottom: 'var(--space-6)' }}>
             <Link href="/" style={{ display: 'inline-block', marginBottom: 'var(--space-4)' }}>
-              <img src="/logo.png" alt="TodoArcade" width={192} height={64} style={{ height: 64, width: 'auto' }} />
+              <Image src="/logo.png" alt="TodoArcade" width={192} height={64} sizes="192px" quality={75} style={{ height: 64, width: 'auto' }} />
             </Link>
             <p style={{ color: 'var(--color-text-secondary)', lineHeight: 1.6, maxWidth: 320 }}>
               Fabricamos consolas arcade personalizadas en Argentina. Calidad premium,

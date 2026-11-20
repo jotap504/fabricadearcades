@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import { CONSOLE_LOGOS, type ConsoleLogo } from '@/lib/console-logos'
 
 interface ConsoleLogoRowsProps {
@@ -20,7 +21,15 @@ function LogoRow({ logos, label, speed }: { logos: ConsoleLogo[]; label: string;
       <div className="product-console-track" style={{ animationDuration: speed }}>
         {repeated.map((logo, index) => (
           <span className="product-console-logo" key={`${logo.id}-${index}`}>
-            <img src={logo.src} alt={logo.name} loading="lazy" />
+            <Image
+              src={logo.src}
+              alt={logo.name}
+              width={64}
+              height={28}
+              sizes="64px"
+              quality={70}
+              style={{ width: 'auto', height: 'auto' }}
+            />
           </span>
         ))}
       </div>

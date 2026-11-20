@@ -1,5 +1,4 @@
 import { type Row } from '@/lib/rows'
-import Image from 'next/image'
 import Link from 'next/link'
 import fs from 'node:fs'
 import path from 'node:path'
@@ -42,6 +41,14 @@ function getConsoleLogos() {
   } catch {
     return []
   }
+}
+
+// Points a plain <img> at the Next image optimizer (WebP, 1x/2x) without paying the
+// hydration cost of a next/image component per logo. SVGs are served as-is.
+function logoImageProps(src: string) {
+  if (/\.svg$/i.test(src)) return { src }
+  const url = (width: number) => `/_next/image?url=${encodeURIComponent(src)}&w=${width}&q=70`
+  return { src: url(128), srcSet: `${url(128)} 1x, ${url(256)} 2x` }
 }
 
 type ProductWithStockRows = Product & {
@@ -334,13 +341,15 @@ export default async function HomePage() {
                   <div className="console-logo-marquee-track">
                     {[...consoleLogos, ...consoleLogos].map((logo, index) => (
                       <div className="console-logo-pill" key={`${logo.src}-${index}`}>
-                        <Image
-                          src={logo.src}
+                        {/* Plain <img> on purpose: 260+ next/image instances would all hydrate in the browser */}
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          {...logoImageProps(logo.src)}
                           alt={logo.name}
                           width={105}
                           height={40}
-                          sizes="105px"
-                          quality={70}
+                          loading="lazy"
+                          decoding="async"
                           style={{ width: 'auto', height: 'auto' }}
                         />
                       </div>

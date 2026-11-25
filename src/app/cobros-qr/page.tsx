@@ -3,7 +3,6 @@ import {
   ArrowRight,
   Banknote,
   CheckCircle2,
-  ExternalLink,
   LayoutDashboard,
   MessageCircle,
   QrCode,
@@ -29,7 +28,6 @@ export const metadata = buildPageMetadata({
   path: PAGE_PATH,
 })
 
-const PAGOSQR_URL = 'https://pagarqr.ar'
 const PAGOSQR_PANEL_URL = 'https://pay.pagarqr.ar/app'
 const WHATSAPP_URL = `https://wa.me/${SITE_CONTACT.telephone.replace('+', '')}?text=${encodeURIComponent(
   'Hola, quiero consultar por Cobros QR con Kobro para mis máquinas.'
@@ -425,9 +423,6 @@ export default function CobrosQrPage() {
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)', justifyContent: 'center' }}>
           <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="btn btn-primary btn-lg" style={{ display: 'inline-flex' }}>
             <MessageCircle size={18} aria-hidden="true" /> Consultar por WhatsApp
-          </a>
-          <a href={PAGOSQR_URL} target="_blank" rel="noopener noreferrer" className="btn btn-secondary btn-lg" style={{ display: 'inline-flex' }}>
-            Conocé más en pagarqr.ar <ExternalLink size={16} aria-hidden="true" />
           </a>
         </div>
         <p style={{ ...bodyStyle, display: 'flex', alignItems: 'center', gap: 'var(--space-2)', flexWrap: 'wrap', justifyContent: 'center' }}>

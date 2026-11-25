@@ -1,7 +1,7 @@
 'use client'
 
 import { type Row } from '@/lib/rows'
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import type { CSSProperties } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { ShoppingCart, ChevronLeft, ChevronRight, Play, Check, Gamepad2, Zap, Usb, ArrowRight, Download } from 'lucide-react'
@@ -178,6 +178,7 @@ export function ProductDetailClient({
   const [quantity, setQuantity] = useState(1)
   const [openFaq, setOpenFaq] = useState<number | null>(null)
   const vinylParam = searchParams.get('vinilo')
+  const appliedVinylParam = useRef(false)
 
   const ledSurchargeFull = productSpecs.led_surcharge || 0
 
@@ -332,9 +333,12 @@ export function ProductDetailClient({
     // No automatic vinyl for products without a vinyl choice (accessories, finished goods).
     if (!product.requires_production) return
 
-    if (vinylParam) {
+    // The ?vinilo= link preselects a design once. Re-applying it on every change would
+    // snap the selector back and make it impossible to pick another vinyl.
+    if (vinylParam && !appliedVinylParam.current) {
       const requestedVinyl = allCompatibleVinyls.find((vinyl) => vinyl.id === vinylParam)
       if (requestedVinyl) {
+        appliedVinylParam.current = true
         setVinylSource(requestedVinyl.quantity > 0 ? 'stock' : 'print')
         setCustomization((prev) => ({
           ...prev,

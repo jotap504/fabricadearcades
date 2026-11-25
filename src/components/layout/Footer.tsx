@@ -80,6 +80,9 @@ export function Footer() {
             <Link href="/como-comprar" className="footer-link">
               Cómo comprar
             </Link>
+            <Link href="/cobros-qr" className="footer-link">
+              Cobros QR
+            </Link>
             <Link href="/envios" className="footer-link">
               Envíos y entregas
             </Link>

@@ -18,6 +18,7 @@ const STATIC_PAGES: Array<{
   { path: '/', priority: 1, changeFrequency: 'weekly' },
   { path: '/productos', priority: 0.9, changeFrequency: 'daily' },
   { path: '/t-molding', priority: 0.8, changeFrequency: 'monthly' },
+  { path: '/cobros-qr', priority: 0.7, changeFrequency: 'monthly' },
   { path: '/tester-fightstick', priority: 0.6, changeFrequency: 'monthly' },
   { path: '/como-comprar', priority: 0.7, changeFrequency: 'monthly' },
   { path: '/envios', priority: 0.7, changeFrequency: 'monthly' },

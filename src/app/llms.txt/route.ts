@@ -102,6 +102,7 @@ export async function GET() {
 - [Catálogo de productos](${SITE_URL}/productos): arcades, consolas, fightsticks, bartops, pedestales y accesorios, con precios en pesos argentinos (ARS)
 - [T-Molding (tapacanto en T)](${SITE_URL}/t-molding): medidas disponibles (16,5 mm y 18,5 mm, negro) y guía paso a paso para hacer la ranura con fresa en T y colocarlo
 - [Tester de comandos para fightstick](${SITE_URL}/tester-fightstick): herramienta gratuita en el navegador para probar botones y palancas, asignar cada puerto USB a Player 1 o 2 y mapear pines GPIO de placas GP2040-CE
+- [Cobros QR para máquinas (Kobro)](${SITE_URL}/cobros-qr): cobro con QR de Mercado Pago para arcades, pelucheras, pinball y vending por pulso; el equipo Kobro se conecta a la entrada de moneda, se siguen cobrando fichas y billetes y el panel web muestra ventas, efectivo y reparto con el local
 - [Cómo comprar](${SITE_URL}/como-comprar): pasos de compra, formas de pago y plazos de fabricación
 - [Envíos y entregas](${SITE_URL}/envios): retiro en fábrica y envíos a todo el país
 - [Garantía y servicio técnico](${SITE_URL}/garantia): cobertura de la garantía, soporte y repuestos

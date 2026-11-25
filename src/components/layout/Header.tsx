@@ -26,6 +26,7 @@ const NAV_LINKS = [
   { href: '/productos?categoria=consolas', label: 'Consolas' },
   { href: '/productos?categoria=fightsticks', label: 'Fightsticks' },
   { href: '/t-molding', label: 'T-Molding' },
+  { href: '/cobros-qr', label: 'Cobros QR' },
   { href: '/contacto', label: 'Contacto' },
 ]
 

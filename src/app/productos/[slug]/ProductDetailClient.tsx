@@ -295,6 +295,9 @@ export function ProductDetailClient({
 
   // Dynamic images based on vinyl selection
   const selectedVinyl = useMemo(() => {
+    // Only made-to-order products have a vinyl choice; accessories and other finished goods
+    // must never inherit one (it would replace their photo and travel into the cart).
+    if (!product.requires_production) return undefined
     if (customization.vinyl_supply_id) {
       return (
         supplies.find((s) => s.id === customization.vinyl_supply_id) ||
@@ -308,7 +311,7 @@ export function ProductDetailClient({
       )
     }
     return undefined
-  }, [supplies, allCompatibleVinyls, customization.vinyl_supply_id, customization.vinyl_name])
+  }, [product.requires_production, supplies, allCompatibleVinyls, customization.vinyl_supply_id, customization.vinyl_name])
 
   const images = useMemo(() => {
     const base = product.images ?? []
@@ -326,6 +329,9 @@ export function ProductDetailClient({
   }, [selectedVinyl?.image_url, customization.vinyl_supply_id, customization.vinyl_name, customization.vinyl_source])
 
   useEffect(() => {
+    // No automatic vinyl for products without a vinyl choice (accessories, finished goods).
+    if (!product.requires_production) return
+
     if (vinylParam) {
       const requestedVinyl = allCompatibleVinyls.find((vinyl) => vinyl.id === vinylParam)
       if (requestedVinyl) {
@@ -371,6 +377,7 @@ export function ProductDetailClient({
     customization.vinyl_name,
     customization.vinyl_source,
     customization.vinyl_supply_id,
+    product.requires_production,
     vinylParam,
     vinylsInStock,
   ])

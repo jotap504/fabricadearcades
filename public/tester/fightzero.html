@@ -164,7 +164,7 @@
     <label class="modelo">Modelo
       <select id="selModelo">
         <option value="duo">FightStick Zeo Duo (8 botones)</option>
-        <option value="doble">FightStick Doble (6 botones)</option>
+        <option value="doble">FightStick Doble (7 botones)</option>
       </select>
     </label>
     <span id="statusBadge" class="badge">DESCONECTADO</span>
@@ -270,7 +270,7 @@
   ];
   var MODELO='duo';
   try{if(localStorage.getItem('fz-modelo')==='doble')MODELO='doble';}catch(e){}
-  var SIN_DOBLE={l1:1,l2:1,l3:1,r3:1};
+  var SIN_DOBLE={l2:1,l3:1,r3:1};
   var PINES=[Object.assign({},DEF[0]),Object.assign({},DEF[1])];
   try{var sv=localStorage.getItem('fz-gp2040ce-pins-v3');if(sv){var o=JSON.parse(sv);if(o&&o.length===2)PINES=o;}}catch(e){}
 
@@ -320,9 +320,9 @@
        '<div class="stick-dot" id="'+j+'-dot"></div></div>'+
        '<div class="ejes-txt" id="'+j+'-txt">X 0  Y 0</div></div>';
     // Doble: 6 botones (B3 B4 R2 arriba, B1 B2 R1 abajo). Zeo Duo: 8 botones.
-    h+='</div><div class="cluster'+(doble?' c3':'')+'">'+(doble?
-       cell(n,'b3','B3',true)+cell(n,'b4','B4',true)+cell(n,'r2','R2')+
-       cell(n,'b1','B1',true)+cell(n,'b2','B2',true)+cell(n,'r1','R1')
+    h+='</div><div class="cluster">'+(doble?
+       '<div></div>'+cell(n,'b3','B3',true)+cell(n,'b4','B4',true)+cell(n,'r2','R2')+
+       cell(n,'l1','L1')+cell(n,'b1','B1',true)+cell(n,'b2','B2',true)+cell(n,'r1','R1')
        :
        cell(n,'l2','L2')+cell(n,'b3','B3',true)+cell(n,'b4','B4',true)+cell(n,'r2','R2')+
        cell(n,'l1','L1')+cell(n,'b1','B1',true)+cell(n,'b2','B2',true)+cell(n,'r1','R1'))+
@@ -336,7 +336,7 @@
     MODELO=selModelo.value==='doble'?'doble':'duo';
     try{localStorage.setItem('fz-modelo',MODELO);}catch(e){}
     construir(1);construir(2);
-    log('sys','Modelo: '+(MODELO==='doble'?'FightStick Doble (6 botones)':'FightStick Zeo Duo (8 botones)'));
+    log('sys','Modelo: '+(MODELO==='doble'?'FightStick Doble (7 botones)':'FightStick Zeo Duo (8 botones)'));
   });
 
   function set(id,on){var e=$(id);if(e)e.classList.toggle('active',on);}

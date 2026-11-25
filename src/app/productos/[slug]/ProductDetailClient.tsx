@@ -605,7 +605,9 @@ export function ProductDetailClient({
       variant: selectedVariant ?? undefined,
       quantity,
       unit_price: unitPrice,
-      customization,
+      // The arcade defaults (players, buttons, vinyl) only make sense for made-to-order products;
+      // accessories and other finished goods go to the cart without them.
+      customization: product.requires_production ? customization : {},
       stock_type: selectedPresetId ? 'immediate' : stockSummary.availability,
       stock_item_id: selectedPresetId ?? undefined,
       fulfillment_type: selectedPresetId ? 'ready_stock' : 'custom',

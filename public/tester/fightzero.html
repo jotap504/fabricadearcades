@@ -56,6 +56,9 @@
   .pin{font-size:8px;font-family:'Courier New',monospace;opacity:.75;font-weight:400;}
   .pin:empty{display:none;}
   .cluster{display:grid;grid-template-columns:repeat(4,52px);gap:6px 8px;}
+  .cluster.c3{grid-template-columns:repeat(3,52px);}
+  .modelo{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);}
+  .modelo select{font:inherit;color:var(--text);background:var(--key);border:1px solid var(--border);border-radius:8px;padding:6px 10px;cursor:pointer;}
 
   /* palanca digital rediseñada */
   .dstick{position:relative;width:150px;height:150px;border:4px solid var(--line);border-radius:50%;background:#111;transition:border-color .06s, box-shadow .06s;margin:0 auto;}
@@ -158,6 +161,12 @@
         </a>
       </div>
     </div>
+    <label class="modelo">Modelo
+      <select id="selModelo">
+        <option value="duo">FightStick Zeo Duo (8 botones)</option>
+        <option value="doble">FightStick Doble (6 botones)</option>
+      </select>
+    </label>
     <span id="statusBadge" class="badge">DESCONECTADO</span>
   </div>
 
@@ -259,6 +268,9 @@
     {up:4,down:3,left:2,right:1,b1:5,b2:6,b3:7,b4:8,l1:9,r1:10,l2:11,r2:12,start:13,select:14},
     {up:26,down:27,left:28,right:29,b1:25,b2:24,b3:23,b4:22,l1:21,r1:20,l2:19,r2:18,start:15,select:17}
   ];
+  var MODELO='duo';
+  try{if(localStorage.getItem('fz-modelo')==='doble')MODELO='doble';}catch(e){}
+  var SIN_DOBLE={l1:1,l2:1,l3:1,r3:1};
   var PINES=[Object.assign({},DEF[0]),Object.assign({},DEF[1])];
   try{var sv=localStorage.getItem('fz-gp2040ce-pins-v3');if(sv){var o=JSON.parse(sv);if(o&&o.length===2)PINES=o;}}catch(e){}
 
@@ -295,8 +307,9 @@
 
   function construir(n){
     var j='j'+n, h='';
+    var doble=MODELO==='doble';
     h+='<div class="toprow"><div class="grp">'+cell(n,'start','ST')+cell(n,'select','SEL')+cell(n,'ps','PS')+'</div>'+
-       '<div class="grp">'+cell(n,'l3','L3')+cell(n,'r3','R3')+'</div></div>';
+       (doble?'':'<div class="grp">'+cell(n,'l3','L3')+cell(n,'r3','R3')+'</div>')+'</div>';
     h+='<div class="mainrow"><div class="sticks">';
     h+='<div class="colx" id="'+j+'-colD"><div class="col-t">Palanca digital</div><div class="dstick" id="'+j+'-dstick">'+
        dg(n,'ul','↖')+dg(n,'ur','↗')+dl(n,'u','up','UP')+dl(n,'l','left','LEFT')+'<div class="ball" id="'+j+'-ball"></div>'+dl(n,'r','right','RIGHT')+dl(n,'d','down','DOWN')+dg(n,'dlf','↙')+dg(n,'dr','↘')+
@@ -306,13 +319,25 @@
        '<div class="stick-cross" style="top:0;bottom:0;left:50%;width:1px;"></div>'+
        '<div class="stick-dot" id="'+j+'-dot"></div></div>'+
        '<div class="ejes-txt" id="'+j+'-txt">X 0  Y 0</div></div>';
-    h+='</div><div class="cluster">'+
+    // Doble: 6 botones (B3 B4 R2 arriba, B1 B2 R1 abajo). Zeo Duo: 8 botones.
+    h+='</div><div class="cluster'+(doble?' c3':'')+'">'+(doble?
+       cell(n,'b3','B3',true)+cell(n,'b4','B4',true)+cell(n,'r2','R2')+
+       cell(n,'b1','B1',true)+cell(n,'b2','B2',true)+cell(n,'r1','R1')
+       :
        cell(n,'l2','L2')+cell(n,'b3','B3',true)+cell(n,'b4','B4',true)+cell(n,'r2','R2')+
-       cell(n,'l1','L1')+cell(n,'b1','B1',true)+cell(n,'b2','B2',true)+cell(n,'r1','R1')+
+       cell(n,'l1','L1')+cell(n,'b1','B1',true)+cell(n,'b2','B2',true)+cell(n,'r1','R1'))+
        '</div></div>';
     $('p'+n).innerHTML=h;
   }
   construir(1);construir(2);
+  var selModelo=$('selModelo');
+  selModelo.value=MODELO;
+  selModelo.addEventListener('change',function(){
+    MODELO=selModelo.value==='doble'?'doble':'duo';
+    try{localStorage.setItem('fz-modelo',MODELO);}catch(e){}
+    construir(1);construir(2);
+    log('sys','Modelo: '+(MODELO==='doble'?'FightStick Doble (6 botones)':'FightStick Zeo Duo (8 botones)'));
+  });
 
   function set(id,on){var e=$(id);if(e)e.classList.toggle('active',on);}
 
@@ -500,6 +525,7 @@
       var k=n-1,j='j'+n,a=asign[k],pad=a?list[a.index]:null;
       var d={up:false,down:false,left:false,right:false},ax=0,ay=0;
       BTN.forEach(function(nm){
+        if(MODELO==='doble'&&SIN_DOBLE[nm])return;
         var b=pad&&pad.buttons[IDX[nm]];
         var on=!!b&&(b.pressed||b.value>0.5);
         cambiar(j+'-'+nm,on);set(j+'-'+nm,on);

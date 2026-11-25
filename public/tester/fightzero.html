@@ -319,10 +319,10 @@
        '<div class="stick-cross" style="top:0;bottom:0;left:50%;width:1px;"></div>'+
        '<div class="stick-dot" id="'+j+'-dot"></div></div>'+
        '<div class="ejes-txt" id="'+j+'-txt">X 0  Y 0</div></div>';
-    // Doble: 6 botones (B3 B4 R2 arriba, B1 B2 R1 abajo). Zeo Duo: 8 botones.
-    h+='</div><div class="cluster">'+(doble?
-       '<div></div>'+cell(n,'b3','B3',true)+cell(n,'b4','B4',true)+'<div></div>'+
-       cell(n,'l1','L1')+cell(n,'b1','B1',true)+cell(n,'b2','B2',true)+cell(n,'r1','R1')
+    // Doble: 6 botones (B3 B4 L1 arriba, B1 B2 R1 abajo; L1 sobre R1). Zeo Duo: 8 botones.
+    h+='</div><div class="cluster'+(doble?' c3':'')+'">'+(doble?
+       cell(n,'b3','B3',true)+cell(n,'b4','B4',true)+cell(n,'l1','L1')+
+       cell(n,'b1','B1',true)+cell(n,'b2','B2',true)+cell(n,'r1','R1')
        :
        cell(n,'l2','L2')+cell(n,'b3','B3',true)+cell(n,'b4','B4',true)+cell(n,'r2','R2')+
        cell(n,'l1','L1')+cell(n,'b1','B1',true)+cell(n,'b2','B2',true)+cell(n,'r1','R1'))+
